@@ -1,7 +1,7 @@
 // npm run probar
 import test from "node:test";
 import assert from "node:assert/strict";
-import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, cleanBars, newsFromSearch, newsKeywords, baQuoteFromChart } from "./calculos.mjs";
+import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, cleanBars, newsFromSearch, newsKeywords, baQuoteFromChart, isAmbiguousTicker } from "./calculos.mjs";
 import { buildDataset, injectIntoPage } from "./armar.mjs";
 
 // Serie diaria de días hábiles, a las 14:30 UTC (apertura de NY), con cierre = base + i
@@ -185,4 +185,16 @@ test("BYMA: si la serie no alcanza, usa el último precio de Yahoo", () => {
   assert.equal(r.chg, 3.45);
   assert.equal(r.asOf, "2026-11-18");
   assert.throws(() => baQuoteFromChart({ meta: {}, quotes: [] }));
+});
+
+test("IRSA: las notas sobre el IRS (impuestos de EE.UU.) no entran", () => {
+  const now = new Date("2026-11-18T15:00:00Z");
+  const mk = (title, i) => ({ title, publisher: "X", link: "https://a/" + i, providerPublishTime: new Date("2026-11-18T10:00:00Z") });
+  const res = { news: ["New IRS Rules Could Add $4.2 Billion To Retirement Savings", "When the IRS Shows Up at 75", "IRSA announces results for the first quarter", "Why IRSA Inversiones (IRS) Stock Is Up", "Buy NYSE: IRS before earnings?"].map(mk) };
+  assert.equal(isAmbiguousTicker("IRS"), true);
+  assert.equal(isAmbiguousTicker("PBR"), false);
+  const items = newsFromSearch(res, { now, ticker: "IRS", keywords: ["irsa"], strictTicker: true, max: 10 });
+  assert.deepEqual(items.map((n) => n.title).sort(), ["Buy NYSE: IRS before earnings?", "IRSA announces results for the first quarter", "Why IRSA Inversiones (IRS) Stock Is Up"]);
+  // un ticker no ambiguo sigue aceptando la sigla suelta
+  assert.equal(newsFromSearch({ news: [mk("PBR Q3 Earnings Call Highlights", 9)] }, { now, ticker: "PBR", keywords: ["petrobras"] }).length, 1);
 });

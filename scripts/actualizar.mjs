@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { armar, FILES, readJson } from "./armar.mjs";
-import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, isoInTz, newsFromSearch, newsKeywords, baQuoteFromChart } from "./calculos.mjs";
+import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, isoInTz, newsFromSearch, newsKeywords, baQuoteFromChart, isAmbiguousTicker } from "./calculos.mjs";
 
 const DAY = 86400000;
 const args = process.argv.slice(2);
@@ -156,7 +156,10 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
   await pool(rapido ? [] : newsFor, 3, async (sym) => {
     try {
       const def = catalogo.titulos.find((x) => x.ticker === sym) || {};
-      const items = newsFromSearch(await src.news(sym), { now, ticker: sym, keywords: newsKeywords(def) });
+      const kws = newsKeywords(def);
+      const strict = isAmbiguousTicker(sym, def);
+      // Para tickers ambiguos se busca por el nombre de la empresa, no por la sigla.
+      const items = newsFromSearch(await src.news(strict && kws[0] ? kws[0] : sym), { now, ticker: sym, keywords: kws, strictTicker: strict });
       if (items.length) news[sym] = items;
     } catch (e) {
       // sin titulares nuevos: se conservan los anteriores que todavía sean recientes

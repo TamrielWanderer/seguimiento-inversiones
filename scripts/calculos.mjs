@@ -183,14 +183,22 @@ export function mepHistory(rows, desde, today) {
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
 /** Titulares de Yahoo (search) -> [{ title, site, date, href, iso }], los más nuevos primero. */
-export function newsFromSearch(res, { maxAgeDays = 21, now = new Date(), max = 4, ticker, keywords } = {}) {
+// Tickers que también son palabras o siglas comunes en inglés (IRS = la agencia de impuestos de EE.UU.).
+// Para estos, el ticker suelto en un titular no alcanza: tiene que venir como "(IRS)", "NYSE: IRS" o "$IRS",
+// o el titular tiene que nombrar a la empresa.
+const AMBIGUOUS = new Set(["IRS", "KO", "T", "V", "C", "MA", "MS", "BA", "DE", "GE", "HD", "PG", "MO", "CAT", "GOLD", "DIS", "NEE", "TS", "TX", "COST", "RIO", "VALE", "TEO", "EDN", "AGRO", "ARCO", "GLOB", "LOMA", "IBM", "VT", "TIP", "AGG", "BND", "USO", "DIA", "SHY"]);
+export const isAmbiguousTicker = (t, def = {}) => Boolean(def.noticiasSinTicker) || AMBIGUOUS.has(String(t).replace(/\.[A-Z]+$/, "")) || String(t).replace(/\.[A-Z]+$/, "").length <= 2;
+
+export function newsFromSearch(res, { maxAgeDays = 21, now = new Date(), max = 4, ticker, keywords, strictTicker = false } = {}) {
   const from = now.getTime() - maxAgeDays * DAY;
   const norm = (x) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "'").toLowerCase();
   const base = ticker ? ticker.replace(/\.[A-Z]+$/, "") : "";
   const kws = (keywords || []).map(norm).filter((k) => k.length >= 3);
   const mentions = (title) => {
     if (!ticker && !kws.length) return true;
-    if (base && new RegExp(`(^|[^A-Za-z])${base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^A-Za-z]|$)`).test(title)) return true;
+    const esc = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (base && new RegExp(`(\\(|\\$|(NYSE|NASDAQ|Nasdaq|BYMA|ASX)\\s*:\\s*)${esc}([^A-Za-z]|$)`).test(title)) return true;
+    if (base && !strictTicker && new RegExp(`(^|[^A-Za-z])${esc}([^A-Za-z]|$)`).test(title)) return true;
     const t = norm(title);
     return kws.some((k) => t.includes(k));
   };
