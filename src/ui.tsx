@@ -31,7 +31,7 @@ const THEME = {
 export type Theme = typeof THEME;
 export const useTheme = (): Theme => THEME;
 
-const PALETTE = ["#2e5bda", "#12a594", "#e0a21b", "#8e5bd0", "#d9567b", "#6f9bf2", "#7a8699", "#3ba55d"];
+const PALETTE = ["#22c55e", "#38bdf8", "#facc15", "#c084fc", "#fb7185", "#a3e635", "#2dd4bf", "#818cf8"];
 type Tone = "success" | "danger" | "warning" | "info" | undefined;
 const toneClass = (t: Tone) => (t ? ` ui-tone-${t}` : "");
 

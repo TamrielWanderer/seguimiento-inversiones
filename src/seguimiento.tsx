@@ -958,6 +958,7 @@ function WatchPicker({
             const locked = held.has(sym);
             return (
               <span key={sym} className={locked ? "inv-chip inv-chip-locked" : "inv-chip"} title={locked ? "Tenés compras de este título: sale de la lista cuando las quites." : CATALOG[sym].name}>
+                <i style={{ background: isFlat(CATALOG[sym].chg) ? DASH.yellow : CATALOG[sym].chg > 0 ? DASH.green : DASH.red }} />
                 {sym}
                 {locked ? <small>en cartera</small> : (
                   <button type="button" aria-label={`Sacar ${sym}`} className="inv-icon-btn" onClick={() => onRemove(sym)}>×</button>
@@ -995,25 +996,40 @@ function ToneDot({ chg, label }: { chg: number; label: string }) {
   );
 }
 
+function NavIcon({ tab }: { tab: MainTab }) {
+  const p: { width: number; height: number; viewBox: string; fill: string; stroke: string; strokeWidth: number; strokeLinecap: "round"; strokeLinejoin: "round" } = {
+    width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round",
+  };
+  if (tab === "calor") return <svg {...p} aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5" /><rect x="13" y="3" width="8" height="8" rx="1.5" /><rect x="3" y="13" width="8" height="8" rx="1.5" /><rect x="13" y="13" width="8" height="8" rx="1.5" /></svg>;
+  if (tab === "cartera") return <svg {...p} aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M3 10h18" /><path d="M8 7V6a4 4 0 0 1 8 0v1" /></svg>;
+  if (tab === "divs") return <svg {...p} aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M12 7v10" /><path d="M9.5 9.5c.6-1 2.8-1.2 3.6 0s-.2 2.2-1.6 2.5c1.6.2 2.4 1.4 1.6 2.6s-3 1-3.6 0" /></svg>;
+  if (tab === "mercado") return <svg {...p} aria-hidden="true"><path d="M4 19V9l5 4 5-8 6 7" /><path d="M4 19h16" /></svg>;
+  if (tab === "analisis") return <svg {...p} aria-hidden="true"><path d="M5 4h10l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" /><path d="M15 4v4h4" /><path d="M8 12h8M8 16h6" /></svg>;
+  if (tab === "datos") return <svg {...p} aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3" /><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6" /><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></svg>;
+  return <svg {...p} aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6" /><circle cx="12" cy="8" r="0.8" fill="currentColor" stroke="none" /></svg>;
+}
+
 function DashShell({ tab, onChange, stamp, stampTone = "ok", children }: { tab: MainTab; onChange: (tab: MainTab) => void; stamp: string; stampTone?: "ok" | "warn" | "old"; children?: ReactNode }) {
   return (
     <div className="inv-dash">
-      <header className="inv-top">
-        <div className="inv-top-in">
-          <div className="inv-top-row">
-            <h1>Seguimiento de inversiones</h1>
-            <div className={`inv-stamp inv-stamp-${stampTone}`}>{stamp}</div>
-          </div>
-          <nav className="inv-tabs" aria-label="Secciones">
-            {TABS.map((item) => (
-              <button key={item.value} type="button" aria-current={item.value === tab ? "page" : undefined} className={item.value === tab ? "inv-tab inv-tab-on" : "inv-tab"} onClick={() => onChange(item.value)}>
-                {item.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </header>
-      <main className="inv-body">{children}</main>
+      <aside className="inv-side">
+        <div className="inv-brand"><span className="inv-logo">S</span><span className="inv-brand-text">Seguimiento</span></div>
+        <nav aria-label="Secciones">
+          {TABS.map((item) => (
+            <button key={item.value} type="button" aria-current={item.value === tab ? "page" : undefined} className={item.value === tab ? "inv-nav-btn inv-nav-on" : "inv-nav-btn"} onClick={() => onChange(item.value)}>
+              <NavIcon tab={item.value} />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+      </aside>
+      <div className="inv-main">
+        <header className="inv-top">
+          <h1>Seguimiento de inversiones</h1>
+          <div className={`inv-stamp inv-stamp-${stampTone}`}>{stamp}</div>
+        </header>
+        <main className="inv-body">{children}</main>
+      </div>
     </div>
   );
 }
@@ -1057,9 +1073,9 @@ function changeOf(q: Quote, w: HeatWindow): number {
 }
 
 function heatStyle(_theme: Theme, chg: number, cap: number): CSSProperties {
-  if (isFlat(chg)) return { background: `color-mix(in srgb, ${DASH.yellow} 14%, var(--surface))`, color: DASH.text };
+  if (isFlat(chg)) return { background: `color-mix(in srgb, ${DASH.yellow} 22%, var(--surface))`, color: DASH.text };
   const intensity = Math.min(1, Math.abs(chg) / (cap || 1));
-  const alpha = 10 + Math.round(intensity * 34);
+  const alpha = 18 + Math.round(intensity * 44);
   return { background: `color-mix(in srgb, ${chg > 0 ? DASH.green : DASH.red} ${alpha}%, var(--surface))`, color: DASH.text };
 }
 
@@ -2688,7 +2704,7 @@ export default function InversionesPage() {
 
   const baOfForm = BA[lotTicker];
   const qtyLabel = lotCcy === "ARS" ? (baOfForm?.kind === "cedear" ? "Cantidad (CEDEARs)" : "Cantidad (acciones BYMA)") : "Cantidad";
-  const pxLabel = lotCcy === "ARS" ? "Precio de compra (ARS)" : lotCcy === "AUD" ? "Precio de compra (A$)" : "Precio de compra (USD)";
+  const pxLabel = lotCcy === "ARS" ? "Precio (ARS)" : lotCcy === "AUD" ? "Precio (A$)" : "Precio (USD)";
   const formDate = parseDate(dateStr);
   const formMep = formDate ? mepOn(formDate) : null;
   const fxPlaceholder = formMep ? `Automático: ${formatDec(formMep, 2)}` : formDate === "" ? `Sin fecha: hoy ${formatDec(MEP_VENTA, 2)}` : "1.575,50";
@@ -2720,7 +2736,6 @@ export default function InversionesPage() {
       </div>
       <div className="inv-row">
         <Button label="Agregar compra" variant="primary" onClick={addLot} />
-        <Button label="Importar desde Excel" onClick={() => setTab("datos")} />
         {lotCcy === "ARS" && baOfForm ? (
           <span className="inv-hint">{baOfForm.symbol} cotiza a {PESOS(baOfForm.price, baOfForm.price % 1 === 0 ? 0 : 2)}. {baOfForm.kind === "cedear" ? "La cantidad es en CEDEARs." : "La cantidad es en acciones locales."}</span>
         ) : null}
@@ -2749,7 +2764,7 @@ export default function InversionesPage() {
           <div className="inv-sum">
             <div>
               <div className="inv-sum-label">Valor de la cartera</div>
-              <div className="inv-sum-value">{MONEY(computed.valueUsd)}</div>
+              <div className="inv-sum-value">{MONEY(computed.valueUsd)} <span className={`inv-pill ${computed.dayUsd >= 0 ? "inv-pill-up" : "inv-pill-down"}`}>{PCT(computed.dayPct)} hoy</span></div>
               <div className="inv-sum-sub">{PESOS(computed.valueArs, 0)} al dólar MEP de hoy ({PESOS(MEP_VENTA, 0)})</div>
             </div>
             <dl className="inv-sum-stats">
@@ -2765,13 +2780,20 @@ export default function InversionesPage() {
             Agregá la primera acá abajo, o importá todas juntas desde un Excel.
           </div>
         )}
+        <div className="inv-actions">
+          <Button label="+ Agregar compra" variant="primary" onClick={() => document.getElementById("compras")?.scrollIntoView({ behavior: "smooth" })} />
+          <Button label="Importar desde Excel" onClick={() => setTab("datos")} />
+          <Button label="Guardar respaldo" onClick={() => setTab("datos")} />
+          <Button label="Ver noticias" onClick={() => setTab("analisis")} />
+        </div>
         {weekEvents.length > 0 ? (
           <div className="inv-week">
-            <span className="inv-week-head">Esta semana</span>
             {weekEvents.map((e) => (
-              <span key={`${e.ticker}-${e.date}-${e.title}`} className="inv-week-item" title={e.detail}>
-                <b>{e.ticker}</b> {e.title} <span>{e.date === todayIso ? "hoy" : fmtIso(e.date, false)}</span>
-              </span>
+              <div key={`${e.ticker}-${e.date}-${e.title}`} className={`inv-week-card inv-week-${e.kind}`} title={e.detail}>
+                <div className="inv-week-date">{e.date === todayIso ? "Hoy" : fmtIso(e.date, false)}</div>
+                <div className="inv-week-tk">{e.ticker}</div>
+                <div className="inv-week-what">{e.title}</div>
+              </div>
             ))}
           </div>
         ) : null}
@@ -2803,7 +2825,7 @@ export default function InversionesPage() {
             </Grid>
           </>
         ) : null}
-        <Section heading={hasPort ? "Compras" : "Agregar una compra"}>
+        <Section heading={hasPort ? "Compras" : "Agregar una compra"} id="compras">
           {lotForm}
           {hasPort && computed.fxToday > 0 ? (
             <Callout tone="warning">
@@ -2959,7 +2981,7 @@ export default function InversionesPage() {
               const note = D.notes.tickers[sym];
               const e = D.earnings[sym];
               return (
-                <article key={sym} className="inv-news-card">
+                <article key={sym} className={`inv-news-card ${isFlat(q.chg) ? "inv-flat" : q.chg > 0 ? "inv-up" : "inv-down"}`}>
                   <div className="inv-news-head">
                     <h3>{sym} <span>{q.name}</span></h3>
                     <div className="inv-news-px">{quotePx(sym, q.price)} <span className={sgn(q.chg)}>{PCT(q.chg)}</span></div>
