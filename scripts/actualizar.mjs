@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { armar, FILES, readJson } from "./armar.mjs";
-import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, isoInTz, newsFromSearch } from "./calculos.mjs";
+import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, isoInTz, newsFromSearch, newsKeywords, baQuoteFromChart } from "./calculos.mjs";
 
 const DAY = 86400000;
 const args = process.argv.slice(2);
@@ -33,7 +33,7 @@ async function realSources() {
   return {
     chart: (sym) => yf.chart(sym, { period1: new Date(Date.now() - 400 * DAY), interval: "1d", events: "div" }),
     calendar: async (sym) => (await yf.quoteSummary(sym, { modules: ["calendarEvents"] })).calendarEvents ?? null,
-    news: (sym) => yf.search(sym, { quotesCount: 0, newsCount: 8 }),
+    news: (sym) => yf.search(sym, { quotesCount: 0, newsCount: 20 }),
     dolares: () => getJson("https://dolarapi.com/v1/dolares"),
     mepHist: () => getJson("https://api.argentinadatos.com/v1/cotizaciones/dolares/bolsa"),
   };
@@ -119,7 +119,7 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
   const ba = {};
   await pool(catalogo.titulos.filter((t) => t.byma), 4, async (t) => {
     try {
-      const { row } = quoteFromChart(await src.chart(t.byma.simbolo), { name: t.byma.nombre });
+      const row = baQuoteFromChart(await src.chart(t.byma.simbolo));
       ba[t.ticker] = { symbol: t.byma.simbolo, name: t.byma.nombre, kind: t.byma.tipo, price: row.price, chg: row.chg, dayChg: row.dayChg, asOf: row.asOf };
     } catch (e) {
       fail(t.byma.simbolo, e);
@@ -145,7 +145,8 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
   const newsFor = Array.from(new Set([...(catalogo.investigarSiempre || catalogo.seguidosPorDefecto || []), ...bigMovers])).filter((s) => catalog[s]);
   await pool(newsFor, 3, async (sym) => {
     try {
-      const items = newsFromSearch(await src.news(sym), { now, ticker: sym });
+      const def = catalogo.titulos.find((x) => x.ticker === sym) || {};
+      const items = newsFromSearch(await src.news(sym), { now, ticker: sym, keywords: newsKeywords(def) });
       if (items.length) news[sym] = items;
     } catch (e) {
       // sin titulares nuevos: se conservan los anteriores que todavía sean recientes

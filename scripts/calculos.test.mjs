@@ -1,7 +1,7 @@
 // npm run probar
 import test from "node:test";
 import assert from "node:assert/strict";
-import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, cleanBars, newsFromSearch } from "./calculos.mjs";
+import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, cleanBars, newsFromSearch, newsKeywords, baQuoteFromChart } from "./calculos.mjs";
 import { buildDataset, injectIntoPage } from "./armar.mjs";
 
 // Serie diaria de días hábiles, a las 14:30 UTC (apertura de NY), con cierre = base + i
@@ -145,8 +145,8 @@ test("titulares de Yahoo: recientes, del título, con link https", () => {
     { title: "Otra empresa", publisher: "X", link: "https://a/3", providerPublishTime: new Date("2026-11-17T10:00:00Z"), relatedTickers: ["VALE"] },
     { title: "Sin https", publisher: "X", link: "http://a/4", providerPublishTime: new Date("2026-11-17T10:00:00Z") },
     { title: "Ayer", publisher: "Bloomberg", link: "https://a/5", providerPublishTime: new Date("2026-11-17T12:00:00Z") },
-  ] }, { now, ticker: "PBR" });
-  assert.deepEqual(items.map((n) => n.title), ["Nueva", "Ayer"]);
+  ] }, { now, ticker: "PBR", keywords: ["nueva", "ayer", "vieja", "otra", "https"] });
+  assert.deepEqual(items.map((n) => n.title), ["Nueva", "Ayer", "Otra empresa"]);
   assert.equal(items[0].date, "17 nov 2026"); // 02:00 UTC del 18 = 23:00 del 17 en Buenos Aires
   assert.equal(items[0].site, "Reuters");
 });
@@ -167,4 +167,22 @@ test("armar: comentarios a mano primero, titulares automáticos después, y los 
   assert.equal(dataset.notes.tickers.BBB.text, "");
   assert.deepEqual(dataset.notes.tickers.BBB.news.map((n) => n.title), ["auto B"]);
   assert.equal(dataset.notes.market, "");
+});
+
+test("titulares: tienen que nombrar a la empresa", () => {
+  const now = new Date("2026-11-18T15:00:00Z");
+  const mk = (title) => ({ title, publisher: "X", link: "https://a/" + title.length, providerPublishTime: new Date("2026-11-18T10:00:00Z") });
+  const res = { news: [mk("Carvana Grows Faster"), mk("McDonald’s vs Yum Brands"), mk("MCD hits a 52-week high"), mk("AMCD is not MCD-related?")] };
+  const items = newsFromSearch(res, { now, ticker: "MCD", keywords: newsKeywords({ nombre: "McDonald's" }) });
+  assert.deepEqual(items.map((n) => n.title), ["McDonald’s vs Yum Brands", "MCD hits a 52-week high", "AMCD is not MCD-related?"]);
+  assert.deepEqual(newsKeywords({ nombre: "Petrobras (ADR)" }), ["Petrobras"]);
+  assert.deepEqual(newsKeywords({ nombre: "X", noticiasClave: ["gold"] }), ["gold"]);
+});
+
+test("BYMA: si la serie no alcanza, usa el último precio de Yahoo", () => {
+  const r = baQuoteFromChart({ meta: { regularMarketPrice: 15000, previousClose: 14500, regularMarketTime: new Date("2026-11-18T19:00:00Z"), exchangeTimezoneName: "America/Argentina/Buenos_Aires" }, quotes: [{ date: new Date("2026-11-18T13:00:00Z"), close: 15000 }] });
+  assert.equal(r.price, 15000);
+  assert.equal(r.chg, 3.45);
+  assert.equal(r.asOf, "2026-11-18");
+  assert.throws(() => baQuoteFromChart({ meta: {}, quotes: [] }));
 });

@@ -1,5 +1,5 @@
 {
-  "_ayuda": "Lista de títulos que la página conoce. Para sumar uno: agregalo acá (ticker de Yahoo) y corré `npm run actualizar`. byma es opcional: el símbolo .BA en Yahoo, con tipo cedear o local. investigarSiempre: títulos de los que el Bot busca noticias en cada rutina (además de los que se movieron mucho o tienen eventos).",
+  "_ayuda": "Lista de títulos que la página conoce. Para sumar uno: agregalo acá (ticker de Yahoo) y corré `npm run actualizar`. byma es opcional: el símbolo .BA en Yahoo, con tipo cedear o local. investigarSiempre: títulos de los que el Bot busca noticias en cada rutina (además de los que se movieron mucho o tienen eventos). noticiasClave (opcional, por título): palabras que tiene que tener un titular para mostrarse; si falta, se usa el ticker y la primera palabra del nombre.",
   "seguidosPorDefecto": [
     "PBR",
     "SCHR",
@@ -86,7 +86,10 @@
         "simbolo": "PBR.BA",
         "nombre": "CEDEAR Petrobras",
         "tipo": "cedear"
-      }
+      },
+      "noticiasClave": [
+        "petrobras"
+      ]
     },
     {
       "ticker": "SCHR",
@@ -94,6 +97,11 @@
       "moneda": "USD",
       "alias": [
         "tesoro"
+      ],
+      "noticiasClave": [
+        "treasury",
+        "treasuries",
+        "bond yields"
       ]
     },
     {
@@ -103,6 +111,11 @@
       "alias": [
         "tips",
         "inflacion"
+      ],
+      "noticiasClave": [
+        "tips",
+        "inflation-protected",
+        "treasury"
       ]
     },
     {
@@ -117,6 +130,9 @@
       "alias": [
         "oro",
         "gold"
+      ],
+      "noticiasClave": [
+        "gold"
       ]
     },
     {
@@ -127,7 +143,11 @@
         "simbolo": "MELI.BA",
         "nombre": "CEDEAR Mercado Libre",
         "tipo": "cedear"
-      }
+      },
+      "noticiasClave": [
+        "mercadolibre",
+        "mercado libre"
+      ]
     },
     {
       "ticker": "YPF",
@@ -137,7 +157,10 @@
         "simbolo": "YPFD.BA",
         "nombre": "YPF (acción local)",
         "tipo": "local"
-      }
+      },
+      "noticiasClave": [
+        "ypf"
+      ]
     },
     {
       "ticker": "IRS",
@@ -147,7 +170,10 @@
         "simbolo": "IRSA.BA",
         "nombre": "IRSA (acción local)",
         "tipo": "local"
-      }
+      },
+      "noticiasClave": [
+        "irsa"
+      ]
     },
     {
       "ticker": "CRESY",
@@ -157,7 +183,10 @@
         "simbolo": "CRES.BA",
         "nombre": "Cresud (acción local)",
         "tipo": "local"
-      }
+      },
+      "noticiasClave": [
+        "cresud"
+      ]
     },
     {
       "ticker": "MCD",
@@ -167,7 +196,10 @@
         "simbolo": "MCD.BA",
         "nombre": "CEDEAR McDonald's",
         "tipo": "cedear"
-      }
+      },
+      "noticiasClave": [
+        "mcdonald"
+      ]
     },
     {
       "ticker": "SPY",
@@ -182,6 +214,13 @@
         "sp500",
         "s p 500",
         "sp 500"
+      ],
+      "noticiasClave": [
+        "s&p 500",
+        "s&p500",
+        "wall street",
+        "stock market",
+        "stocks"
       ]
     },
     {
@@ -196,6 +235,10 @@
       "alias": [
         "nasdaq",
         "nasdaq 100"
+      ],
+      "noticiasClave": [
+        "nasdaq",
+        "tech stocks"
       ]
     },
     {
@@ -236,7 +279,11 @@
         "simbolo": "GOOGL.BA",
         "nombre": "CEDEAR Alphabet",
         "tipo": "cedear"
-      }
+      },
+      "noticiasClave": [
+        "alphabet",
+        "google"
+      ]
     },
     {
       "ticker": "AMZN",
@@ -266,7 +313,11 @@
         "simbolo": "KO.BA",
         "nombre": "CEDEAR Coca-Cola",
         "tipo": "cedear"
-      }
+      },
+      "noticiasClave": [
+        "coca-cola",
+        "coke"
+      ]
     },
     {
       "ticker": "VIST",
@@ -276,7 +327,10 @@
         "simbolo": "VIST.BA",
         "nombre": "CEDEAR Vista Energy",
         "tipo": "cedear"
-      }
+      },
+      "noticiasClave": [
+        "vista energy"
+      ]
     },
     {
       "ticker": "GGAL",
@@ -286,7 +340,10 @@
         "simbolo": "GGAL.BA",
         "nombre": "Galicia (acción local)",
         "tipo": "local"
-      }
+      },
+      "noticiasClave": [
+        "galicia"
+      ]
     },
     {
       "ticker": "BMA",
@@ -296,7 +353,10 @@
         "simbolo": "BMA.BA",
         "nombre": "Banco Macro (acción local)",
         "tipo": "local"
-      }
+      },
+      "noticiasClave": [
+        "banco macro"
+      ]
     },
     {
       "ticker": "PAM",
@@ -306,7 +366,10 @@
         "simbolo": "PAMP.BA",
         "nombre": "Pampa Energía (acción local)",
         "tipo": "local"
-      }
+      },
+      "noticiasClave": [
+        "pampa"
+      ]
     },
     {
       "ticker": "TLT",
@@ -314,6 +377,12 @@
       "moneda": "USD",
       "alias": [
         "tesoro"
+      ],
+      "noticiasClave": [
+        "treasury",
+        "treasuries",
+        "bond yields",
+        "long bond"
       ]
     },
     {
@@ -327,6 +396,9 @@
       },
       "alias": [
         "plata",
+        "silver"
+      ],
+      "noticiasClave": [
         "silver"
       ]
     },

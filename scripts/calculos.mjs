@@ -166,7 +166,8 @@ export function mepHistory(rows, desde, today) {
     const d = r.fecha.slice(0, 10);
     if (d >= desde) byDate.set(d, round(r.venta, 2));
   }
-  if (today && today.venta && today.iso && !byDate.has(today.iso)) byDate.set(today.iso, today.venta);
+  // El dato de hoy de DolarApi es el más reciente: reemplaza al que tenga la historia para hoy.
+  if (today && today.venta && today.iso) byDate.set(today.iso, today.venta);
   const all = Array.from(byDate.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   // Para que la página no pese de más: diario en los últimos 3 años, semanal (último dato de cada semana) antes.
   const ref = today?.iso || all.at(-1)?.[0];
@@ -182,11 +183,20 @@ export function mepHistory(rows, desde, today) {
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
 /** Titulares de Yahoo (search) -> [{ title, site, date, href, iso }], los más nuevos primero. */
-export function newsFromSearch(res, { maxAgeDays = 21, now = new Date(), max = 4, ticker } = {}) {
+export function newsFromSearch(res, { maxAgeDays = 21, now = new Date(), max = 4, ticker, keywords } = {}) {
   const from = now.getTime() - maxAgeDays * DAY;
+  const norm = (x) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "'").toLowerCase();
+  const base = ticker ? ticker.replace(/\.[A-Z]+$/, "") : "";
+  const kws = (keywords || []).map(norm).filter((k) => k.length >= 3);
+  const mentions = (title) => {
+    if (!ticker && !kws.length) return true;
+    if (base && new RegExp(`(^|[^A-Za-z])${base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^A-Za-z]|$)`).test(title)) return true;
+    const t = norm(title);
+    return kws.some((k) => t.includes(k));
+  };
   return (res?.news || [])
     .filter((n) => n && typeof n.title === "string" && /^https:\/\//.test(n.link || "") && n.providerPublishTime)
-    .filter((n) => !ticker || !Array.isArray(n.relatedTickers) || n.relatedTickers.length === 0 || n.relatedTickers.includes(ticker))
+    .filter((n) => mentions(n.title))
     .map((n) => ({ t: new Date(n.providerPublishTime), n }))
     .filter(({ t }) => t.getTime() >= from)
     .sort((a, b) => b.t - a.t)
@@ -195,4 +205,25 @@ export function newsFromSearch(res, { maxAgeDays = 21, now = new Date(), max = 4
       const iso = isoInTz(t, "America/Buenos_Aires");
       return { title: n.title.trim(), site: n.publisher || "Yahoo Finance", date: `${Number(iso.slice(8, 10))} ${MESES[Number(iso.slice(5, 7)) - 1]} ${iso.slice(0, 4)}`, href: n.link, iso };
     });
+}
+
+/** Palabras para reconocer titulares de un título: las de noticiasClave o la primera del nombre. */
+export function newsKeywords(t) {
+  if (Array.isArray(t.noticiasClave) && t.noticiasClave.length) return t.noticiasClave;
+  const first = String(t.nombre || "").replace(/\(.*?\)/g, " ").replace(/['’]s\b/g, "").split(/[^\p{L}\p{N}&-]+/u).find((w) => w.length >= 4);
+  return first ? [first] : [];
+}
+
+/** Cotización BYMA: con la serie si alcanza; si no, con el último precio que informa Yahoo. */
+export function baQuoteFromChart(chart) {
+  try {
+    return quoteFromChart(chart, {}).row;
+  } catch (e) {
+    const m = chart?.meta || {};
+    const price = m.regularMarketPrice;
+    if (!Number.isFinite(price)) throw e;
+    const prev = Number.isFinite(m.previousClose) ? m.previousClose : null;
+    const asOf = m.regularMarketTime ? isoInTz(new Date(m.regularMarketTime), m.exchangeTimezoneName || "America/Argentina/Buenos_Aires") : null;
+    return { price, chg: prev ? round((price / prev - 1) * 100, 2) : 0, dayChg: prev ? round(price - prev) : 0, asOf };
+  }
 }
