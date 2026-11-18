@@ -1,11 +1,11 @@
 {
-  "_ayuda": "Este archivo es el único que actualiza Grok. Ver GROK.md. No pongas precios ni variaciones: la página los calcula sola.",
+  "_ayuda": "Opcional. Comentarios, links y fechas oficiales cargados a mano (ver LEEME.md). No pongas precios: la página los calcula sola.",
   "updatedAt": "2026-11-16",
-  "market": "El CPI de octubre subió 0,4 % mensual frente a 0,3 % esperado (CNBC, 10 nov). La Fed se reúne el 8 y 9 de diciembre. El 12 de noviembre Jensen Huang renunció como CEO de NVIDIA; la compañía publica el 3T el 17 de noviembre.",
+  "market": "",
   "tickers": {
     "PBR": {
       "date": "2026-11-16",
-      "text": "Hoy cayó 5,67 % (USD 17,30) junto con el Brent (−3,82 %). En un mes se dejó un 33,46 % después del pico cerca de USD 26 a mediados de octubre; en tres meses −5,21 %. El 10 de noviembre publicó lucro neto de R$ 39.800 millones en el 3T y aprobó R$ 15.300 millones de remuneración (R$ 1,18732774 por acción; registro ADR 23 dic; pagos desde el 1 y el 29 de marzo de 2027). El 12 de noviembre acordó comprar el 70 % restante de Logum (logística de etanol) por R$ 620 millones, sujeto al Cade. Siguen las cuotas del 2T: JCP el 23 de noviembre en Brasil y, para el ADR, a partir del 1 de diciembre. Para mirar: el crudo, el cierre de Logum y esas fechas de cobro.",
+      "text": "",
       "news": [
         {
           "title": "Lucro neto de R$ 39.800 millones en el 3T 2026",
@@ -35,7 +35,7 @@
     },
     "SCHR": {
       "date": "2026-11-16",
-      "text": "Cerró casi plano, +0,21 % (USD 23,85). En un mes −0,21 % y en tres −2,29 %: el Tesoro a 10 años sigue alto (5,121 %), aunque hoy aflojó 3,3 pb. No vi un comunicado propio del fondo en estas dos semanas; lo que lo mueve es la tasa y la inflación. El CPI de octubre subió 0,4 % mensual vs. 0,3 % esperado. La Fed se reúne el 8 y 9 de diciembre. Última distribución USD 0,0875, ex 2 nov, pago 6 nov.",
+      "text": "",
       "news": [
         {
           "title": "CPI de octubre +0,4 %, más de lo esperado",
@@ -53,7 +53,7 @@
     },
     "SCHP": {
       "date": "2026-11-16",
-      "text": "Casi plano hoy (−0,04 %, USD 25,17). En un mes −1,10 % y en tres −2,74 %: hubo inflación más alta, pero también tasas reales firmes. No vi un comunicado propio del fondo en estas dos semanas. El CPI de octubre (0,4 % mensual) es lo más relevante para un fondo de TIPS; conviene mirar la Fed de diciembre. Última distribución USD 0,0799, ex 2 nov, pago 6 nov.",
+      "text": "",
       "news": [
         {
           "title": "CPI de octubre +0,4 %, más de lo esperado",
@@ -71,7 +71,7 @@
     },
     "GLD": {
       "date": "2026-11-16",
-      "text": "Cedió 0,71 % (USD 352,93) y el mínimo del día (USD 351,96) iguala el de 52 semanas. En un mes −7,61 % y en tres −12,96 %. El futuro dic-26 operó cerca de USD 3.853,60. CNBC ubicó el spot en un mínimo de más de un año, con el dólar firme y tasas altas. No paga dividendos. Para mirar: el 10 años, el dólar y la Fed de diciembre.",
+      "text": "",
       "news": [
         {
           "title": "El oro cae a un mínimo de más de un año con el dólar en alza",
@@ -95,7 +95,7 @@
     },
     "MELI": {
       "date": "2026-11-16",
-      "text": "Cayó 1,97 % (USD 1.462,12) y el mínimo del día (USD 1.453,99) es también el de 52 semanas. En un mes −20,28 % y en tres −18,21 %. El 4 de noviembre publicó el 3T: ingresos de USD 10.750 millones (+45 % interanual), pero el margen operativo bajó a 6,3 % por logística y marketing; el mercado lo tomó mal. En Argentina el GMV en moneda constante creció 40 %. Para mirar: si el margen deja de apretarse y cómo sigue Brasil, su mercado más grande.",
+      "text": "",
       "news": [
         {
           "title": "Ingresos de USD 10.750 millones en el 3T, +45 % interanual",
@@ -113,7 +113,7 @@
     },
     "YPF": {
       "date": "2026-11-16",
-      "text": "Cayó 5,96 % (USD 35,64), en línea con el petróleo y con el resto de los ADR argentinos. En un mes −31,59 % y en tres −32,37 %. El 3T se publicó el 28 de octubre (justo afuera de esta ventana de dos semanas). El 16 de noviembre, Ámbito armó un comparativo de Vaca Muerta: YPF lideró producción y EBITDA en los nueve meses, con más peso del shale. Para mirar: el Brent (−15,98 % en un mes) y si el mercado vuelve a pagar el crecimiento de Vaca Muerta.",
+      "text": "",
       "news": [
         {
           "title": "Vaca Muerta: YPF, Vista y Pampa mejoraron el EBITDA en 2026",
@@ -125,7 +125,7 @@
     },
     "IRS": {
       "date": "2026-11-16",
-      "text": "Cayó 4,86 % (USD 11,93) y tocó el mínimo de 52 semanas (USD 11,82). En un mes −15,57 % y en tres −18,51 %. El 3 de noviembre publicó el 1T del ejercicio 2027: pérdida neta de $ 6.380 millones (frente a una ganancia un año atrás), sobre todo por el valor razonable de las propiedades; el EBITDA ajustado total subió 9,3 %. Las ventas de locatarios en shoppings cayeron 6,1 % en términos reales. La asamblea del 22 de octubre aprobó un dividendo de $ 211.000 millones, pagadero desde el 3 de noviembre. Para mirar: ocupaciones, alquileres y el ritmo de las obras (Oeste Outlet, Distrito Diagonal, Ramblas).",
+      "text": "",
       "news": [
         {
           "title": "Resultados del primer trimestre del ejercicio 2027",
@@ -137,7 +137,7 @@
     },
     "CRESY": {
       "date": "2026-11-16",
-      "text": "Cayó 5,85 % (USD 9,17), otra jornada débil de ADR argentinos. En un mes −20,40 % y en tres −13,33 %. El 9 de noviembre publicó los resultados del primer trimestre del ejercicio 2027 (cerrado el 30 de septiembre). No vi otra noticia verificada de la compañía en estas dos semanas. Para mirar: el campo, el tipo de cambio y los números de ese balance.",
+      "text": "",
       "news": [
         {
           "title": "Resultados del 1T del ejercicio 2027 (cerrado el 30 sep 2026)",
@@ -155,7 +155,7 @@
     },
     "MCD": {
       "date": "2026-11-16",
-      "text": "Fue de las pocas que subió: +0,99 % (USD 274,67). En un mes +13,05 % y en tres +3,44 %. El 4 de noviembre publicó el 3T: ventas globales del sistema +4 %, comparable global +1,5 % (EE.UU. −0,2 %) y subió el dividendo trimestral 4 % a USD 1,93 (pago el 15 de diciembre, registro el 1 de diciembre). Para mirar: si las ventas comparables en EE.UU. dejan de estar en rojo y el cobro de ese dividendo.",
+      "text": "",
       "news": [
         {
           "title": "Resultados del 3T 2026 y suba del dividendo a USD 1,93",
@@ -173,7 +173,7 @@
     },
     "SPY": {
       "date": "2026-11-16",
-      "text": "El ETF del S&P 500 cerró en USD 739,95 (−1,91 %), en línea con el índice (7.416,59, −1,92 %). En un mes −3,05 % y en tres −4,23 %. Hoy pesó la tecnología y el comercio de IA; las tasas altas y el CPI de octubre siguen de fondo. El 4 de noviembre, tras las midterms en EE.UU., varios gigantes tecnológicos habían rebotado. Para mirar: la Fed de diciembre y si la corrección de IA se profundiza.",
+      "text": "",
       "news": [
         {
           "title": "Los Treasuries recuperan algo con la baja de las acciones",
@@ -197,7 +197,7 @@
     },
     "QQQ": {
       "date": "2026-11-16",
-      "text": "El Nasdaq 100 (USD 661,75) cayó 2,67 %, más que el S&P, con NVIDIA −4,12 %, Alphabet −4,07 % y Amazon −3,34 %. En un mes −6,77 % y en tres −9,33 %. El 12 de noviembre Jensen Huang renunció como CEO de NVIDIA; el 3T de la compañía se publica el 17. El 4 de noviembre, después de las midterms, varios de estos nombres habían subido. Para mirar: esa publicación de NVIDIA y el tono de las tasas.",
+      "text": "",
       "news": [
         {
           "title": "NVIDIA anuncia el cambio de CEO",
@@ -221,7 +221,7 @@
     },
     "AAPL": {
       "date": "2026-11-16",
-      "text": "Cayó 0,98 % (USD 352,78), menos que el resto de las tecnológicas grandes. En un mes +2,71 % y en tres +15,44 %, cerca del máximo de 52 semanas (USD 360,83). El 13 de noviembre salió a la venta Apple HomeView, una pantalla de 7 pulgadas con Siri AI, a USD 299 en EE.UU. y otros países (no en la UE). Hoy se paga el dividendo de USD 0,27 (ya operó ex). El 4 de noviembre había subido cerca de 7 % tras las midterms. Para mirar: la demanda de HomeView y si el precio sostiene la zona alta del año.",
+      "text": "",
       "news": [
         {
           "title": "Apple HomeView ya está a la venta",
@@ -239,7 +239,7 @@
     },
     "MSFT": {
       "date": "2026-11-16",
-      "text": "Cayó 1,12 % (USD 517,99). En un mes −2,09 % y en tres +7,84 %. El 12 y 13 de noviembre un corte global de Microsoft 365 (Outlook, Teams, Copilot y Exchange) duró casi 24 horas; el 16 la compañía atribuyó el incidente a un error de software de julio. El 19 de noviembre es la fecha ex y de registro del dividendo de USD 0,98 (pago el 10 de diciembre). Para mirar: esa fecha ex y si el mercado sigue penalizando a las tecnológicas grandes.",
+      "text": "",
       "news": [
         {
           "title": "Microsoft atribuye el corte global de Microsoft 365 a un error de julio",
@@ -257,7 +257,7 @@
     },
     "NVDA": {
       "date": "2026-11-16",
-      "text": "Cayó 4,12 % (USD 156,14), cerca del mínimo de 52 semanas (USD 148,80). En un mes −27,08 % y en tres −30,61 %. El 12 de noviembre Jensen Huang renunció como presidente, CEO y director; Colette Kress (CFO) quedó como CEO interina y Harvey C. Jones como presidente del directorio. La compañía publica el 3T del ejercicio 2027 el 17 de noviembre (mañana). Ese informe es lo más cercano a mirar.",
+      "text": "",
       "news": [
         {
           "title": "NVIDIA anuncia el cambio de CEO: renuncia Jensen Huang",
@@ -281,7 +281,7 @@
     },
     "GOOGL": {
       "date": "2026-11-16",
-      "text": "Cayó 4,07 % (USD 283,72), una de las peores del día entre las grandes. En un mes −16,70 % y en tres −17,52 %. El 12 de noviembre Google presentó Gemini 4 Hydrogen, un modelo pensado para flujos «agénticos» y programación, y lo llevó a Search. El 4 de noviembre había subido más de 6 % tras las midterms. Para mirar: si el mercado vuelve a pagar la historia de IA o sigue recortando a las hiperescaladoras.",
+      "text": "",
       "news": [
         {
           "title": "Google presenta Gemini 4 Hydrogen para flujos agénticos",
@@ -299,7 +299,7 @@
     },
     "AMZN": {
       "date": "2026-11-16",
-      "text": "Cayó 3,34 % (USD 257,75). En un mes todavía está +3,10 %; en tres meses −1,36 %. Hoy se movió con el resto de las tecnológicas grandes. El 16 de noviembre AWS publicó su ronda semanal de novedades (entre ellas el AWS Emulator). El 4 de noviembre había llegado a subir 8 % tras las midterms. Para mirar: la misma corrección de IA/nube que pega en todo el grupo.",
+      "text": "",
       "news": [
         {
           "title": "Ronda semanal de AWS: Nitro Sandboxes, Emulator y más",
@@ -317,7 +317,7 @@
     },
     "TSLA": {
       "date": "2026-11-16",
-      "text": "Cayó 2,69 % (USD 379,74). En un mes +7,05 % y en tres +11,92 %, mejor que la mayoría de las tecnológicas grandes. El 16 de noviembre TechCrunch y medios alemanes informaron una expansión de unos € 3.000 millones en Giga Berlín para fabricar el Cybercab (construcción prevista en 2027, producción hacia 2029). El 4 de noviembre, tras las midterms, la acción había bajado cerca de 2 %. Para mirar: plazos y permisos de esa planta, y el humor del mercado con IA y autos.",
+      "text": "",
       "news": [
         {
           "title": "Tesla apuesta al Cybercab con una expansión de € 3.000 millones en Berlín",
@@ -335,7 +335,7 @@
     },
     "KO": {
       "date": "2026-11-16",
-      "text": "Subió un poco: +0,23 % (USD 99,48), cerca del máximo de 52 semanas (USD 100,56). En un mes +5,94 % y en tres +14,37 %. En estas dos semanas no vi un comunicado nuevo de la compañía; el dividendo de USD 0,53 tiene registro el 1 de diciembre y pago el 15 (comunicado del 15 de octubre). La acción viene de un año muy fuerte, y eso comprimió el rendimiento. Para mirar: esa fecha de registro y si el precio se sostiene tan cerca del máximo.",
+      "text": "",
       "news": [
         {
           "title": "Coca-Cola sube 36 % en un año y el rendimiento del dividendo se achica",
@@ -353,7 +353,7 @@
     },
     "VIST": {
       "date": "2026-11-16",
-      "text": "Cayó 4,23 % (USD 53,48) con el Brent (−3,82 %). En un mes −25,67 % y en tres −25,89 %. El 3T se publicó el 28 de octubre (justo afuera de esta ventana). El 16 de noviembre, Ámbito indicó que Vista tuvo el mayor crecimiento de producción y el mejor margen EBITDA entre YPF, Vista y Pampa en los nueve meses. Para mirar: el crudo y si esos números operativos vuelven a verse en el precio.",
+      "text": "",
       "news": [
         {
           "title": "Vaca Muerta: YPF, Vista y Pampa mejoraron el EBITDA en 2026",
@@ -365,12 +365,12 @@
     },
     "GGAL": {
       "date": "2026-11-16",
-      "text": "Cayó 5,21 % (USD 28,20) y el mínimo del día (USD 28,175) es un nuevo piso de 52 semanas. En un mes −21,71 % y en tres −35,05 %, de los peores del catálogo. En las últimas dos semanas no encontré un comunicado oficial o una cobertura específica que pudiera verificar. La baja viene con el resto de los bancos y ADR argentinos. Para mirar: el próximo balance y el humor del mercado local.",
+      "text": "",
       "news": []
     },
     "BMA": {
       "date": "2026-11-16",
-      "text": "Cayó 5,29 % (USD 53,85) y también marcó un mínimo de 52 semanas (USD 53,77). En un mes −15,91 % y en tres −31,69 %. El 12 de noviembre informó a la CNV y a la SEC que recompró 770.019 acciones Clase B a un promedio de $ 9.374,862, por un total de $ 7.218.821.825. No vi el 3T publicado en esta ventana. Para mirar: si sigue la recompra y el próximo informe de resultados.",
+      "text": "",
       "news": [
         {
           "title": "6-K: recompra de 770.019 acciones Clase B",
@@ -382,7 +382,7 @@
     },
     "PAM": {
       "date": "2026-11-16",
-      "text": "Fue de las peores del día: −6,55 % (USD 60,94) y un nuevo mínimo de 52 semanas (USD 60,89). En un mes −24,86 % y en tres −23,69 %. El 2 de noviembre publicó los resultados del 3T y de los nueve meses (6-K ante la SEC el 5 de noviembre). El 16, Ámbito la incluyó en el comparativo de Vaca Muerta, destacando el desarrollo de Rincón de Aranda. Para mirar: el crudo, la generación eléctrica y esos números del 3T.",
+      "text": "",
       "news": [
         {
           "title": "6-K con los resultados del 3T 2026",
@@ -400,7 +400,7 @@
     },
     "TLT": {
       "date": "2026-11-16",
-      "text": "Cerró exactamente igual que el viernes (USD 79,38, 0,00 %). En un mes −0,84 % y en tres −2,42 %. El Tesoro a 10 años aflojó hoy a 5,121 % (−3,3 pb) cuando cayeron las acciones, pero las tasas largas siguen altas en el trimestre. No vi un hecho propio del ETF; lo mueve la curva. El 11 de noviembre, Motley Fool comparó TLT con SPLB. Para mirar: la Fed de diciembre y el 10 años.",
+      "text": "",
       "news": [
         {
           "title": "Los Treasuries recuperan algo con la baja de las acciones",
@@ -424,7 +424,7 @@
     },
     "SLV": {
       "date": "2026-11-16",
-      "text": "Cayó 3,94 % (USD 42,39) y el mínimo del día (USD 42,01) iguala el de 52 semanas. En un mes −17,71 % y en tres −28,84 %, peor que el oro. No vi noticias propias del ETF; lo que hay es el mercado de la plata, presionado por el dólar firme, las tasas y las apuestas a una suba de la Fed. Para mirar: las mismas variables que al oro, y si el piso de 52 semanas se sostiene.",
+      "text": "",
       "news": [
         {
           "title": "Oro y plata ceden con las apuestas a una suba de la Fed",

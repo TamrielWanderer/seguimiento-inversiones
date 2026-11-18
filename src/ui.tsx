@@ -31,29 +31,19 @@ const THEME = {
 export type Theme = typeof THEME;
 export const useTheme = (): Theme => THEME;
 
-const PALETTE = ["#22c55e", "#a3e635", "#facc15", "#38bdf8", "#c084fc", "#fb7185", "#2dd4bf", "#818cf8"];
+const PALETTE = ["#2e5bda", "#12a594", "#e0a21b", "#8e5bd0", "#d9567b", "#6f9bf2", "#7a8699", "#3ba55d"];
 type Tone = "success" | "danger" | "warning" | "info" | undefined;
 const toneClass = (t: Tone) => (t ? ` ui-tone-${t}` : "");
 
 // ── Página ───────────────────────────────────────────────────────────────────
-export function Page({ title, summary, sources, children }: { title: string; summary?: string; width?: string; palette?: readonly string[]; sources?: string[]; children?: ReactNode }) {
+export function Page({ title, sources, children }: { title: string; summary?: string; width?: string; palette?: readonly string[]; sources?: string[]; children?: ReactNode }) {
   useEffect(() => {
     document.title = title;
   }, [title]);
   return (
     <div className="ui-page">
       {children}
-      {(summary || sources?.length) ? (
-        <footer className="ui-footer">
-          {summary ? <p>{summary}</p> : null}
-          {sources?.length ? (
-            <>
-              <div className="ui-footer-head">Fuentes</div>
-              <ul>{sources.map((s) => <li key={s}>{s}</li>)}</ul>
-            </>
-          ) : null}
-        </footer>
-      ) : null}
+      {sources?.length ? <footer className="ui-footer">{sources.join(" ")}</footer> : null}
     </div>
   );
 }
@@ -201,7 +191,7 @@ export function LineChart({ points, floor, ceiling, unit, format = (v: number) =
   const path = points.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
   const area = points.length ? `${path} L${x(points.length - 1).toFixed(1)},${pad.t + ih} L${x(0).toFixed(1)},${pad.t + ih} Z` : "";
   const up = points.length > 1 && points[points.length - 1].value >= points[0].value;
-  const color = up ? "#22c55e" : "#fb7185";
+  const color = up ? "var(--up)" : "var(--down)";
   const ticks = [0, 1, 2, 3].map((k) => floor + (span * k) / 3);
   const every = Math.max(1, Math.ceil(points.length / Math.max(2, Math.floor(iw / 70))));
   const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -228,13 +218,13 @@ export function LineChart({ points, floor, ceiling, unit, format = (v: number) =
         {points.map((p, i) => (i % every === 0 || i === points.length - 1) && (i === points.length - 1 || points.length - 1 - i >= every / 2) ? (
           <text key={i} x={x(i)} y={H - 8} textAnchor={i === points.length - 1 ? "end" : i === 0 ? "start" : "middle"} className="ui-axis">{p.label}</text>
         ) : null)}
-        <path d={area} fill={color} opacity={0.12} />
-        <path d={path} fill="none" stroke={color} strokeWidth={2.2} strokeLinejoin="round" strokeLinecap="round" />
+        <path d={area} fill={color} opacity={0.08} />
+        <path d={path} fill="none" stroke={color} strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" />
         {points.length ? <circle cx={x(points.length - 1)} cy={y(points[points.length - 1].value)} r={3.5} fill={color} /> : null}
         {h && hover != null ? (
           <g>
             <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + ih} className="ui-hover-line" />
-            <circle cx={x(hover)} cy={y(h.value)} r={4.5} fill={color} stroke="#121a2b" strokeWidth={2} />
+            <circle cx={x(hover)} cy={y(h.value)} r={4.5} fill={color} stroke="var(--surface)" strokeWidth={2} />
           </g>
         ) : null}
       </svg>
@@ -273,7 +263,7 @@ export function Bars({ bars }: { bars: { label: string; value: number; display?:
         <div className="ui-bar-row" key={i}>
           <div className="ui-bar-label">{b.label}</div>
           <div className="ui-bar-track">
-            <div className="ui-bar-fill" style={{ width: `${(Math.abs(b.value) / max) * 100}%`, background: b.value >= 0 ? "#22c55e" : "#fb7185" }} />
+            <div className="ui-bar-fill" style={{ width: `${(Math.abs(b.value) / max) * 100}%`, background: b.value >= 0 ? "var(--up)" : "var(--down)" }} />
           </div>
           <div className={`ui-bar-num${b.value >= 0 ? " ui-tone-success" : " ui-tone-danger"}`}>
             {b.display ?? b.value}
@@ -302,7 +292,7 @@ export function Pie({ parts, total, label }: { parts: { label: string; value: nu
     const [x2, y2] = pt(r, full ? a1 - 1e-4 : a1);
     const [x3, y3] = pt(r, a0);
     const d = `M${x0},${y0} A${R},${R} 0 ${big} 1 ${x1},${y1} L${x2},${y2} A${r},${r} 0 ${big} 0 ${x3},${y3} Z`;
-    return <path key={i} d={d} fill={PALETTE[i % PALETTE.length]} stroke="#1b2438" strokeWidth={1.5}><title>{`${p.label}: ${p.display ?? p.value}`}</title></path>;
+    return <path key={i} d={d} fill={PALETTE[i % PALETTE.length]} stroke="var(--surface)" strokeWidth={1.5}><title>{`${p.label}: ${p.display ?? p.value}`}</title></path>;
   });
   return (
     <div className="ui-pie">
