@@ -1,0 +1,1553 @@
+{
+  "_ayuda": "Lista de títulos que la página conoce. Para sumar uno: agregalo acá (ticker de Yahoo) y corré `npm run actualizar`. byma es opcional: el símbolo .BA en Yahoo, con tipo cedear o local. investigarSiempre: títulos de los que el Bot busca noticias en cada rutina (además de los que se movieron mucho o tienen eventos).",
+  "seguidosPorDefecto": [
+    "PBR",
+    "SCHR",
+    "SCHP",
+    "GLD"
+  ],
+  "investigarSiempre": [
+    "PBR",
+    "SCHR",
+    "SCHP",
+    "GLD",
+    "MELI",
+    "YPF",
+    "IRS",
+    "CRESY",
+    "MCD",
+    "SPY",
+    "QQQ",
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "GOOGL",
+    "AMZN",
+    "TSLA",
+    "KO",
+    "VIST",
+    "GGAL",
+    "BMA",
+    "PAM",
+    "TLT",
+    "SLV"
+  ],
+  "mepDesde": "2019-01-01",
+  "indices": [
+    {
+      "id": "spx",
+      "nombre": "S&P 500",
+      "yahoo": "^GSPC",
+      "tipo": "indice"
+    },
+    {
+      "id": "ndx",
+      "nombre": "Nasdaq",
+      "yahoo": "^IXIC",
+      "tipo": "indice"
+    },
+    {
+      "id": "tnx",
+      "nombre": "Tesoro 10 años",
+      "yahoo": "^TNX",
+      "tipo": "tasa"
+    },
+    {
+      "id": "oro",
+      "nombre": "Oro (futuro)",
+      "yahoo": "GC=F",
+      "tipo": "usd"
+    },
+    {
+      "id": "brent",
+      "nombre": "Brent",
+      "yahoo": "BZ=F",
+      "tipo": "usd"
+    },
+    {
+      "id": "asx",
+      "nombre": "S&P/ASX 200",
+      "yahoo": "^AXJO",
+      "tipo": "indice"
+    },
+    {
+      "id": "audusd",
+      "nombre": "AUD/USD",
+      "yahoo": "AUDUSD=X",
+      "tipo": "fx"
+    }
+  ],
+  "titulos": [
+    {
+      "ticker": "PBR",
+      "nombre": "Petrobras (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "PBR.BA",
+        "nombre": "CEDEAR Petrobras",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "SCHR",
+      "nombre": "Tesoro EE.UU. intermedio (Schwab)",
+      "moneda": "USD",
+      "alias": [
+        "tesoro"
+      ]
+    },
+    {
+      "ticker": "SCHP",
+      "nombre": "TIPS EE.UU. (Schwab)",
+      "moneda": "USD",
+      "alias": [
+        "tips",
+        "inflacion"
+      ]
+    },
+    {
+      "ticker": "GLD",
+      "nombre": "Oro (SPDR Gold Shares)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "GLD.BA",
+        "nombre": "CEDEAR SPDR Gold",
+        "tipo": "cedear"
+      },
+      "alias": [
+        "oro",
+        "gold"
+      ]
+    },
+    {
+      "ticker": "MELI",
+      "nombre": "Mercado Libre",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "MELI.BA",
+        "nombre": "CEDEAR Mercado Libre",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "YPF",
+      "nombre": "YPF (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "YPFD.BA",
+        "nombre": "YPF (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "IRS",
+      "nombre": "IRSA (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "IRSA.BA",
+        "nombre": "IRSA (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "CRESY",
+      "nombre": "Cresud (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "CRES.BA",
+        "nombre": "Cresud (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "MCD",
+      "nombre": "McDonald's",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "MCD.BA",
+        "nombre": "CEDEAR McDonald's",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "SPY",
+      "nombre": "S&P 500 (SPDR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "SPY.BA",
+        "nombre": "CEDEAR SPDR S&P 500",
+        "tipo": "cedear"
+      },
+      "alias": [
+        "sp500",
+        "s p 500",
+        "sp 500"
+      ]
+    },
+    {
+      "ticker": "QQQ",
+      "nombre": "Nasdaq 100 (Invesco)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "QQQ.BA",
+        "nombre": "CEDEAR Invesco QQQ",
+        "tipo": "cedear"
+      },
+      "alias": [
+        "nasdaq",
+        "nasdaq 100"
+      ]
+    },
+    {
+      "ticker": "AAPL",
+      "nombre": "Apple",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "AAPL.BA",
+        "nombre": "CEDEAR Apple",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "MSFT",
+      "nombre": "Microsoft",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "MSFT.BA",
+        "nombre": "CEDEAR Microsoft",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "NVDA",
+      "nombre": "NVIDIA",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "NVDA.BA",
+        "nombre": "CEDEAR NVIDIA",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "GOOGL",
+      "nombre": "Alphabet",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "GOOGL.BA",
+        "nombre": "CEDEAR Alphabet",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "AMZN",
+      "nombre": "Amazon",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "AMZN.BA",
+        "nombre": "CEDEAR Amazon",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "TSLA",
+      "nombre": "Tesla",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "TSLA.BA",
+        "nombre": "CEDEAR Tesla",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "KO",
+      "nombre": "Coca-Cola",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "KO.BA",
+        "nombre": "CEDEAR Coca-Cola",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "VIST",
+      "nombre": "Vista Energy",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "VIST.BA",
+        "nombre": "CEDEAR Vista Energy",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "GGAL",
+      "nombre": "Galicia (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "GGAL.BA",
+        "nombre": "Galicia (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "BMA",
+      "nombre": "Banco Macro (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "BMA.BA",
+        "nombre": "Banco Macro (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "PAM",
+      "nombre": "Pampa Energía (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "PAMP.BA",
+        "nombre": "Pampa Energía (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "TLT",
+      "nombre": "Tesoro EE.UU. 20+ años (iShares)",
+      "moneda": "USD",
+      "alias": [
+        "tesoro"
+      ]
+    },
+    {
+      "ticker": "SLV",
+      "nombre": "Plata (iShares)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "SLV.BA",
+        "nombre": "CEDEAR iShares Silver",
+        "tipo": "cedear"
+      },
+      "alias": [
+        "plata",
+        "silver"
+      ]
+    },
+    {
+      "ticker": "TGS",
+      "nombre": "Transportadora de Gas del Sur (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "TGSU2.BA",
+        "nombre": "TGS (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "CEPU",
+      "nombre": "Central Puerto (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "CEPU.BA",
+        "nombre": "Central Puerto (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "EDN",
+      "nombre": "Edenor (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "EDN.BA",
+        "nombre": "Edenor (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "LOMA",
+      "nombre": "Loma Negra (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "LOMA.BA",
+        "nombre": "Loma Negra (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "SUPV",
+      "nombre": "Supervielle (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "SUPV.BA",
+        "nombre": "Supervielle (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "BBAR",
+      "nombre": "BBVA Argentina (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "BBAR.BA",
+        "nombre": "BBVA Argentina (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "TEO",
+      "nombre": "Telecom Argentina (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "TECO2.BA",
+        "nombre": "Telecom Argentina (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "GLOB",
+      "nombre": "Globant",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "GLOB.BA",
+        "nombre": "CEDEAR Globant",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "BIOX",
+      "nombre": "Bioceres Crop Solutions",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "BIOX.BA",
+        "nombre": "CEDEAR Bioceres",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "CAAP",
+      "nombre": "Corporación América Airports",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "CAAP.BA",
+        "nombre": "CEDEAR Corporación América",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "ARCO",
+      "nombre": "Arcos Dorados",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "ARCO.BA",
+        "nombre": "CEDEAR Arcos Dorados",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "AGRO",
+      "nombre": "Adecoagro",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "ADGO.BA",
+        "nombre": "Adecoagro (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "TS",
+      "nombre": "Tenaris",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "TEN.BA",
+        "nombre": "Tenaris (acción local)",
+        "tipo": "local"
+      }
+    },
+    {
+      "ticker": "TX",
+      "nombre": "Ternium",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "VALE",
+      "nombre": "Vale",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "VALE.BA",
+        "nombre": "CEDEAR Vale",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "ITUB",
+      "nombre": "Itaú Unibanco (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "ITUB.BA",
+        "nombre": "CEDEAR Itaú",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "BBD",
+      "nombre": "Banco Bradesco (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "BBD.BA",
+        "nombre": "CEDEAR Bradesco",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "ABEV",
+      "nombre": "Ambev (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "ABEV.BA",
+        "nombre": "CEDEAR Ambev",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "META",
+      "nombre": "Meta Platforms",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "META.BA",
+        "nombre": "CEDEAR Meta",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "AVGO",
+      "nombre": "Broadcom",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "AVGO.BA",
+        "nombre": "CEDEAR Broadcom",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "ORCL",
+      "nombre": "Oracle",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "ORCL.BA",
+        "nombre": "CEDEAR Oracle",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "JPM",
+      "nombre": "JPMorgan Chase",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "JPM.BA",
+        "nombre": "CEDEAR JPMorgan",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "LLY",
+      "nombre": "Eli Lilly",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "LLY.BA",
+        "nombre": "CEDEAR Eli Lilly",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "WMT",
+      "nombre": "Walmart",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "WMT.BA",
+        "nombre": "CEDEAR Walmart",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "V",
+      "nombre": "Visa",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "V.BA",
+        "nombre": "CEDEAR Visa",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "MA",
+      "nombre": "Mastercard",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "MA.BA",
+        "nombre": "CEDEAR Mastercard",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "XOM",
+      "nombre": "Exxon Mobil",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "XOM.BA",
+        "nombre": "CEDEAR Exxon Mobil",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "UNH",
+      "nombre": "UnitedHealth",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "UNH.BA",
+        "nombre": "CEDEAR UnitedHealth",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "JNJ",
+      "nombre": "Johnson & Johnson",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "JNJ.BA",
+        "nombre": "CEDEAR Johnson & Johnson",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "HD",
+      "nombre": "Home Depot",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "HD.BA",
+        "nombre": "CEDEAR Home Depot",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "PG",
+      "nombre": "Procter & Gamble",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "PG.BA",
+        "nombre": "CEDEAR Procter & Gamble",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "COST",
+      "nombre": "Costco",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "COST.BA",
+        "nombre": "CEDEAR Costco",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "ABBV",
+      "nombre": "AbbVie",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "ABBV.BA",
+        "nombre": "CEDEAR AbbVie",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "BAC",
+      "nombre": "Bank of America",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "NFLX",
+      "nombre": "Netflix",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "NFLX.BA",
+        "nombre": "CEDEAR Netflix",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "PEP",
+      "nombre": "PepsiCo",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "PEP.BA",
+        "nombre": "CEDEAR PepsiCo",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "CRM",
+      "nombre": "Salesforce",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "CRM.BA",
+        "nombre": "CEDEAR Salesforce",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "AMD",
+      "nombre": "AMD",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "AMD.BA",
+        "nombre": "CEDEAR AMD",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "CSCO",
+      "nombre": "Cisco",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "CSCO.BA",
+        "nombre": "CEDEAR Cisco",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "ADBE",
+      "nombre": "Adobe",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "ADBE.BA",
+        "nombre": "CEDEAR Adobe",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "GE",
+      "nombre": "GE Aerospace",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "GE.BA",
+        "nombre": "CEDEAR GE Aerospace",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "CAT",
+      "nombre": "Caterpillar",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "CAT.BA",
+        "nombre": "CEDEAR Caterpillar",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "MRK",
+      "nombre": "Merck",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "MRK.BA",
+        "nombre": "CEDEAR Merck",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "CVX",
+      "nombre": "Chevron",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "CVX.BA",
+        "nombre": "CEDEAR Chevron",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "PFE",
+      "nombre": "Pfizer",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "PFE.BA",
+        "nombre": "CEDEAR Pfizer",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "INTC",
+      "nombre": "Intel",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "INTC.BA",
+        "nombre": "CEDEAR Intel",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "MU",
+      "nombre": "Micron",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "MU.BA",
+        "nombre": "CEDEAR Micron",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "GOLD",
+      "nombre": "Barrick Mining",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "BABA",
+      "nombre": "Alibaba (ADR)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "BABA.BA",
+        "nombre": "CEDEAR Alibaba",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "RIO",
+      "nombre": "Rio Tinto",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "RIO.BA",
+        "nombre": "CEDEAR Rio Tinto",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "DIS",
+      "nombre": "Walt Disney",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "PYPL",
+      "nombre": "PayPal",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "PYPL.BA",
+        "nombre": "CEDEAR PayPal",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "COIN",
+      "nombre": "Coinbase",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "COIN.BA",
+        "nombre": "CEDEAR Coinbase",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "PLTR",
+      "nombre": "Palantir",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "PLTR.BA",
+        "nombre": "CEDEAR Palantir",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "SHOP",
+      "nombre": "Shopify",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "SHOP.BA",
+        "nombre": "CEDEAR Shopify",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "PANW",
+      "nombre": "Palo Alto Networks",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "PANW.BA",
+        "nombre": "CEDEAR Palo Alto",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "AXP",
+      "nombre": "American Express",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "AXP.BA",
+        "nombre": "CEDEAR American Express",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "C",
+      "nombre": "Citigroup",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "C.BA",
+        "nombre": "CEDEAR Citigroup",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "MS",
+      "nombre": "Morgan Stanley",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "MS.BA",
+        "nombre": "CEDEAR Morgan Stanley",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "BLK",
+      "nombre": "BlackRock",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "SCHW",
+      "nombre": "Charles Schwab",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "BA",
+      "nombre": "Boeing",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "BA.BA",
+        "nombre": "CEDEAR Boeing",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "DE",
+      "nombre": "Deere",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "DE.BA",
+        "nombre": "CEDEAR Deere",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "NKE",
+      "nombre": "Nike",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "NKE.BA",
+        "nombre": "CEDEAR Nike",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "SBUX",
+      "nombre": "Starbucks",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "SBUX.BA",
+        "nombre": "CEDEAR Starbucks",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "T",
+      "nombre": "AT&T",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "T.BA",
+        "nombre": "CEDEAR AT&T",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "VZ",
+      "nombre": "Verizon",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "VZ.BA",
+        "nombre": "CEDEAR Verizon",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "BMY",
+      "nombre": "Bristol-Myers Squibb",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "BMY.BA",
+        "nombre": "CEDEAR Bristol-Myers",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "GILD",
+      "nombre": "Gilead",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "GILD.BA",
+        "nombre": "CEDEAR Gilead",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "IBM",
+      "nombre": "IBM",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "IBM.BA",
+        "nombre": "CEDEAR IBM",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "QCOM",
+      "nombre": "Qualcomm",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "QCOM.BA",
+        "nombre": "CEDEAR Qualcomm",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "UBER",
+      "nombre": "Uber",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "UBER.BA",
+        "nombre": "CEDEAR Uber",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "HON",
+      "nombre": "Honeywell",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "HON.BA",
+        "nombre": "CEDEAR Honeywell",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "AMGN",
+      "nombre": "Amgen",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "AMGN.BA",
+        "nombre": "CEDEAR Amgen",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "NEE",
+      "nombre": "NextEra Energy",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "NEE.BA",
+        "nombre": "CEDEAR NextEra",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "RTX",
+      "nombre": "RTX",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "RTX.BA",
+        "nombre": "CEDEAR RTX",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "LMT",
+      "nombre": "Lockheed Martin",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "LMT.BA",
+        "nombre": "CEDEAR Lockheed Martin",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "MO",
+      "nombre": "Altria",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "MO.BA",
+        "nombre": "CEDEAR Altria",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "COP",
+      "nombre": "ConocoPhillips",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "COP.BA",
+        "nombre": "CEDEAR ConocoPhillips",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "SLB",
+      "nombre": "SLB (Schlumberger)",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "SLB.BA",
+        "nombre": "CEDEAR SLB",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "WFC",
+      "nombre": "Wells Fargo",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "WFC.BA",
+        "nombre": "CEDEAR Wells Fargo",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "DIA",
+      "nombre": "SPDR Dow Jones Industrial",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "DIA.BA",
+        "nombre": "CEDEAR SPDR Dow Jones",
+        "tipo": "cedear"
+      },
+      "alias": [
+        "dow",
+        "dow jones"
+      ]
+    },
+    {
+      "ticker": "IWM",
+      "nombre": "iShares Russell 2000",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "IWM.BA",
+        "nombre": "CEDEAR iShares Russell 2000",
+        "tipo": "cedear"
+      },
+      "alias": [
+        "russell",
+        "russell 2000"
+      ]
+    },
+    {
+      "ticker": "VTI",
+      "nombre": "Vanguard Total Stock Market",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "VOO",
+      "nombre": "Vanguard S&P 500",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "EEM",
+      "nombre": "iShares MSCI Emerging Markets",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "EEM.BA",
+        "nombre": "CEDEAR iShares MSCI Emerging",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "EWZ",
+      "nombre": "iShares MSCI Brasil",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "EWZ.BA",
+        "nombre": "CEDEAR iShares MSCI Brasil",
+        "tipo": "cedear"
+      },
+      "alias": [
+        "brasil",
+        "brazil"
+      ]
+    },
+    {
+      "ticker": "ARGT",
+      "nombre": "Global X MSCI Argentina",
+      "moneda": "USD",
+      "alias": [
+        "argentina"
+      ]
+    },
+    {
+      "ticker": "EFA",
+      "nombre": "iShares MSCI EAFE",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "EFA.BA",
+        "nombre": "CEDEAR iShares MSCI EAFE",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "VEA",
+      "nombre": "Vanguard FTSE Developed Markets",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "VEA.BA",
+        "nombre": "CEDEAR Vanguard Developed",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "VT",
+      "nombre": "Vanguard Total World",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "XLE",
+      "nombre": "Energy Select Sector SPDR",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "XLE.BA",
+        "nombre": "CEDEAR Energy SPDR",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "XLF",
+      "nombre": "Financial Select Sector SPDR",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "XLF.BA",
+        "nombre": "CEDEAR Financial SPDR",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "XLK",
+      "nombre": "Technology Select Sector SPDR",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "XLK.BA",
+        "nombre": "CEDEAR Technology SPDR",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "XLV",
+      "nombre": "Health Care Select Sector SPDR",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "XLV.BA",
+        "nombre": "CEDEAR Health Care SPDR",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "XLI",
+      "nombre": "Industrial Select Sector SPDR",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "XLI.BA",
+        "nombre": "CEDEAR Industrial SPDR",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "XLY",
+      "nombre": "Consumer Discretionary Select Sector SPDR",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "XLY.BA",
+        "nombre": "CEDEAR Consumer Discretionary SPDR",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "XLP",
+      "nombre": "Consumer Staples Select Sector SPDR",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "XLP.BA",
+        "nombre": "CEDEAR Consumer Staples SPDR",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "XLU",
+      "nombre": "Utilities Select Sector SPDR",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "XLU.BA",
+        "nombre": "CEDEAR Utilities SPDR",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "IAU",
+      "nombre": "Oro (iShares)",
+      "moneda": "USD",
+      "alias": [
+        "oro"
+      ]
+    },
+    {
+      "ticker": "GDX",
+      "nombre": "VanEck Gold Miners",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "GDX.BA",
+        "nombre": "CEDEAR VanEck Gold Miners",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "USO",
+      "nombre": "United States Oil Fund",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "USO.BA",
+        "nombre": "CEDEAR United States Oil",
+        "tipo": "cedear"
+      },
+      "alias": [
+        "petroleo",
+        "oil"
+      ]
+    },
+    {
+      "ticker": "IEF",
+      "nombre": "Tesoro EE.UU. 7–10 años (iShares)",
+      "moneda": "USD",
+      "alias": [
+        "tesoro"
+      ]
+    },
+    {
+      "ticker": "SHY",
+      "nombre": "Tesoro EE.UU. 1–3 años (iShares)",
+      "moneda": "USD",
+      "alias": [
+        "tesoro"
+      ]
+    },
+    {
+      "ticker": "TIP",
+      "nombre": "TIPS (iShares)",
+      "moneda": "USD",
+      "alias": [
+        "tips",
+        "inflacion"
+      ]
+    },
+    {
+      "ticker": "BND",
+      "nombre": "Vanguard Total Bond Market",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "AGG",
+      "nombre": "iShares Core U.S. Aggregate Bond",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "LQD",
+      "nombre": "iShares iBoxx USD Investment Grade",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "HYG",
+      "nombre": "iShares iBoxx USD High Yield",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "VNQ",
+      "nombre": "Vanguard Real Estate",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "SMH",
+      "nombre": "VanEck Semiconductor",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "SMH.BA",
+        "nombre": "CEDEAR VanEck Semiconductor",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "ARKK",
+      "nombre": "ARK Innovation",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "ARKK.BA",
+        "nombre": "CEDEAR ARK Innovation",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "IBIT",
+      "nombre": "iShares Bitcoin Trust",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "IBIT.BA",
+        "nombre": "CEDEAR iShares Bitcoin Trust",
+        "tipo": "cedear"
+      },
+      "alias": [
+        "bitcoin",
+        "btc"
+      ]
+    },
+    {
+      "ticker": "IEMG",
+      "nombre": "iShares Core MSCI Emerging Markets",
+      "moneda": "USD",
+      "byma": {
+        "simbolo": "IEMG.BA",
+        "nombre": "CEDEAR iShares Core Emerging",
+        "tipo": "cedear"
+      }
+    },
+    {
+      "ticker": "VWO",
+      "nombre": "Vanguard FTSE Emerging Markets",
+      "moneda": "USD"
+    },
+    {
+      "ticker": "SGOV",
+      "nombre": "iShares 0–3 Month Treasury",
+      "moneda": "USD",
+      "alias": [
+        "tesoro"
+      ]
+    },
+    {
+      "ticker": "BHP.AX",
+      "nombre": "BHP Group (ASX)",
+      "moneda": "AUD",
+      "alias": [
+        "asx",
+        "australia"
+      ]
+    },
+    {
+      "ticker": "CBA.AX",
+      "nombre": "Commonwealth Bank (ASX)",
+      "moneda": "AUD",
+      "alias": [
+        "asx",
+        "australia"
+      ]
+    },
+    {
+      "ticker": "CSL.AX",
+      "nombre": "CSL (ASX)",
+      "moneda": "AUD",
+      "alias": [
+        "asx",
+        "australia"
+      ]
+    },
+    {
+      "ticker": "RIO.AX",
+      "nombre": "Rio Tinto (ASX)",
+      "moneda": "AUD",
+      "alias": [
+        "asx",
+        "australia"
+      ]
+    },
+    {
+      "ticker": "WBC.AX",
+      "nombre": "Westpac (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "NAB.AX",
+      "nombre": "National Australia Bank (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "ANZ.AX",
+      "nombre": "ANZ Group (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "MQG.AX",
+      "nombre": "Macquarie Group (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "WES.AX",
+      "nombre": "Wesfarmers (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "FMG.AX",
+      "nombre": "Fortescue (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "WDS.AX",
+      "nombre": "Woodside Energy (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "TLS.AX",
+      "nombre": "Telstra (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "WOW.AX",
+      "nombre": "Woolworths Group (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "GMG.AX",
+      "nombre": "Goodman Group (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "TCL.AX",
+      "nombre": "Transurban (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "ALL.AX",
+      "nombre": "Aristocrat Leisure (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "STO.AX",
+      "nombre": "Santos (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "NST.AX",
+      "nombre": "Northern Star Resources (ASX)",
+      "moneda": "AUD"
+    },
+    {
+      "ticker": "IOZ.AX",
+      "nombre": "iShares Core S&P/ASX 200 (ASX)",
+      "moneda": "AUD",
+      "alias": [
+        "asx",
+        "asx 200",
+        "australia"
+      ]
+    },
+    {
+      "ticker": "VAS.AX",
+      "nombre": "Vanguard Australian Shares (ASX)",
+      "moneda": "AUD",
+      "alias": [
+        "asx",
+        "australia"
+      ]
+    }
+  ]
+}

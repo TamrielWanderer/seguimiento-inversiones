@@ -1,0 +1,29 @@
+{
+  "name": "seguimiento-de-inversiones",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Seguimiento de inversiones: aplicación web independiente",
+  "scripts": {
+    "dev": "vite",
+    "actualizar": "node scripts/actualizar.mjs",
+    "armar": "node scripts/armar.mjs",
+    "build": "node scripts/armar.mjs && tsc --noEmit && vite build",
+    "vista": "vite preview",
+    "probar": "node --test scripts/calculos.test.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.1.0",
+    "yahoo-finance2": "^4.0.6"
+  }
+}
