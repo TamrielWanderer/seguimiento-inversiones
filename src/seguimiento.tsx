@@ -206,7 +206,7 @@ function freshness(generatedAt: string, now: Date): { text: string; tone: "ok" |
   const t = Date.parse(generatedAt);
   if (!Number.isFinite(t)) return { text: "sin fecha", tone: "old" };
   const h = (now.getTime() - t) / 3600000;
-  const text = h < 1 ? "hace menos de 1 hora" : h < 48 ? `hace ${Math.floor(h)} h` : `hace ${Math.floor(h / 24)} días`;
+  const text = h < 1 / 30 ? "recién" : h < 1 ? `hace ${Math.max(1, Math.round(h * 60))} min` : h < 48 ? `hace ${Math.floor(h)} h` : `hace ${Math.floor(h / 24)} días`;
   // Hasta 30 h es normal (se actualiza una vez por día hábil); los fines de semana se tolera hasta 78 h.
   const dow = new Intl.DateTimeFormat("en-US", { timeZone: "America/Buenos_Aires", weekday: "short" }).format(now);
   const limit = dow === "Sat" || dow === "Sun" || dow === "Mon" ? 78 : 30;
@@ -2339,7 +2339,7 @@ export default function InversionesPage() {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 5 * 60 * 1000);
+    const id = setInterval(() => setNow(new Date()), 60 * 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -2350,16 +2350,25 @@ export default function InversionesPage() {
     let alive = true;
     const g = globalThis as unknown as { fetch?: (u: string, o?: { cache?: string }) => Promise<{ ok: boolean; json(): Promise<unknown> }> };
     if (!g.fetch) return;
-    g.fetch(DATA_URL, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((ds) => {
-        if (!alive || !isDataset(ds)) return;
-        if (Date.parse(ds.generatedAt) <= Date.parse(D.generatedAt)) return;
-        applyDataset(ds);
-        setDataVer((v) => v + 1);
-      })
-      .catch(() => { /* sin red o bloqueado: quedan los datos de la página */ });
-    return () => { alive = false; };
+    const load = () => {
+      // El parámetro evita que el navegador o el servidor devuelvan una copia vieja.
+      g.fetch!(`${DATA_URL}${DATA_URL.includes("?") ? "&" : "?"}t=${Math.floor(Date.now() / 60000)}`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((ds) => {
+          if (!alive || !isDataset(ds)) return;
+          if (Date.parse(ds.generatedAt) <= Date.parse(D.generatedAt)) return;
+          applyDataset(ds);
+          setDataVer((v) => v + 1);
+          setNow(new Date());
+        })
+        .catch(() => { /* sin red o bloqueado: quedan los datos de la página */ });
+    };
+    load();
+    // Mientras la página está abierta, busca datos nuevos cada 5 minutos y al volver a la pestaña.
+    const id = setInterval(load, 5 * 60 * 1000);
+    const onVisible = () => { if (document.visibilityState === "visible") load(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { alive = false; clearInterval(id); document.removeEventListener("visibilitychange", onVisible); };
   }, []);
   const skipTabWrite = useRef(true);
   const skipPersistWrite = useRef(true);
@@ -3041,7 +3050,7 @@ export default function InversionesPage() {
           <li><b>Cargá cada compra con su fecha.</b> Así el costo se convierte con el dólar MEP de ese día: el resultado en dólares descuenta la devaluación y el resultado en pesos la incluye.</li>
           <li><b>Elegí dónde compraste.</b> En pesos se usa el precio del CEDEAR o de la acción local en BYMA; en dólares, el de Nueva York; en A$, el de Sídney.</li>
           <li><b>Los números con punto.</b> En pesos, «12.350» es doce mil trescientos cincuenta. En dólares, «17.945» es diecisiete con 945.</li>
-          <li><b>Los precios no son en vivo.</b> Se actualizan una vez por día hábil, después del cierre. Arriba a la derecha dice hace cuánto; el punto se pone amarillo o rojo si quedaron viejos.</li>
+          <li><b>Los precios no son en vivo.</b> Se actualizan cada 30 minutos mientras los mercados están abiertos (con unos 15 minutos de demora) y la página los toma sola. Arriba a la derecha dice hace cuánto; el punto se pone amarillo o rojo si quedaron viejos.</li>
           <li><b>Los dividendos estimados</b> usan lo pagado en los últimos 12 meses y no incluyen CEDEARs ni acciones locales.</li>
         </ol>
       </Section>

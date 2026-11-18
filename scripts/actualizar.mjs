@@ -80,7 +80,7 @@ async function pool(items, size, fn) {
 
 const NOT_COMPANY = /^(SPY|QQQ|DIA|IWM|VTI|VOO|VT|IAU|GLD|SLV|SCHR|SCHP|TIP|TLT|IEF|SHY|SGOV|BND|AGG|LQD|HYG|VNQ|VWO|ARGT|EWZ|USO|XLU|GDX|SMH|ARKK|IBIT|IEMG|IOZ\.AX|VAS\.AX)$/;
 
-export async function actualizar({ src, catalogo, prev, now = new Date(), log = console.log }) {
+export async function actualizar({ src, catalogo, prev, now = new Date(), log = console.log, rapido = false }) {
   const todayBA = isoInTz(now, "America/Buenos_Aires");
   const errors = [];
   const fail = (what, e) => errors.push(`${what}: ${e?.message || e}`);
@@ -95,7 +95,16 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
       const { row, tz } = quoteFromChart(chart, { name: t.nombre, ccy: t.moneda });
       catalog[t.ticker] = row;
       let d = dividendsFromChart(chart, row.asOf, tz);
-      if (!NOT_COMPANY.test(t.ticker) || d.n12 > 0) {
+      if (rapido) {
+        // Actualización rápida: solo precios. Fechas de dividendos y resultados quedan las de la última completa.
+        const old = prev.div?.[t.ticker];
+        if (old) {
+          if (old.nextEx > todayBA) d.nextEx = old.nextEx;
+          if (old.nextPay > todayBA) d.nextPay = old.nextPay;
+          d.lastPay = old.lastPay ?? null;
+        }
+        if (prev.earnings?.[t.ticker]?.date >= todayBA) earnings[t.ticker] = prev.earnings[t.ticker];
+      } else if (!NOT_COMPANY.test(t.ticker) || d.n12 > 0) {
         try {
           const cal = await src.calendar(t.yahoo || t.ticker);
           const r = applyCalendarEvents(d, cal, todayBA);
@@ -143,7 +152,8 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
   const news = {};
   const bigMovers = Object.entries(catalog).filter(([, r]) => Math.abs(r.chg ?? 0) >= 4).map(([s]) => s);
   const newsFor = Array.from(new Set([...(catalogo.investigarSiempre || catalogo.seguidosPorDefecto || []), ...bigMovers])).filter((s) => catalog[s]);
-  await pool(newsFor, 3, async (sym) => {
+  if (rapido) Object.assign(news, prev.news || {});
+  await pool(rapido ? [] : newsFor, 3, async (sym) => {
     try {
       const def = catalogo.titulos.find((x) => x.ticker === sym) || {};
       const items = newsFromSearch(await src.news(sym), { now, ticker: sym, keywords: newsKeywords(def) });
@@ -168,7 +178,12 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
   }
   let mepHist = prev.mepHist || [];
   try {
-    mepHist = mepHistory(await src.mepHist(), catalogo.mepDesde || "2019-01-01", { iso: todayBA, venta: fx?.mep?.venta });
+    if (rapido && mepHist.length) {
+      mepHist = mepHist.filter(([d]) => d !== todayBA);
+      if (fx?.mep?.venta) mepHist.push([todayBA, fx.mep.venta]);
+    } else {
+      mepHist = mepHistory(await src.mepHist(), catalogo.mepDesde || "2019-01-01", { iso: todayBA, venta: fx?.mep?.venta });
+    }
   } catch (e) {
     fail("Historia del MEP", e);
   }
@@ -205,12 +220,12 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
  * Corre la actualización completa. No corta el proceso: devuelve qué pasó.
  * saved=false si fallaron más de la mitad de los títulos (no se pisa mercado.json).
  */
-export async function runActualizar({ muestra = MUESTRA, ahora = null, log = console.log } = {}) {
+export async function runActualizar({ muestra = MUESTRA, ahora = null, log = console.log, rapido = args.includes("--rapido") } = {}) {
   const catalogo = readJson(FILES.catalogo);
   const prev = fs.existsSync(FILES.mercado) ? readJson(FILES.mercado) : {};
   const src = muestra ? sampleSources(muestra) : await realSources();
   const now = ahora ? new Date(ahora) : new Date();
-  const { mercado, failed } = await actualizar({ src, catalogo, prev, now, log });
+  const { mercado, failed } = await actualizar({ src, catalogo, prev, now, log, rapido });
   for (const e of mercado.errors.slice(0, 20)) log(`  error: ${e}`);
   const total = catalogo.titulos.length;
   if (failed > total / 2) {

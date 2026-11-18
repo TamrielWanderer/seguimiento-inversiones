@@ -1,15 +1,19 @@
 name: Actualizar y publicar
 
 # Baja los datos, compila la página y la publica en GitHub Pages.
-# - Automático: de lunes a viernes a las 18:40 de Buenos Aires (21:40 UTC), después del cierre
-#   de Nueva York y de BYMA.
+# - Rápido (solo precios y dólar): de lunes a viernes cada 30 minutos mientras operan Buenos Aires
+#   y Nueva York (10:00 a 18:30 de Buenos Aires). No guarda nada en el repositorio.
+# - Completo (además dividendos, resultados, noticias e historia del dólar): a las 18:40 de
+#   Buenos Aires, después del cierre, y a las 03:30 para la sesión de Sídney. Guarda los datos.
 # - Al subir cambios (por ejemplo, editar datos/catalogo.json o datos/noticias.json desde GitHub):
 #   también baja datos nuevos, así un título recién agregado aparece enseguida.
 #   (Los commits de datos que hace este mismo flujo no lo vuelven a disparar.)
 # - A mano: pestaña Actions → «Actualizar y publicar» → «Run workflow».
 on:
   schedule:
+    - cron: "*/30 13-21 * * 1-5"
     - cron: "40 21 * * 1-5"
+    - cron: "30 6 * * 1-5"
   push:
     branches: [main]
   workflow_dispatch: {}
@@ -38,7 +42,12 @@ jobs:
       - name: Bajar cotizaciones, dólar y noticias
         id: datos
         continue-on-error: true   # si Yahoo no responde, se publica con los datos anteriores
-        run: npm run actualizar
+        run: |
+          if [ "${{ github.event.schedule }}" = "*/30 13-21 * * 1-5" ]; then
+            npm run actualizar -- --rapido
+          else
+            npm run actualizar
+          fi
 
       - name: Probar cálculos
         run: npm run probar
@@ -50,6 +59,7 @@ jobs:
           VITE_DATA_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/datos.json
 
       - name: Guardar los datos nuevos en el repositorio
+        if: github.event.schedule != '*/30 13-21 * * 1-5'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
