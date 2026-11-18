@@ -107,26 +107,67 @@ function isToneCell(c: unknown): c is { text: string; tone?: Tone } {
   return !!c && typeof c === "object" && !isValidElement(c) && "text" in (c as object);
 }
 
-export function Table({ columns, rows, align }: { columns: string[]; rows: TableCell[][]; align?: ("start" | "end" | "center")[] }) {
+/** Valor para ordenar una celda: fecha DD/MM/AAAA, número con formato argentino, o texto. */
+function sortValue(c: TableCell): number | string {
+  const t = (isToneCell(c) ? c.text : typeof c === "string" || typeof c === "number" ? String(c) : "").trim();
+  const d = t.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (d) return Number(`${d[3]}${d[2]}${d[1]}`);
+  const num = t.replace(/[−–]/g, "-").replace(/[^0-9,.\-]/g, "");
+  if (/\d/.test(num) && !/^[A-Za-zÁÉÍÓÚáéíóúñ]{3,}/.test(t.replace(/^(USD|A\$|\$)\s*/i, ""))) {
+    const n = Number(num.replace(/\./g, "").replace(",", "."));
+    if (Number.isFinite(n)) return n;
+  }
+  return t.toLowerCase();
+}
+
+export function Table({ columns, rows, align, sortable = false, filterable = false, footer }: {
+  columns: string[]; rows: TableCell[][]; align?: ("start" | "end" | "center")[]; sortable?: boolean; filterable?: boolean; footer?: TableCell[];
+}) {
   const al = (i: number) => (align?.[i] === "end" ? "right" : align?.[i] === "center" ? "center" : "left");
+  const [sort, setSort] = useState<{ col: number; dir: 1 | -1 } | null>(null);
+  const [q, setQ] = useState("");
+  const shown = useMemo(() => {
+    let r = rows;
+    const needle = q.trim().toLowerCase();
+    if (needle) r = r.filter((row) => row.some((c) => (isToneCell(c) ? c.text : typeof c === "string" ? c : "").toLowerCase().includes(needle)));
+    if (sort) {
+      r = [...r].sort((x, y) => {
+        const a = sortValue(x[sort.col]);
+        const b = sortValue(y[sort.col]);
+        const cmp = typeof a === "number" && typeof b === "number" ? a - b : String(a).localeCompare(String(b), "es");
+        return cmp * sort.dir;
+      });
+    }
+    return r;
+  }, [rows, sort, q]);
+  const cell = (c: TableCell, j: number, Tag: "td" | "th" = "td") => {
+    if (isToneCell(c)) return <Tag key={j} style={{ textAlign: al(j) }} className={toneClass(c.tone).trim()}>{c.text}</Tag>;
+    const long = typeof c === "string" && c.length > 42;
+    return <Tag key={j} style={{ textAlign: al(j) }} className={long ? "ui-wrap" : undefined}>{c as ReactNode}</Tag>;
+  };
   return (
-    <div className="ui-table-wrap">
-      <table className="ui-table">
-        <thead>
-          <tr>{columns.map((c, i) => <th key={i} style={{ textAlign: al(i) }}>{c}</th>)}</tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={i}>
-              {r.map((c, j) => {
-                if (isToneCell(c)) return <td key={j} style={{ textAlign: al(j) }} className={toneClass(c.tone).trim()}>{c.text}</td>;
-                const long = typeof c === "string" && c.length > 42;
-                return <td key={j} style={{ textAlign: al(j) }} className={long ? "ui-wrap" : undefined}>{c as ReactNode}</td>;
-              })}
+    <div className="ui-table-box">
+      {filterable ? <input className="inv-input ui-table-filter" type="search" aria-label="Filtrar la tabla" placeholder="Filtrar…" value={q} onChange={(e) => setQ(e.target.value)} /> : null}
+      <div className="ui-table-wrap">
+        <table className="ui-table">
+          <thead>
+            <tr>
+              {columns.map((c, i) => sortable && c ? (
+                <th key={i} style={{ textAlign: al(i) }} aria-sort={sort?.col === i ? (sort.dir === 1 ? "ascending" : "descending") : undefined}>
+                  <button type="button" className="ui-sort" onClick={() => setSort((p) => (p?.col === i ? (p.dir === 1 ? { col: i, dir: -1 } : null) : { col: i, dir: 1 }))}>
+                    {c}<span aria-hidden="true">{sort?.col === i ? (sort.dir === 1 ? " ▲" : " ▼") : ""}</span>
+                  </button>
+                </th>
+              ) : <th key={i} style={{ textAlign: al(i) }}>{c}</th>)}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {shown.map((r, i) => <tr key={i}>{r.map((c, j) => cell(c, j))}</tr>)}
+            {shown.length === 0 ? <tr><td colSpan={columns.length} className="ui-table-empty">Sin resultados</td></tr> : null}
+          </tbody>
+          {footer ? <tfoot><tr>{footer.map((c, j) => cell(c, j))}</tr></tfoot> : null}
+        </table>
+      </div>
     </div>
   );
 }
@@ -232,6 +273,70 @@ export function LineChart({ points, floor, ceiling, unit, format = (v: number) =
         <div className="ui-tip" style={{ left: Math.min(Math.max(x(hover) - 60, 0), width - 130), top: Math.max(y(h.value) - 52, 0) }}>
           <div className="ui-tip-label">{h.label}</div>
           <div className="ui-tip-value">{unit ? `${unit} ` : ""}{format(h.value)}</div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** Varias líneas sobre el mismo eje (valor de la cartera, invertido, referencia). */
+export function MultiLine({ labels, series, format = (v: number) => String(v), unit }: {
+  labels: string[]; series: { name: string; color: string; values: (number | null)[]; dashed?: boolean }[]; format?: (v: number) => string; unit?: string;
+}) {
+  const [ref, width] = useWidth<HTMLDivElement>();
+  const [hover, setHover] = useState<number | null>(null);
+  const H = 260;
+  const pad = { l: 64, r: 14, t: 14, b: 28 };
+  const iw = width - pad.l - pad.r;
+  const ih = H - pad.t - pad.b;
+  const all = series.flatMap((s) => s.values).filter((v): v is number => v != null);
+  const lo0 = Math.min(...all, 0);
+  const hi0 = Math.max(...all, 1);
+  const floor = lo0;
+  const ceiling = hi0 + (hi0 - lo0) * 0.06;
+  const span = ceiling - floor || 1;
+  const n = labels.length;
+  const x = (i: number) => pad.l + (n <= 1 ? iw / 2 : (i / (n - 1)) * iw);
+  const y = (v: number) => pad.t + (1 - (v - floor) / span) * ih;
+  const pathOf = (vals: (number | null)[]) => {
+    let d = "";
+    let pen = false;
+    vals.forEach((v, i) => {
+      if (v == null) { pen = false; return; }
+      d += `${pen ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)} `;
+      pen = true;
+    });
+    return d;
+  };
+  const ticks = [0, 1, 2, 3].map((k) => floor + ((hi0 - floor) * k) / 3);
+  const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(iw / 80))));
+  const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
+    setHover(Math.max(0, Math.min(n - 1, Math.round(((px - pad.l) / (iw || 1)) * (n - 1)))));
+  };
+  return (
+    <div className="ui-chart" ref={ref}>
+      <div className="ui-chart-legend">
+        {series.map((s) => <span key={s.name}><i style={{ background: s.color }} />{s.name}</span>)}
+        {unit ? <span className="ui-chart-unit">{unit}</span> : null}
+      </div>
+      <svg width={width} height={H} role="img" aria-label={series.map((s) => s.name).join(", ")} onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={pad.l} x2={width - pad.r} y1={y(t)} y2={y(t)} className="ui-grid-line" />
+            <text x={pad.l - 8} y={y(t) + 4} textAnchor="end" className="ui-axis">{format(t)}</text>
+          </g>
+        ))}
+        {labels.map((l, i) => (i % every === 0 && n - 1 - i >= every * 0.9) || i === n - 1 ? (
+          <text key={i} x={x(i)} y={H - 8} textAnchor={i === n - 1 ? "end" : i === 0 ? "start" : "middle"} className="ui-axis">{l}</text>
+        ) : null)}
+        {series.map((s) => <path key={s.name} d={pathOf(s.values)} fill="none" stroke={s.color} strokeWidth={s.dashed ? 1.6 : 2.2} strokeDasharray={s.dashed ? "5 4" : undefined} strokeLinejoin="round" strokeLinecap="round" />)}
+        {hover != null ? <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + ih} className="ui-hover-line" /> : null}
+      </svg>
+      {hover != null ? (
+        <div className="ui-tip" style={{ left: Math.min(Math.max(x(hover) - 80, 0), width - 190), top: 30 }}>
+          <div className="ui-tip-label">{labels[hover]}</div>
+          {series.map((s) => s.values[hover] != null ? <div key={s.name} className="ui-tip-row"><i style={{ background: s.color }} />{s.name}: <b>{format(s.values[hover]!)}</b></div> : null)}
         </div>
       ) : null}
     </div>

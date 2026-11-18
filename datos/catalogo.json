@@ -1,5 +1,5 @@
 {
-  "_ayuda": "Lista de títulos que la página conoce. Para sumar uno: agregalo acá (ticker de Yahoo) y corré `npm run actualizar`. byma es opcional: el símbolo .BA en Yahoo, con tipo cedear o local. investigarSiempre: títulos de los que el Bot busca noticias en cada rutina (además de los que se movieron mucho o tienen eventos). noticiasClave (opcional, por título): palabras que tiene que tener un titular para mostrarse; si falta, se usa el ticker y la primera palabra del nombre.",
+  "_ayuda": "Lista de títulos que la página conoce. Para sumar uno: agregalo acá (ticker de Yahoo) y corré `npm run actualizar`. byma es opcional: el símbolo .BA en Yahoo, con tipo cedear o local. investigarSiempre: títulos de los que el Bot busca noticias en cada rutina (además de los que se movieron mucho o tienen eventos). noticiasClave (opcional, por título): palabras que tiene que tener un titular para mostrarse; si falta, se usa el ticker y la primera palabra del nombre. byma.ratio: cuántos CEDEARs (o acciones locales) equivalen a 1 acción de Nueva York (0.5 = 1:2); el script avisa si deja de coincidir con los precios. sector y pais: para el reparto de la cartera.",
   "seguidosPorDefecto": [
     "PBR",
     "SCHR",
@@ -85,11 +85,14 @@
       "byma": {
         "simbolo": "PBR.BA",
         "nombre": "CEDEAR Petrobras",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 1
       },
       "noticiasClave": [
         "petrobras"
-      ]
+      ],
+      "sector": "Energía",
+      "pais": "Brasil"
     },
     {
       "ticker": "SCHR",
@@ -102,7 +105,9 @@
         "treasury",
         "treasuries",
         "bond yields"
-      ]
+      ],
+      "sector": "Bonos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "SCHP",
@@ -116,7 +121,9 @@
         "tips",
         "inflation-protected",
         "treasury"
-      ]
+      ],
+      "sector": "Bonos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "GLD",
@@ -125,7 +132,8 @@
       "byma": {
         "simbolo": "GLD.BA",
         "nombre": "CEDEAR SPDR Gold",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 50
       },
       "alias": [
         "oro",
@@ -133,7 +141,9 @@
       ],
       "noticiasClave": [
         "gold"
-      ]
+      ],
+      "sector": "Oro y plata",
+      "pais": "Global"
     },
     {
       "ticker": "MELI",
@@ -142,12 +152,15 @@
       "byma": {
         "simbolo": "MELI.BA",
         "nombre": "CEDEAR Mercado Libre",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 120
       },
       "noticiasClave": [
         "mercadolibre",
         "mercado libre"
-      ]
+      ],
+      "sector": "Consumo",
+      "pais": "Argentina"
     },
     {
       "ticker": "YPF",
@@ -156,11 +169,14 @@
       "byma": {
         "simbolo": "YPFD.BA",
         "nombre": "YPF (acción local)",
-        "tipo": "local"
+        "tipo": "local",
+        "ratio": 10
       },
       "noticiasClave": [
         "ypf"
-      ]
+      ],
+      "sector": "Energía",
+      "pais": "Argentina"
     },
     {
       "ticker": "IRS",
@@ -169,11 +185,14 @@
       "byma": {
         "simbolo": "IRSA.BA",
         "nombre": "IRSA (acción local)",
-        "tipo": "local"
+        "tipo": "local",
+        "ratio": 10
       },
       "noticiasClave": [
         "irsa"
-      ]
+      ],
+      "sector": "Inmobiliario",
+      "pais": "Argentina"
     },
     {
       "ticker": "CRESY",
@@ -182,11 +201,14 @@
       "byma": {
         "simbolo": "CRES.BA",
         "nombre": "Cresud (acción local)",
-        "tipo": "local"
+        "tipo": "local",
+        "ratio": 10
       },
       "noticiasClave": [
         "cresud"
-      ]
+      ],
+      "sector": "Agro",
+      "pais": "Argentina"
     },
     {
       "ticker": "MCD",
@@ -195,11 +217,14 @@
       "byma": {
         "simbolo": "MCD.BA",
         "nombre": "CEDEAR McDonald's",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 24
       },
       "noticiasClave": [
         "mcdonald"
-      ]
+      ],
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "SPY",
@@ -208,7 +233,8 @@
       "byma": {
         "simbolo": "SPY.BA",
         "nombre": "CEDEAR SPDR S&P 500",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 60
       },
       "alias": [
         "sp500",
@@ -221,7 +247,9 @@
         "spy",
         "wall street",
         "stock market"
-      ]
+      ],
+      "sector": "Índices",
+      "pais": "EE.UU."
     },
     {
       "ticker": "QQQ",
@@ -230,7 +258,8 @@
       "byma": {
         "simbolo": "QQQ.BA",
         "nombre": "CEDEAR Invesco QQQ",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 20
       },
       "alias": [
         "nasdaq",
@@ -239,7 +268,9 @@
       "noticiasClave": [
         "nasdaq",
         "tech stocks"
-      ]
+      ],
+      "sector": "Índices",
+      "pais": "EE.UU."
     },
     {
       "ticker": "AAPL",
@@ -248,8 +279,11 @@
       "byma": {
         "simbolo": "AAPL.BA",
         "nombre": "CEDEAR Apple",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 20
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "MSFT",
@@ -258,8 +292,11 @@
       "byma": {
         "simbolo": "MSFT.BA",
         "nombre": "CEDEAR Microsoft",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 30
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "NVDA",
@@ -268,8 +305,11 @@
       "byma": {
         "simbolo": "NVDA.BA",
         "nombre": "CEDEAR NVIDIA",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 24
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "GOOGL",
@@ -278,12 +318,15 @@
       "byma": {
         "simbolo": "GOOGL.BA",
         "nombre": "CEDEAR Alphabet",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 58
       },
       "noticiasClave": [
         "alphabet",
         "google"
-      ]
+      ],
+      "sector": "Comunicaciones",
+      "pais": "EE.UU."
     },
     {
       "ticker": "AMZN",
@@ -292,8 +335,11 @@
       "byma": {
         "simbolo": "AMZN.BA",
         "nombre": "CEDEAR Amazon",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 145
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "TSLA",
@@ -302,8 +348,11 @@
       "byma": {
         "simbolo": "TSLA.BA",
         "nombre": "CEDEAR Tesla",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 15
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "KO",
@@ -312,11 +361,14 @@
       "byma": {
         "simbolo": "KO.BA",
         "nombre": "CEDEAR Coca-Cola",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 5
       },
       "noticiasClave": [
         "coca-cola"
-      ]
+      ],
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "VIST",
@@ -325,11 +377,14 @@
       "byma": {
         "simbolo": "VIST.BA",
         "nombre": "CEDEAR Vista Energy",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 3
       },
       "noticiasClave": [
         "vista energy"
-      ]
+      ],
+      "sector": "Energía",
+      "pais": "Argentina"
     },
     {
       "ticker": "GGAL",
@@ -338,11 +393,14 @@
       "byma": {
         "simbolo": "GGAL.BA",
         "nombre": "Galicia (acción local)",
-        "tipo": "local"
+        "tipo": "local",
+        "ratio": 10
       },
       "noticiasClave": [
         "galicia"
-      ]
+      ],
+      "sector": "Finanzas",
+      "pais": "Argentina"
     },
     {
       "ticker": "BMA",
@@ -351,11 +409,14 @@
       "byma": {
         "simbolo": "BMA.BA",
         "nombre": "Banco Macro (acción local)",
-        "tipo": "local"
+        "tipo": "local",
+        "ratio": 10
       },
       "noticiasClave": [
         "banco macro"
-      ]
+      ],
+      "sector": "Finanzas",
+      "pais": "Argentina"
     },
     {
       "ticker": "PAM",
@@ -364,11 +425,14 @@
       "byma": {
         "simbolo": "PAMP.BA",
         "nombre": "Pampa Energía (acción local)",
-        "tipo": "local"
+        "tipo": "local",
+        "ratio": 25
       },
       "noticiasClave": [
         "pampa"
-      ]
+      ],
+      "sector": "Energía",
+      "pais": "Argentina"
     },
     {
       "ticker": "TLT",
@@ -382,7 +446,9 @@
         "treasuries",
         "bond yields",
         "long bond"
-      ]
+      ],
+      "sector": "Bonos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "SLV",
@@ -391,7 +457,8 @@
       "byma": {
         "simbolo": "SLV.BA",
         "nombre": "CEDEAR iShares Silver",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 6
       },
       "alias": [
         "plata",
@@ -399,7 +466,9 @@
       ],
       "noticiasClave": [
         "silver"
-      ]
+      ],
+      "sector": "Oro y plata",
+      "pais": "Global"
     },
     {
       "ticker": "TGS",
@@ -408,8 +477,11 @@
       "byma": {
         "simbolo": "TGSU2.BA",
         "nombre": "TGS (acción local)",
-        "tipo": "local"
-      }
+        "tipo": "local",
+        "ratio": 5
+      },
+      "sector": "Energía",
+      "pais": "Argentina"
     },
     {
       "ticker": "CEPU",
@@ -418,8 +490,11 @@
       "byma": {
         "simbolo": "CEPU.BA",
         "nombre": "Central Puerto (acción local)",
-        "tipo": "local"
-      }
+        "tipo": "local",
+        "ratio": 10
+      },
+      "sector": "Energía",
+      "pais": "Argentina"
     },
     {
       "ticker": "EDN",
@@ -428,8 +503,11 @@
       "byma": {
         "simbolo": "EDN.BA",
         "nombre": "Edenor (acción local)",
-        "tipo": "local"
-      }
+        "tipo": "local",
+        "ratio": 20
+      },
+      "sector": "Energía",
+      "pais": "Argentina"
     },
     {
       "ticker": "LOMA",
@@ -438,8 +516,11 @@
       "byma": {
         "simbolo": "LOMA.BA",
         "nombre": "Loma Negra (acción local)",
-        "tipo": "local"
-      }
+        "tipo": "local",
+        "ratio": 5
+      },
+      "sector": "Materiales",
+      "pais": "Argentina"
     },
     {
       "ticker": "SUPV",
@@ -448,8 +529,11 @@
       "byma": {
         "simbolo": "SUPV.BA",
         "nombre": "Supervielle (acción local)",
-        "tipo": "local"
-      }
+        "tipo": "local",
+        "ratio": 5
+      },
+      "sector": "Finanzas",
+      "pais": "Argentina"
     },
     {
       "ticker": "BBAR",
@@ -458,8 +542,11 @@
       "byma": {
         "simbolo": "BBAR.BA",
         "nombre": "BBVA Argentina (acción local)",
-        "tipo": "local"
-      }
+        "tipo": "local",
+        "ratio": 3
+      },
+      "sector": "Finanzas",
+      "pais": "Argentina"
     },
     {
       "ticker": "TEO",
@@ -468,8 +555,11 @@
       "byma": {
         "simbolo": "TECO2.BA",
         "nombre": "Telecom Argentina (acción local)",
-        "tipo": "local"
-      }
+        "tipo": "local",
+        "ratio": 5
+      },
+      "sector": "Comunicaciones",
+      "pais": "Argentina"
     },
     {
       "ticker": "GLOB",
@@ -478,8 +568,11 @@
       "byma": {
         "simbolo": "GLOB.BA",
         "nombre": "CEDEAR Globant",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 18
+      },
+      "sector": "Tecnología",
+      "pais": "Argentina"
     },
     {
       "ticker": "BIOX",
@@ -488,8 +581,11 @@
       "byma": {
         "simbolo": "BIOX.BA",
         "nombre": "CEDEAR Bioceres",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 1
+      },
+      "sector": "Agro",
+      "pais": "Argentina"
     },
     {
       "ticker": "CAAP",
@@ -498,8 +594,11 @@
       "byma": {
         "simbolo": "CAAP.BA",
         "nombre": "CEDEAR Corporación América",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 0.25
+      },
+      "sector": "Industria",
+      "pais": "Argentina"
     },
     {
       "ticker": "ARCO",
@@ -508,8 +607,11 @@
       "byma": {
         "simbolo": "ARCO.BA",
         "nombre": "CEDEAR Arcos Dorados",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 0.5
+      },
+      "sector": "Consumo",
+      "pais": "Argentina"
     },
     {
       "ticker": "AGRO",
@@ -518,8 +620,11 @@
       "byma": {
         "simbolo": "ADGO.BA",
         "nombre": "Adecoagro (acción local)",
-        "tipo": "local"
-      }
+        "tipo": "local",
+        "ratio": 1
+      },
+      "sector": "Agro",
+      "pais": "Argentina"
     },
     {
       "ticker": "TS",
@@ -528,13 +633,18 @@
       "byma": {
         "simbolo": "TEN.BA",
         "nombre": "Tenaris (acción local)",
-        "tipo": "local"
-      }
+        "tipo": "local",
+        "ratio": 1
+      },
+      "sector": "Materiales",
+      "pais": "Argentina"
     },
     {
       "ticker": "TX",
       "nombre": "Ternium",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Materiales",
+      "pais": "Argentina"
     },
     {
       "ticker": "VALE",
@@ -543,8 +653,11 @@
       "byma": {
         "simbolo": "VALE.BA",
         "nombre": "CEDEAR Vale",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 2
+      },
+      "sector": "Materiales",
+      "pais": "Brasil"
     },
     {
       "ticker": "ITUB",
@@ -553,8 +666,11 @@
       "byma": {
         "simbolo": "ITUB.BA",
         "nombre": "CEDEAR Itaú",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 1
+      },
+      "sector": "Finanzas",
+      "pais": "Brasil"
     },
     {
       "ticker": "BBD",
@@ -563,8 +679,11 @@
       "byma": {
         "simbolo": "BBD.BA",
         "nombre": "CEDEAR Bradesco",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 1
+      },
+      "sector": "Finanzas",
+      "pais": "Brasil"
     },
     {
       "ticker": "ABEV",
@@ -573,8 +692,11 @@
       "byma": {
         "simbolo": "ABEV.BA",
         "nombre": "CEDEAR Ambev",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 0.3333
+      },
+      "sector": "Consumo",
+      "pais": "Brasil"
     },
     {
       "ticker": "META",
@@ -583,8 +705,11 @@
       "byma": {
         "simbolo": "META.BA",
         "nombre": "CEDEAR Meta",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 24
+      },
+      "sector": "Comunicaciones",
+      "pais": "EE.UU."
     },
     {
       "ticker": "AVGO",
@@ -593,8 +718,11 @@
       "byma": {
         "simbolo": "AVGO.BA",
         "nombre": "CEDEAR Broadcom",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 39
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "ORCL",
@@ -603,8 +731,11 @@
       "byma": {
         "simbolo": "ORCL.BA",
         "nombre": "CEDEAR Oracle",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 3
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "JPM",
@@ -613,8 +744,11 @@
       "byma": {
         "simbolo": "JPM.BA",
         "nombre": "CEDEAR JPMorgan",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 15
+      },
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "LLY",
@@ -623,8 +757,11 @@
       "byma": {
         "simbolo": "LLY.BA",
         "nombre": "CEDEAR Eli Lilly",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 56
+      },
+      "sector": "Salud",
+      "pais": "EE.UU."
     },
     {
       "ticker": "WMT",
@@ -633,8 +770,11 @@
       "byma": {
         "simbolo": "WMT.BA",
         "nombre": "CEDEAR Walmart",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 18
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "V",
@@ -643,8 +783,11 @@
       "byma": {
         "simbolo": "V.BA",
         "nombre": "CEDEAR Visa",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 18
+      },
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "MA",
@@ -653,8 +796,11 @@
       "byma": {
         "simbolo": "MA.BA",
         "nombre": "CEDEAR Mastercard",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 33
+      },
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "XOM",
@@ -663,8 +809,11 @@
       "byma": {
         "simbolo": "XOM.BA",
         "nombre": "CEDEAR Exxon Mobil",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 10
+      },
+      "sector": "Energía",
+      "pais": "EE.UU."
     },
     {
       "ticker": "UNH",
@@ -673,8 +822,11 @@
       "byma": {
         "simbolo": "UNH.BA",
         "nombre": "CEDEAR UnitedHealth",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 33
+      },
+      "sector": "Salud",
+      "pais": "EE.UU."
     },
     {
       "ticker": "JNJ",
@@ -683,8 +835,11 @@
       "byma": {
         "simbolo": "JNJ.BA",
         "nombre": "CEDEAR Johnson & Johnson",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 15
+      },
+      "sector": "Salud",
+      "pais": "EE.UU."
     },
     {
       "ticker": "HD",
@@ -693,8 +848,11 @@
       "byma": {
         "simbolo": "HD.BA",
         "nombre": "CEDEAR Home Depot",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 32
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "PG",
@@ -703,8 +861,11 @@
       "byma": {
         "simbolo": "PG.BA",
         "nombre": "CEDEAR Procter & Gamble",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 15
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "COST",
@@ -713,8 +874,11 @@
       "byma": {
         "simbolo": "COST.BA",
         "nombre": "CEDEAR Costco",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 48
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "ABBV",
@@ -723,13 +887,18 @@
       "byma": {
         "simbolo": "ABBV.BA",
         "nombre": "CEDEAR AbbVie",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 10
+      },
+      "sector": "Salud",
+      "pais": "EE.UU."
     },
     {
       "ticker": "BAC",
       "nombre": "Bank of America",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "NFLX",
@@ -738,8 +907,11 @@
       "byma": {
         "simbolo": "NFLX.BA",
         "nombre": "CEDEAR Netflix",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 48
+      },
+      "sector": "Comunicaciones",
+      "pais": "EE.UU."
     },
     {
       "ticker": "PEP",
@@ -748,8 +920,11 @@
       "byma": {
         "simbolo": "PEP.BA",
         "nombre": "CEDEAR PepsiCo",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 18
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "CRM",
@@ -758,8 +933,11 @@
       "byma": {
         "simbolo": "CRM.BA",
         "nombre": "CEDEAR Salesforce",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 18
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "AMD",
@@ -768,8 +946,11 @@
       "byma": {
         "simbolo": "AMD.BA",
         "nombre": "CEDEAR AMD",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 10
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "CSCO",
@@ -778,8 +959,11 @@
       "byma": {
         "simbolo": "CSCO.BA",
         "nombre": "CEDEAR Cisco",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 5
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "ADBE",
@@ -788,8 +972,11 @@
       "byma": {
         "simbolo": "ADBE.BA",
         "nombre": "CEDEAR Adobe",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 44
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "GE",
@@ -798,8 +985,11 @@
       "byma": {
         "simbolo": "GE.BA",
         "nombre": "CEDEAR GE Aerospace",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 8
+      },
+      "sector": "Industria",
+      "pais": "EE.UU."
     },
     {
       "ticker": "CAT",
@@ -808,8 +998,11 @@
       "byma": {
         "simbolo": "CAT.BA",
         "nombre": "CEDEAR Caterpillar",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 20
+      },
+      "sector": "Industria",
+      "pais": "EE.UU."
     },
     {
       "ticker": "MRK",
@@ -818,8 +1011,11 @@
       "byma": {
         "simbolo": "MRK.BA",
         "nombre": "CEDEAR Merck",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 5
+      },
+      "sector": "Salud",
+      "pais": "EE.UU."
     },
     {
       "ticker": "CVX",
@@ -828,8 +1024,11 @@
       "byma": {
         "simbolo": "CVX.BA",
         "nombre": "CEDEAR Chevron",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 16
+      },
+      "sector": "Energía",
+      "pais": "EE.UU."
     },
     {
       "ticker": "PFE",
@@ -838,8 +1037,11 @@
       "byma": {
         "simbolo": "PFE.BA",
         "nombre": "CEDEAR Pfizer",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 4
+      },
+      "sector": "Salud",
+      "pais": "EE.UU."
     },
     {
       "ticker": "INTC",
@@ -848,8 +1050,11 @@
       "byma": {
         "simbolo": "INTC.BA",
         "nombre": "CEDEAR Intel",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 5
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "MU",
@@ -858,13 +1063,18 @@
       "byma": {
         "simbolo": "MU.BA",
         "nombre": "CEDEAR Micron",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 5
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "GOLD",
       "nombre": "Barrick Mining",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Oro y plata",
+      "pais": "Global"
     },
     {
       "ticker": "BABA",
@@ -873,8 +1083,11 @@
       "byma": {
         "simbolo": "BABA.BA",
         "nombre": "CEDEAR Alibaba",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 9
+      },
+      "sector": "Tecnología",
+      "pais": "China"
     },
     {
       "ticker": "RIO",
@@ -883,13 +1096,18 @@
       "byma": {
         "simbolo": "RIO.BA",
         "nombre": "CEDEAR Rio Tinto",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 8
+      },
+      "sector": "Materiales",
+      "pais": "Reino Unido"
     },
     {
       "ticker": "DIS",
       "nombre": "Walt Disney",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Comunicaciones",
+      "pais": "EE.UU."
     },
     {
       "ticker": "PYPL",
@@ -898,8 +1116,11 @@
       "byma": {
         "simbolo": "PYPL.BA",
         "nombre": "CEDEAR PayPal",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 8
+      },
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "COIN",
@@ -908,8 +1129,11 @@
       "byma": {
         "simbolo": "COIN.BA",
         "nombre": "CEDEAR Coinbase",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 27
+      },
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "PLTR",
@@ -918,8 +1142,11 @@
       "byma": {
         "simbolo": "PLTR.BA",
         "nombre": "CEDEAR Palantir",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 3
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "SHOP",
@@ -928,8 +1155,11 @@
       "byma": {
         "simbolo": "SHOP.BA",
         "nombre": "CEDEAR Shopify",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 107
+      },
+      "sector": "Tecnología",
+      "pais": "Canadá"
     },
     {
       "ticker": "PANW",
@@ -938,8 +1168,11 @@
       "byma": {
         "simbolo": "PANW.BA",
         "nombre": "CEDEAR Palo Alto",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 50
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "AXP",
@@ -948,8 +1181,11 @@
       "byma": {
         "simbolo": "AXP.BA",
         "nombre": "CEDEAR American Express",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 15
+      },
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "C",
@@ -958,8 +1194,11 @@
       "byma": {
         "simbolo": "C.BA",
         "nombre": "CEDEAR Citigroup",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 3
+      },
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "MS",
@@ -968,18 +1207,25 @@
       "byma": {
         "simbolo": "MS.BA",
         "nombre": "CEDEAR Morgan Stanley",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 41
+      },
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "BLK",
       "nombre": "BlackRock",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "SCHW",
       "nombre": "Charles Schwab",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "BA",
@@ -988,8 +1234,11 @@
       "byma": {
         "simbolo": "BA.BA",
         "nombre": "CEDEAR Boeing",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 24
+      },
+      "sector": "Industria",
+      "pais": "EE.UU."
     },
     {
       "ticker": "DE",
@@ -998,8 +1247,11 @@
       "byma": {
         "simbolo": "DE.BA",
         "nombre": "CEDEAR Deere",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 40
+      },
+      "sector": "Industria",
+      "pais": "EE.UU."
     },
     {
       "ticker": "NKE",
@@ -1008,8 +1260,11 @@
       "byma": {
         "simbolo": "NKE.BA",
         "nombre": "CEDEAR Nike",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 12
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "SBUX",
@@ -1018,8 +1273,11 @@
       "byma": {
         "simbolo": "SBUX.BA",
         "nombre": "CEDEAR Starbucks",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 12
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "T",
@@ -1028,8 +1286,11 @@
       "byma": {
         "simbolo": "T.BA",
         "nombre": "CEDEAR AT&T",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 3
+      },
+      "sector": "Comunicaciones",
+      "pais": "EE.UU."
     },
     {
       "ticker": "VZ",
@@ -1038,8 +1299,11 @@
       "byma": {
         "simbolo": "VZ.BA",
         "nombre": "CEDEAR Verizon",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 4
+      },
+      "sector": "Comunicaciones",
+      "pais": "EE.UU."
     },
     {
       "ticker": "BMY",
@@ -1048,8 +1312,11 @@
       "byma": {
         "simbolo": "BMY.BA",
         "nombre": "CEDEAR Bristol-Myers",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 3
+      },
+      "sector": "Salud",
+      "pais": "EE.UU."
     },
     {
       "ticker": "GILD",
@@ -1058,8 +1325,11 @@
       "byma": {
         "simbolo": "GILD.BA",
         "nombre": "CEDEAR Gilead",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 4
+      },
+      "sector": "Salud",
+      "pais": "EE.UU."
     },
     {
       "ticker": "IBM",
@@ -1068,8 +1338,11 @@
       "byma": {
         "simbolo": "IBM.BA",
         "nombre": "CEDEAR IBM",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 15
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "QCOM",
@@ -1078,8 +1351,11 @@
       "byma": {
         "simbolo": "QCOM.BA",
         "nombre": "CEDEAR Qualcomm",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 11
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "UBER",
@@ -1088,8 +1364,11 @@
       "byma": {
         "simbolo": "UBER.BA",
         "nombre": "CEDEAR Uber",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 2
+      },
+      "sector": "Industria",
+      "pais": "EE.UU."
     },
     {
       "ticker": "HON",
@@ -1098,8 +1377,11 @@
       "byma": {
         "simbolo": "HON.BA",
         "nombre": "CEDEAR Honeywell",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 8
+      },
+      "sector": "Industria",
+      "pais": "EE.UU."
     },
     {
       "ticker": "AMGN",
@@ -1108,8 +1390,11 @@
       "byma": {
         "simbolo": "AMGN.BA",
         "nombre": "CEDEAR Amgen",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 30
+      },
+      "sector": "Salud",
+      "pais": "EE.UU."
     },
     {
       "ticker": "NEE",
@@ -1118,8 +1403,11 @@
       "byma": {
         "simbolo": "NEE.BA",
         "nombre": "CEDEAR NextEra",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 19
+      },
+      "sector": "Servicios públicos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "RTX",
@@ -1128,8 +1416,11 @@
       "byma": {
         "simbolo": "RTX.BA",
         "nombre": "CEDEAR RTX",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 5
+      },
+      "sector": "Industria",
+      "pais": "EE.UU."
     },
     {
       "ticker": "LMT",
@@ -1138,8 +1429,11 @@
       "byma": {
         "simbolo": "LMT.BA",
         "nombre": "CEDEAR Lockheed Martin",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 20
+      },
+      "sector": "Industria",
+      "pais": "EE.UU."
     },
     {
       "ticker": "MO",
@@ -1148,8 +1442,11 @@
       "byma": {
         "simbolo": "MO.BA",
         "nombre": "CEDEAR Altria",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 4
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "COP",
@@ -1158,8 +1455,11 @@
       "byma": {
         "simbolo": "COP.BA",
         "nombre": "CEDEAR ConocoPhillips",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 25
+      },
+      "sector": "Energía",
+      "pais": "EE.UU."
     },
     {
       "ticker": "SLB",
@@ -1168,8 +1468,11 @@
       "byma": {
         "simbolo": "SLB.BA",
         "nombre": "CEDEAR SLB",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 3
+      },
+      "sector": "Energía",
+      "pais": "EE.UU."
     },
     {
       "ticker": "WFC",
@@ -1178,8 +1481,11 @@
       "byma": {
         "simbolo": "WFC.BA",
         "nombre": "CEDEAR Wells Fargo",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 5
+      },
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "DIA",
@@ -1188,12 +1494,15 @@
       "byma": {
         "simbolo": "DIA.BA",
         "nombre": "CEDEAR SPDR Dow Jones",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 20
       },
       "alias": [
         "dow",
         "dow jones"
-      ]
+      ],
+      "sector": "Índices",
+      "pais": "EE.UU."
     },
     {
       "ticker": "IWM",
@@ -1202,22 +1511,29 @@
       "byma": {
         "simbolo": "IWM.BA",
         "nombre": "CEDEAR iShares Russell 2000",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 10
       },
       "alias": [
         "russell",
         "russell 2000"
-      ]
+      ],
+      "sector": "Índices",
+      "pais": "EE.UU."
     },
     {
       "ticker": "VTI",
       "nombre": "Vanguard Total Stock Market",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Índices",
+      "pais": "EE.UU."
     },
     {
       "ticker": "VOO",
       "nombre": "Vanguard S&P 500",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Índices",
+      "pais": "EE.UU."
     },
     {
       "ticker": "EEM",
@@ -1226,8 +1542,11 @@
       "byma": {
         "simbolo": "EEM.BA",
         "nombre": "CEDEAR iShares MSCI Emerging",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 5
+      },
+      "sector": "Índices",
+      "pais": "Global"
     },
     {
       "ticker": "EWZ",
@@ -1236,12 +1555,15 @@
       "byma": {
         "simbolo": "EWZ.BA",
         "nombre": "CEDEAR iShares MSCI Brasil",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 2
       },
       "alias": [
         "brasil",
         "brazil"
-      ]
+      ],
+      "sector": "Índices",
+      "pais": "Brasil"
     },
     {
       "ticker": "ARGT",
@@ -1249,7 +1571,9 @@
       "moneda": "USD",
       "alias": [
         "argentina"
-      ]
+      ],
+      "sector": "Índices",
+      "pais": "Argentina"
     },
     {
       "ticker": "EFA",
@@ -1258,8 +1582,11 @@
       "byma": {
         "simbolo": "EFA.BA",
         "nombre": "CEDEAR iShares MSCI EAFE",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 18
+      },
+      "sector": "Índices",
+      "pais": "Global"
     },
     {
       "ticker": "VEA",
@@ -1268,13 +1595,18 @@
       "byma": {
         "simbolo": "VEA.BA",
         "nombre": "CEDEAR Vanguard Developed",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 10
+      },
+      "sector": "Índices",
+      "pais": "Global"
     },
     {
       "ticker": "VT",
       "nombre": "Vanguard Total World",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Índices",
+      "pais": "Global"
     },
     {
       "ticker": "XLE",
@@ -1283,8 +1615,11 @@
       "byma": {
         "simbolo": "XLE.BA",
         "nombre": "CEDEAR Energy SPDR",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 2
+      },
+      "sector": "Energía",
+      "pais": "EE.UU."
     },
     {
       "ticker": "XLF",
@@ -1293,8 +1628,11 @@
       "byma": {
         "simbolo": "XLF.BA",
         "nombre": "CEDEAR Financial SPDR",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 2
+      },
+      "sector": "Finanzas",
+      "pais": "EE.UU."
     },
     {
       "ticker": "XLK",
@@ -1303,8 +1641,11 @@
       "byma": {
         "simbolo": "XLK.BA",
         "nombre": "CEDEAR Technology SPDR",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 46
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "XLV",
@@ -1313,8 +1654,11 @@
       "byma": {
         "simbolo": "XLV.BA",
         "nombre": "CEDEAR Health Care SPDR",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 29
+      },
+      "sector": "Salud",
+      "pais": "EE.UU."
     },
     {
       "ticker": "XLI",
@@ -1323,8 +1667,11 @@
       "byma": {
         "simbolo": "XLI.BA",
         "nombre": "CEDEAR Industrial SPDR",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 28
+      },
+      "sector": "Industria",
+      "pais": "EE.UU."
     },
     {
       "ticker": "XLY",
@@ -1333,8 +1680,11 @@
       "byma": {
         "simbolo": "XLY.BA",
         "nombre": "CEDEAR Consumer Discretionary SPDR",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 43
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "XLP",
@@ -1343,8 +1693,11 @@
       "byma": {
         "simbolo": "XLP.BA",
         "nombre": "CEDEAR Consumer Staples SPDR",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 16
+      },
+      "sector": "Consumo",
+      "pais": "EE.UU."
     },
     {
       "ticker": "XLU",
@@ -1353,8 +1706,11 @@
       "byma": {
         "simbolo": "XLU.BA",
         "nombre": "CEDEAR Utilities SPDR",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 15
+      },
+      "sector": "Servicios públicos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "IAU",
@@ -1362,7 +1718,9 @@
       "moneda": "USD",
       "alias": [
         "oro"
-      ]
+      ],
+      "sector": "Oro y plata",
+      "pais": "Global"
     },
     {
       "ticker": "GDX",
@@ -1371,8 +1729,11 @@
       "byma": {
         "simbolo": "GDX.BA",
         "nombre": "CEDEAR VanEck Gold Miners",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 10
+      },
+      "sector": "Oro y plata",
+      "pais": "Global"
     },
     {
       "ticker": "USO",
@@ -1381,12 +1742,15 @@
       "byma": {
         "simbolo": "USO.BA",
         "nombre": "CEDEAR United States Oil",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 15
       },
       "alias": [
         "petroleo",
         "oil"
-      ]
+      ],
+      "sector": "Energía",
+      "pais": "EE.UU."
     },
     {
       "ticker": "IEF",
@@ -1394,7 +1758,9 @@
       "moneda": "USD",
       "alias": [
         "tesoro"
-      ]
+      ],
+      "sector": "Bonos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "SHY",
@@ -1402,7 +1768,9 @@
       "moneda": "USD",
       "alias": [
         "tesoro"
-      ]
+      ],
+      "sector": "Bonos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "TIP",
@@ -1411,32 +1779,44 @@
       "alias": [
         "tips",
         "inflacion"
-      ]
+      ],
+      "sector": "Bonos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "BND",
       "nombre": "Vanguard Total Bond Market",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Bonos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "AGG",
       "nombre": "iShares Core U.S. Aggregate Bond",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Bonos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "LQD",
       "nombre": "iShares iBoxx USD Investment Grade",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Bonos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "HYG",
       "nombre": "iShares iBoxx USD High Yield",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Bonos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "VNQ",
       "nombre": "Vanguard Real Estate",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Inmobiliario",
+      "pais": "EE.UU."
     },
     {
       "ticker": "SMH",
@@ -1445,8 +1825,11 @@
       "byma": {
         "simbolo": "SMH.BA",
         "nombre": "CEDEAR VanEck Semiconductor",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 50
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "ARKK",
@@ -1455,8 +1838,11 @@
       "byma": {
         "simbolo": "ARKK.BA",
         "nombre": "CEDEAR ARK Innovation",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 10
+      },
+      "sector": "Tecnología",
+      "pais": "EE.UU."
     },
     {
       "ticker": "IBIT",
@@ -1465,12 +1851,15 @@
       "byma": {
         "simbolo": "IBIT.BA",
         "nombre": "CEDEAR iShares Bitcoin Trust",
-        "tipo": "cedear"
+        "tipo": "cedear",
+        "ratio": 10
       },
       "alias": [
         "bitcoin",
         "btc"
-      ]
+      ],
+      "sector": "Cripto",
+      "pais": "Global"
     },
     {
       "ticker": "IEMG",
@@ -1479,13 +1868,18 @@
       "byma": {
         "simbolo": "IEMG.BA",
         "nombre": "CEDEAR iShares Core Emerging",
-        "tipo": "cedear"
-      }
+        "tipo": "cedear",
+        "ratio": 12
+      },
+      "sector": "Índices",
+      "pais": "Global"
     },
     {
       "ticker": "VWO",
       "nombre": "Vanguard FTSE Emerging Markets",
-      "moneda": "USD"
+      "moneda": "USD",
+      "sector": "Índices",
+      "pais": "Global"
     },
     {
       "ticker": "SGOV",
@@ -1493,7 +1887,9 @@
       "moneda": "USD",
       "alias": [
         "tesoro"
-      ]
+      ],
+      "sector": "Bonos",
+      "pais": "EE.UU."
     },
     {
       "ticker": "BHP.AX",
@@ -1502,7 +1898,9 @@
       "alias": [
         "asx",
         "australia"
-      ]
+      ],
+      "sector": "Materiales",
+      "pais": "Australia"
     },
     {
       "ticker": "CBA.AX",
@@ -1511,7 +1909,9 @@
       "alias": [
         "asx",
         "australia"
-      ]
+      ],
+      "sector": "Finanzas",
+      "pais": "Australia"
     },
     {
       "ticker": "CSL.AX",
@@ -1520,7 +1920,9 @@
       "alias": [
         "asx",
         "australia"
-      ]
+      ],
+      "sector": "Salud",
+      "pais": "Australia"
     },
     {
       "ticker": "RIO.AX",
@@ -1529,77 +1931,107 @@
       "alias": [
         "asx",
         "australia"
-      ]
+      ],
+      "sector": "Materiales",
+      "pais": "Australia"
     },
     {
       "ticker": "WBC.AX",
       "nombre": "Westpac (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Finanzas",
+      "pais": "Australia"
     },
     {
       "ticker": "NAB.AX",
       "nombre": "National Australia Bank (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Finanzas",
+      "pais": "Australia"
     },
     {
       "ticker": "ANZ.AX",
       "nombre": "ANZ Group (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Finanzas",
+      "pais": "Australia"
     },
     {
       "ticker": "MQG.AX",
       "nombre": "Macquarie Group (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Finanzas",
+      "pais": "Australia"
     },
     {
       "ticker": "WES.AX",
       "nombre": "Wesfarmers (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Consumo",
+      "pais": "Australia"
     },
     {
       "ticker": "FMG.AX",
       "nombre": "Fortescue (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Materiales",
+      "pais": "Australia"
     },
     {
       "ticker": "WDS.AX",
       "nombre": "Woodside Energy (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Energía",
+      "pais": "Australia"
     },
     {
       "ticker": "TLS.AX",
       "nombre": "Telstra (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Comunicaciones",
+      "pais": "Australia"
     },
     {
       "ticker": "WOW.AX",
       "nombre": "Woolworths Group (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Consumo",
+      "pais": "Australia"
     },
     {
       "ticker": "GMG.AX",
       "nombre": "Goodman Group (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Inmobiliario",
+      "pais": "Australia"
     },
     {
       "ticker": "TCL.AX",
       "nombre": "Transurban (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Industria",
+      "pais": "Australia"
     },
     {
       "ticker": "ALL.AX",
       "nombre": "Aristocrat Leisure (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Consumo",
+      "pais": "Australia"
     },
     {
       "ticker": "STO.AX",
       "nombre": "Santos (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Energía",
+      "pais": "Australia"
     },
     {
       "ticker": "NST.AX",
       "nombre": "Northern Star Resources (ASX)",
-      "moneda": "AUD"
+      "moneda": "AUD",
+      "sector": "Materiales",
+      "pais": "Australia"
     },
     {
       "ticker": "IOZ.AX",
@@ -1609,7 +2041,9 @@
         "asx",
         "asx 200",
         "australia"
-      ]
+      ],
+      "sector": "Índices",
+      "pais": "Australia"
     },
     {
       "ticker": "VAS.AX",
@@ -1618,6 +2052,37 @@
       "alias": [
         "asx",
         "australia"
+      ],
+      "sector": "Índices",
+      "pais": "Australia"
+    },
+    {
+      "ticker": "BTC-USD",
+      "nombre": "Bitcoin",
+      "moneda": "USD",
+      "sector": "Cripto",
+      "pais": "Global",
+      "alias": [
+        "btc",
+        "bitcoin"
+      ],
+      "noticiasClave": [
+        "bitcoin"
+      ]
+    },
+    {
+      "ticker": "ETH-USD",
+      "nombre": "Ethereum",
+      "moneda": "USD",
+      "sector": "Cripto",
+      "pais": "Global",
+      "alias": [
+        "eth",
+        "ethereum",
+        "ether"
+      ],
+      "noticiasClave": [
+        "ethereum"
       ]
     }
   ]

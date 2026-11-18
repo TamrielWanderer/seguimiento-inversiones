@@ -89,7 +89,7 @@ export function dividendsFromChart(chart, lastIso, tz) {
     .map((e) => ({ iso: isoInTz(new Date(e.date), tz), amount: e.amount }))
     .sort((a, b) => a.iso.localeCompare(b.iso));
   const from12 = isoMinusDays(lastIso, 365);
-  const from24 = isoMinusDays(lastIso, 730);
+  const from24 = isoMinusDays(lastIso, 1830);
   const last12 = evs.filter((e) => e.iso > from12 && e.iso <= lastIso);
   const last = evs.filter((e) => e.iso <= lastIso).at(-1) ?? null;
   return {
@@ -234,4 +234,49 @@ export function baQuoteFromChart(chart) {
     const asOf = m.regularMarketTime ? isoInTz(new Date(m.regularMarketTime), m.exchangeTimezoneName || "America/Argentina/Buenos_Aires") : null;
     return { price, chg: prev ? round((price / prev - 1) * 100, 2) : 0, dayChg: prev ? round(price - prev) : 0, asOf };
   }
+}
+
+// ── Historia semanal (5 años) para el gráfico de la cartera ─────────────────
+const mondayOf = (iso) => {
+  const d = new Date(`${iso}T12:00:00Z`);
+  return new Date(d.getTime() - ((d.getUTCDay() + 6) % 7) * DAY).toISOString().slice(0, 10);
+};
+
+/** Lunes de las últimas n semanas, terminando en la semana de lastIso. */
+export function weekAxis(lastIso, n = 261) {
+  const end = Date.parse(`${mondayOf(lastIso)}T12:00:00Z`);
+  return Array.from({ length: n }, (_, i) => new Date(end - (n - 1 - i) * 7 * DAY).toISOString().slice(0, 10));
+}
+
+const compact = (v) => (v == null ? null : v >= 100 ? Math.round(v * 100) / 100 : Math.round(v * 10000) / 10000);
+
+/**
+ * Último cierre de cada semana, alineado al eje. Lo que las barras no cubren se toma de la
+ * serie anterior (las corridas rápidas bajan solo 400 días). Las semanas sin dato repiten la anterior.
+ */
+export function weeklySeries(weeks, bars, prev) {
+  const byWeek = new Map();
+  if (prev?.weeks && prev.values) prev.weeks.forEach((w, i) => { if (prev.values[i] != null) byWeek.set(w, prev.values[i]); });
+  const firstBarWeek = bars.length ? mondayOf(bars[0].iso) : null;
+  for (const b of bars) byWeek.set(mondayOf(b.iso), b.close);
+  let last = null;
+  return weeks.map((w) => {
+    const v = byWeek.get(w);
+    if (v != null) last = v;
+    else if (firstBarWeek && w < firstBarWeek && !prev) return null;
+    return compact(last);
+  });
+}
+
+/** Une la historia de dividendos anterior con la nueva (por fecha ex). */
+export function mergeDivHist(prevHist, hist, fromIso) {
+  const m = new Map();
+  for (const [d, a] of prevHist || []) if (d > fromIso) m.set(d, a);
+  for (const [d, a] of hist || []) m.set(d, a);
+  return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+}
+
+/** Ratio que surge de los precios: precio NY × CCL / precio BYMA. */
+export function impliedRatio(nyPrice, ccl, baPrice) {
+  return nyPrice > 0 && ccl > 0 && baPrice > 0 ? (nyPrice * ccl) / baPrice : null;
 }

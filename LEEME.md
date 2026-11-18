@@ -79,10 +79,29 @@ solos a las 3 semanas, para que no queden viejos:
 }
 ```
 
+## Qué se puede cargar
+
+- **Compras** con fecha, comisión y dónde se compró (Nueva York, BYMA en pesos, CEDEAR en dólares, ASX). Se pueden editar.
+- **Ventas** desde el botón «Vender» de cada posición (se descuentan primero las compras más viejas).
+- **Otros activos** (bonos, ON, fondos, efectivo) con lo que se puso y lo que valen hoy.
+- **Varias carteras** en el mismo navegador, y una cartera de ejemplo para probar.
+
+`datos/catalogo.json` guarda, por título, el **ratio** del CEDEAR o de la acción local
+(`byma.ratio`: cuántos equivalen a 1 acción de Nueva York), el **sector** y el **país**. El ratio se
+usa para los dividendos y el dólar implícito; la actualización avisa en el registro si un ratio
+deja de coincidir con los precios (por ejemplo, después de un cambio de ratio).
+
+## Instalar en el celular
+
+El sitio publicado se puede agregar a la pantalla de inicio (iPhone: Compartir → «Agregar a
+inicio»; Android: menú → «Instalar app»). Funciona sin conexión con los últimos datos bajados.
+Los archivos son `public/manifest.webmanifest`, `public/sw.js` y los íconos.
+
 ## Estructura
 
 ```
-src/seguimiento.tsx   la página (lógica, cálculos y pantallas)
+src/seguimiento.tsx   la página (pantallas)
+src/calc.ts           cálculos de la cartera: ventas, dividendos cobrados, historia (con pruebas)
 src/ui.tsx, ui.css    componentes propios (tablas, gráficos, tarjetas) que reemplazan a los de Grok
 scripts/              descarga de datos (actualizar.mjs), cálculos y armado (armar.mjs)
 .github/workflows/    actualización y publicación automática en GitHub Pages

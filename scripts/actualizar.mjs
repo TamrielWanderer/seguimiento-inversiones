@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { armar, FILES, readJson } from "./armar.mjs";
-import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, isoInTz, newsFromSearch, newsKeywords, baQuoteFromChart, isAmbiguousTicker } from "./calculos.mjs";
+import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, isoInTz, newsFromSearch, newsKeywords, baQuoteFromChart, isAmbiguousTicker, weekAxis, weeklySeries, mergeDivHist, impliedRatio } from "./calculos.mjs";
 
 const DAY = 86400000;
 const args = process.argv.slice(2);
@@ -31,7 +31,7 @@ async function realSources() {
     }
   };
   return {
-    chart: (sym) => yf.chart(sym, { period1: new Date(Date.now() - 400 * DAY), interval: "1d", events: "div" }),
+    chart: (sym, days = 400) => yf.chart(sym, { period1: new Date(Date.now() - days * DAY), interval: "1d", events: "div" }),
     calendar: async (sym) => (await yf.quoteSummary(sym, { modules: ["calendarEvents"] })).calendarEvents ?? null,
     news: (sym) => yf.search(sym, { quotesCount: 0, newsCount: 20 }),
     dolares: () => getJson("https://dolarapi.com/v1/dolares"),
@@ -78,30 +78,37 @@ async function pool(items, size, fn) {
   return out;
 }
 
-const NOT_COMPANY = /^(SPY|QQQ|DIA|IWM|VTI|VOO|VT|IAU|GLD|SLV|SCHR|SCHP|TIP|TLT|IEF|SHY|SGOV|BND|AGG|LQD|HYG|VNQ|VWO|ARGT|EWZ|USO|XLU|GDX|SMH|ARKK|IBIT|IEMG|IOZ\.AX|VAS\.AX)$/;
+const NOT_COMPANY = /-USD$|^(SPY|QQQ|DIA|IWM|VTI|VOO|VT|IAU|GLD|SLV|SCHR|SCHP|TIP|TLT|IEF|SHY|SGOV|BND|AGG|LQD|HYG|VNQ|VWO|ARGT|EWZ|USO|XLU|GDX|SMH|ARKK|IBIT|IEMG|IOZ\.AX|VAS\.AX)$/;
 
 export async function actualizar({ src, catalogo, prev, now = new Date(), log = console.log, rapido = false }) {
   const todayBA = isoInTz(now, "America/Buenos_Aires");
   const errors = [];
   const fail = (what, e) => errors.push(`${what}: ${e?.message || e}`);
 
-  // 1) Títulos (NY y ASX)
+  // 1) Títulos (NY y ASX). La corrida completa baja 5 años para la historia semanal.
+  const days = rapido ? 400 : 1900;
+  const weeks = weekAxis(todayBA);
+  const series = {};
+  const prevHist = prev.hist?.weeks ? prev.hist : null;
   const catalog = {};
   const div = {};
   const earnings = {};
   await pool(catalogo.titulos, 4, async (t) => {
     try {
-      const chart = await src.chart(t.yahoo || t.ticker);
-      const { row, tz } = quoteFromChart(chart, { name: t.nombre, ccy: t.moneda });
+      const chart = await src.chart(t.yahoo || t.ticker, days);
+      const { row, tz, bars } = quoteFromChart(chart, { name: t.nombre, ccy: t.moneda });
       catalog[t.ticker] = row;
+      const old = prevHist?.series?.[t.ticker];
+      series[t.ticker] = weeklySeries(weeks, bars, rapido && old ? { weeks: prevHist.weeks, values: old } : null);
       let d = dividendsFromChart(chart, row.asOf, tz);
+      if (rapido) d.hist = mergeDivHist(prev.div?.[t.ticker]?.hist, d.hist, new Date(now.getTime() - 1830 * DAY).toISOString().slice(0, 10));
       if (rapido) {
         // Actualización rápida: solo precios. Fechas de dividendos y resultados quedan las de la última completa.
-        const old = prev.div?.[t.ticker];
-        if (old) {
-          if (old.nextEx > todayBA) d.nextEx = old.nextEx;
-          if (old.nextPay > todayBA) d.nextPay = old.nextPay;
-          d.lastPay = old.lastPay ?? null;
+        const oldDiv = prev.div?.[t.ticker];
+        if (oldDiv) {
+          if (oldDiv.nextEx > todayBA) d.nextEx = oldDiv.nextEx;
+          if (oldDiv.nextPay > todayBA) d.nextPay = oldDiv.nextPay;
+          d.lastPay = oldDiv.lastPay ?? null;
         }
         if (prev.earnings?.[t.ticker]?.date >= todayBA) earnings[t.ticker] = prev.earnings[t.ticker];
       } else if (!NOT_COMPANY.test(t.ticker) || d.n12 > 0) {
@@ -119,6 +126,7 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
     } catch (e) {
       fail(t.ticker, e);
       if (prev.catalog?.[t.ticker]) catalog[t.ticker] = prev.catalog[t.ticker];
+      if (prevHist?.series?.[t.ticker]) series[t.ticker] = weeklySeries(weeks, [], { weeks: prevHist.weeks, values: prevHist.series[t.ticker] });
       if (prev.div?.[t.ticker]) div[t.ticker] = prev.div[t.ticker];
       if (prev.earnings?.[t.ticker]?.date >= todayBA) earnings[t.ticker] = prev.earnings[t.ticker];
     }
@@ -191,6 +199,16 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
     fail("Historia del MEP", e);
   }
 
+  // Control de ratios: si el precio deja de coincidir con el ratio cargado, puede haber cambiado.
+  for (const t of catalogo.titulos) {
+    const r = t.byma?.ratio;
+    const b = ba[t.ticker];
+    const imp = impliedRatio(catalog[t.ticker]?.price, fx?.ccl?.venta, b?.price);
+    if (r && imp && b.asOf >= new Date(now.getTime() - 5 * DAY).toISOString().slice(0, 10) && Math.abs(imp / r - 1) > 0.15) {
+      errors.push(`Aviso: el ratio de ${t.byma.simbolo} (${r}) no coincide con los precios (da ${imp.toFixed(2)}). Revisalo en datos/catalogo.json.`);
+    }
+  }
+
   const asOfOf = (sym) => catalog[sym]?.asOf;
   const idxAsOf = (id) => indices.find((x) => x.id === id)?.asOf;
   const baDates = Object.values(ba).map((b) => b.asOf).filter(Boolean).sort();
@@ -211,6 +229,7 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
     earnings,
     indices,
     news,
+    hist: { weeks, series },
     errors,
   };
   const total = catalogo.titulos.length;

@@ -37,6 +37,13 @@ export function buildDataset(catalogo, mercado, noticias, now = new Date()) {
     if (t.alias?.length) aliases[t.ticker] = t.alias;
   }
   const known = new Set(order);
+  const meta = {};
+  const ratios = {};
+  for (const t of catalogo.titulos) {
+    if (!known.has(t.ticker)) continue;
+    if (t.sector || t.pais) meta[t.ticker] = [t.sector || "Otros", t.pais || "Otros"];
+    if (t.byma?.ratio) ratios[t.ticker] = t.byma.ratio;
+  }
   const tickers = {};
   // Titulares automáticos de Yahoo (actualizar.mjs)
   for (const [sym, items] of Object.entries(mercado.news || {})) {
@@ -72,7 +79,9 @@ export function buildDataset(catalogo, mercado, noticias, now = new Date()) {
     order,
     aliases,
     catalog: Object.fromEntries(order.map((s) => [s, mercado.catalog[s]])),
-    ba: Object.fromEntries(Object.entries(mercado.ba || {}).filter(([s]) => known.has(s))),
+    ba: Object.fromEntries(Object.entries(mercado.ba || {}).filter(([s]) => known.has(s)).map(([s, b]) => [s, ratios[s] ? { ...b, ratio: ratios[s] } : b])),
+    meta,
+    hist: mercado.hist?.weeks ? { weeks: mercado.hist.weeks, series: Object.fromEntries(Object.entries(mercado.hist.series).filter(([s]) => known.has(s))) } : null,
     div: Object.fromEntries(Object.entries(mercado.div || {}).filter(([s]) => known.has(s))),
     earnings: Object.fromEntries(Object.entries(mercado.earnings || {}).filter(([s]) => known.has(s))),
     indices: mercado.indices || [],

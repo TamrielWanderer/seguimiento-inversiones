@@ -10,7 +10,7 @@
     "armar": "node scripts/armar.mjs",
     "build": "node scripts/armar.mjs && tsc --noEmit && vite build",
     "vista": "vite preview",
-    "probar": "node --test scripts/calculos.test.mjs"
+    "probar": "node --test scripts/calculos.test.mjs scripts/cartera.test.mjs"
   },
   "engines": { "node": ">=20" },
   "dependencies": {
