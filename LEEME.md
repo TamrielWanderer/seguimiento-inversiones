@@ -106,3 +106,11 @@ src/ui.tsx, ui.css    componentes propios (tablas, gráficos, tarjetas) que reem
 scripts/              descarga de datos (actualizar.mjs), cálculos y armado (armar.mjs)
 .github/workflows/    actualización y publicación automática en GitHub Pages
 ```
+
+## Idiomas
+
+La página está en español e inglés (selector en el menú; la elección se guarda en el navegador).
+Los textos se escriben en español en el código y pasan por `tr("…")`; la traducción está en
+`src/lang/en.json`. Para sumar un idioma: copiá ese archivo (por ejemplo `pt.json`), traducí los
+valores y agregalo en `src/i18n.ts` (`LANGS`, `DICT` y `MONTHS`). `npm run probar` avisa si falta
+algún texto.
