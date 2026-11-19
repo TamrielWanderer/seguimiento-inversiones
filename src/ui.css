@@ -42,9 +42,12 @@ a { color: var(--lime); }
 .inv-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 14px; font-weight: 700; }
 .inv-logo { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--lime), var(--up)); color: #121a2b; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex: 0 0 auto; }
 .inv-side nav { display: flex; flex-direction: column; gap: 4px; }
+.inv-nav-short { display: none; }
 .inv-nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font: inherit; font-size: 14px; font-weight: 500; color: var(--muted); background: transparent; border: none; border-radius: 999px; padding: 10px 14px; cursor: pointer; white-space: nowrap; }
 .inv-nav-btn:hover { background: rgba(232, 237, 247, 0.06); color: var(--ink); }
 .inv-nav-on, .inv-nav-on:hover { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.inv-lang { margin-top: auto; display: flex; flex-direction: column; gap: 4px; padding: 12px 8px 0; color: var(--muted); font-size: 12.5px; }
+.inv-lang select { font: inherit; height: 36px; border-radius: 10px; border: 1px solid rgba(232, 237, 247, 0.14); background: var(--surface); color: var(--ink); padding: 0 8px; }
 .inv-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .inv-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 20px 28px 4px; max-width: 1240px; width: 100%; }
 .inv-top h1 { margin: 0; font-size: 23px; line-height: 1.25; font-weight: 700; letter-spacing: -0.02em; }
@@ -240,6 +243,7 @@ h4.ui-section-title { font-size: 14px; }
 
 .ui-table-box { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .ui-table-filter { max-width: 280px; }
+.ui-more { display: none; }
 .ui-sort { font: inherit; color: inherit; background: none; border: none; padding: 0; cursor: pointer; }
 .ui-sort:hover { color: var(--ink); }
 .ui-table tfoot td { border-top: 1px solid var(--line); font-weight: 700; background: var(--head); padding: 9px 14px; font-size: 14px; white-space: nowrap; }
@@ -270,13 +274,43 @@ h4.ui-section-title { font-size: 14px; }
 }
 @media (max-width: 820px) {
   .inv-dash { flex-direction: column; }
-  .inv-side { width: 100%; height: auto; flex: 0 0 auto; flex-direction: row; align-items: center; padding: 10px 12px; border-right: none; border-bottom: 1px solid var(--line); z-index: 10; overflow: hidden; }
-  .inv-brand { padding: 0 4px 0 0; }
-  .inv-brand-text { display: none; }
-  .inv-side nav { flex-direction: row; overflow-x: auto; flex: 1; min-width: 0; gap: 6px; scrollbar-width: none; }
-  .inv-side nav::-webkit-scrollbar { display: none; }
-  .inv-nav-btn { width: auto; padding: 8px 12px; flex: 0 0 auto; }
+  /* Arriba: marca e idioma. Abajo: barra de secciones al alcance del pulgar. */
+  .inv-side { width: 100%; height: auto; flex: 0 0 auto; flex-direction: row; align-items: center; justify-content: space-between; padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top)); border-right: none; border-bottom: 1px solid var(--line); position: static; overflow: visible; }
+  .inv-brand { padding: 0; }
+  .inv-side nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; flex-direction: row; gap: 0; background: var(--side); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  .inv-nav-btn { flex: 1 1 auto; min-width: 0; width: auto; flex-direction: column; gap: 3px; padding: 6px 4px; border-radius: 12px; font-size: 10.5px; line-height: 1.1; min-height: 48px; justify-content: center; }
+  .inv-nav-btn span { overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .inv-nav-long { display: none; }
+  .inv-nav-short { display: block; }
+  .inv-nav-on, .inv-nav-on:hover { background: rgba(250, 204, 21, 0.14); color: var(--accent); }
+  .inv-lang { margin: 0; padding: 0; flex: 0 0 auto; }
+  .inv-lang span { display: none; }
+  .inv-main { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+  .ui-floating { bottom: calc(80px + env(safe-area-inset-bottom)); right: 14px; }
   .ui-footer { padding-left: 16px; }
+  .inv-input, .inv-select, .inv-lang select, .ui-btn { min-height: 44px; }
+  .inv-input, .inv-select, .inv-lang select { font-size: 16px; }
+}
+/* Tablas como tarjetas: cada fila es una tarjeta y cada dato lleva su encabezado arriba. */
+@media (max-width: 900px) {
+  .ui-table-wrap { overflow: visible; background: transparent; border: none; border-radius: 0; }
+  .ui-table, .ui-table tbody, .ui-table tfoot { display: block; width: 100%; }
+  .ui-table thead { display: none; }
+  .ui-table tr { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+  .ui-table tfoot tr { background: var(--head); margin-bottom: 0; }
+  .ui-table td, .ui-table tfoot td { display: block; padding: 0; border: none; background: transparent; text-align: left !important; white-space: normal; overflow-wrap: anywhere; font-size: 14.5px; min-width: 0; max-width: none; }
+  .ui-table tbody tr:hover td { background: transparent; }
+  .ui-table td[data-label]::before { content: attr(data-label); display: block; color: var(--muted); font-size: 12px; font-weight: 500; margin-bottom: 1px; }
+  .ui-table td:first-child { grid-column: 1 / -1; font-size: 16px; font-weight: 700; }
+  .ui-table td:first-child::before { display: none; }
+  .ui-table td.ui-wrap { grid-column: 1 / -1; min-width: 0; max-width: none; }
+  .ui-table td.ui-blank { display: none; }
+  .ui-table td:not([data-label]):not(:first-child) { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
+  .ui-table td:not([data-label]) .ui-btn { flex: 1 1 0; max-width: 220px; padding: 8px 12px; font-size: 14px; }
+  .ui-table td.ui-table-empty { grid-column: 1 / -1; text-align: center !important; }
+  .ui-table-filter { max-width: none; }
+  .ui-table tr.ui-row-extra { display: none; }
+  .ui-more { display: block; width: 100%; }
 }
 @media (max-width: 560px) {
   .inv-top, .inv-body, .ui-footer { padding-left: 16px; padding-right: 16px; }

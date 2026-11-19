@@ -28,6 +28,7 @@ import {
   type ReactNode,
 } from "./ui";
 import { applySales, realizedBySale, receivedDividends, portfolioHistory, allocation, posKey, divFactor, type Ccy, type Lot, type Sale, type Extra, type Env, type DivInfo } from "./calc";
+import { tr, setLang, readLang, monthShort, LANGS, type Lang } from "./i18n";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Los datos de esta página no se editan a mano.
@@ -188,26 +189,25 @@ function writePortfolios(active: string, list: PortfolioRef[]): void {
   } catch { /* sin guardado */ }
 }
 const TAB_KEY = "familia-inversiones-tab-v1";
-const TABS: { value: MainTab; label: string }[] = [
-  { value: "cartera", label: "Cartera" },
-  { value: "calor", label: "Seguimiento" },
-  { value: "divs", label: "Dividendos" },
-  { value: "mercado", label: "Mercado y dólar" },
-  { value: "analisis", label: "Noticias" },
-  { value: "datos", label: "Importar y respaldo" },
-  { value: "info", label: "Ayuda" },
+const TABS: { value: MainTab; label: string; short: string }[] = [
+  { value: "cartera", label: "Cartera", short: "Cartera" },
+  { value: "calor", label: "Seguimiento", short: "Lista" },
+  { value: "divs", label: "Dividendos", short: "Dividendos" },
+  { value: "mercado", label: "Mercado y dólar", short: "Mercado" },
+  { value: "analisis", label: "Noticias", short: "Noticias" },
+  { value: "datos", label: "Importar y respaldo", short: "Datos" },
+  { value: "info", label: "Ayuda", short: "Ayuda" },
 ];
 const FLAT = 0.05;
 
 // ── Fechas ───────────────────────────────────────────────────────────────────
-const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
 /** "2026-11-16" -> "16 nov 2026" (o "16 nov" sin año). */
 function fmtIso(iso: string | null | undefined, withYear = true): string {
   if (!iso) return "—";
   const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return iso;
-  const s = `${Number(m[3])} ${MESES[Number(m[2]) - 1]}`;
+  const s = `${Number(m[3])} ${monthShort(Number(m[2]) - 1)}`;
   return withYear ? `${s} ${m[1]}` : s;
 }
 
@@ -224,7 +224,7 @@ function fmtStampBA(iso: string | null | undefined): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
   const s = new Intl.DateTimeFormat("es-AR", { timeZone: "America/Buenos_Aires", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
-  return `${s} (hora de Buenos Aires)`;
+  return `${s} ${tr("(hora de Buenos Aires)")}`;
 }
 
 function addDaysIso(iso: string, days: number): string {
@@ -234,9 +234,9 @@ function addDaysIso(iso: string, days: number): string {
 /** Antigüedad de los datos: texto y tono para la etiqueta del encabezado. */
 function freshness(generatedAt: string, now: Date): { text: string; tone: "ok" | "warn" | "old" } {
   const t = Date.parse(generatedAt);
-  if (!Number.isFinite(t)) return { text: "sin fecha", tone: "old" };
+  if (!Number.isFinite(t)) return { text: tr("sin fecha"), tone: "old" };
   const h = (now.getTime() - t) / 3600000;
-  const text = h < 1 / 30 ? "recién" : h < 1 ? `hace ${Math.max(1, Math.round(h * 60))} min` : h < 48 ? `hace ${Math.floor(h)} h` : `hace ${Math.floor(h / 24)} días`;
+  const text = h < 1 / 30 ? tr("recién") : h < 1 ? tr("hace {0} min", Math.max(1, Math.round(h * 60))) : h < 48 ? tr("hace {0} h", Math.floor(h)) : tr("hace {0} días", Math.floor(h / 24));
   // Hasta 30 h es normal (se actualiza una vez por día hábil); los fines de semana se tolera hasta 78 h.
   const dow = new Intl.DateTimeFormat("en-US", { timeZone: "America/Buenos_Aires", weekday: "short" }).format(now);
   const limit = dow === "Sat" || dow === "Sun" || dow === "Mon" ? 78 : 30;
@@ -281,12 +281,12 @@ function chartOf(q: Quote): { points: { label: string; value: number }[]; floor:
 function freqText(d: DivRow): string {
   const n = d.n12;
   if (n == null) return "—";
-  if (n === 0) return d.lastEx ? "Sin pagos en 12 meses" : "No paga";
-  if (n >= 11) return `Mensual (${n} pagos en 12 meses)`;
-  if (n === 4) return "Trimestral";
-  if (n === 2) return "Semestral";
-  if (n === 1) return "1 pago en 12 meses";
-  return `${n} pagos en 12 meses`;
+  if (n === 0) return d.lastEx ? tr("Sin pagos en 12 meses") : tr("No paga");
+  if (n >= 11) return tr("Mensual ({0} pagos en 12 meses)", n);
+  if (n === 4) return tr("Trimestral");
+  if (n === 2) return tr("Semestral");
+  if (n === 1) return tr("1 pago en 12 meses");
+  return tr("{0} pagos en 12 meses", n);
 }
 
 function normQuery(s: string): string {
@@ -650,19 +650,19 @@ function ensureWatch(watch: string[], lots: Lot[]): string[] {
 }
 
 function parseBackupObject(parsed: unknown): BackupParse {
-  if (!parsed || typeof parsed !== "object") return { ok: false, error: "El archivo no tiene un formato reconocido." };
+  if (!parsed || typeof parsed !== "object") return { ok: false, error: tr("El archivo no tiene un formato reconocido.") };
   const o = parsed as Record<string, unknown>;
   const watchRaw = o.watch ?? o.w;
   const lotsRaw = o.lots ?? o.l;
   if (watchRaw === undefined && lotsRaw === undefined) {
-    return { ok: false, error: "No encontré títulos ni compras en esa copia." };
+    return { ok: false, error: tr("No encontré títulos ni compras en esa copia.") };
   }
   const lots = sanitizeLots(lotsRaw ?? []);
   const watch = ensureWatch(sanitizeWatch(watchRaw ?? []), lots);
   const sales = sanitizeSales(o.sales ?? o.s);
   const extras = sanitizeExtras(o.extras ?? o.e);
   if (watch.length === 0 && lots.length === 0 && extras.length === 0) {
-    return { ok: false, error: "Esa copia no tiene títulos conocidos de este catálogo ni compras válidas." };
+    return { ok: false, error: tr("Esa copia no tiene títulos conocidos de este catálogo ni compras válidas.") };
   }
   return { ok: true, watch, lots, sales, extras };
 }
@@ -671,7 +671,7 @@ function parseBackupJson(text: string): BackupParse {
   try {
     return parseBackupObject(JSON.parse(text));
   } catch {
-    return { ok: false, error: "No pude leer ese JSON. Fijate que sea una copia de esta página." };
+    return { ok: false, error: tr("No pude leer ese JSON. Fijate que sea una copia de esta página.") };
   }
 }
 
@@ -705,7 +705,7 @@ function mergeById<T extends { id: string }>(a: T[], b: T[]): T[] {
 function parseBackupCode(raw: string): BackupParse {
   const trimmed = raw.trim();
   const t = trimmed.replace(/\s+/g, "");
-  if (!t) return { ok: false, error: "Pegá el código de una copia." };
+  if (!t) return { ok: false, error: tr("Pegá el código de una copia.") };
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) return parseBackupJson(trimmed);
   const b64 = t.startsWith(BACKUP_PREFIX) ? t.slice(BACKUP_PREFIX.length) : t;
   try {
@@ -751,7 +751,7 @@ function formatStampBA(iso?: string | null): string {
     minute: "2-digit",
     hour12: false,
   }).format(d);
-  return `${parts} (hora de Buenos Aires)`;
+  return `${parts} ${tr("(hora de Buenos Aires)")}`;
 }
 
 function writeCookieBackup(watch: string[], lots: Lot[], updatedAt: string): boolean {
@@ -944,11 +944,11 @@ function WatchPicker({
     <>
       <div>
         <input
-          aria-label="Agregar un título a la lista"
+          aria-label={tr("Agregar un título a la lista")}
           className="inv-input"
           type="search"
           value={query}
-          placeholder="Agregar un título: escribí el ticker o el nombre (mcd, apple, oro)"
+          placeholder={tr("Agregar un título: escribí el ticker o el nombre (mcd, apple, oro)")}
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
@@ -1018,23 +1018,23 @@ function WatchPicker({
       ) : null}
       {typed && suggestions.length === 0 ? (
         already.length > 0 ? (
-          <p className="inv-hint">{already.length === 1 ? `${already[0]} ya está en la lista.` : `${already.join(", ")} ya están en la lista.`}</p>
+          <p className="inv-hint">{already.length === 1 ? tr("{0} ya está en la lista.", already[0]) : tr("{0} ya están en la lista.", already.join(", "))}</p>
         ) : (
-          <p className="inv-hint">Ese título no está en el catálogo.</p>
+          <p className="inv-hint">{tr("Ese título no está en el catálogo.")}</p>
         )
       ) : null}
       {followed.length === 0 ? (
-        <p className="inv-hint">La lista está vacía. Buscá un título arriba.</p>
+        <p className="inv-hint">{tr("La lista está vacía. Buscá un título arriba.")}</p>
       ) : (
         <div className="inv-chips">
           {followed.map((sym) => {
             const locked = held.has(sym);
             return (
-              <span key={sym} className={locked ? "inv-chip inv-chip-locked" : "inv-chip"} title={locked ? "Tenés compras de este título: sale de la lista cuando las quites." : CATALOG[sym].name}>
+              <span key={sym} className={locked ? "inv-chip inv-chip-locked" : "inv-chip"} title={locked ? tr("Tenés compras de este título: sale de la lista cuando las quites.") : CATALOG[sym].name}>
                 <i style={{ background: isFlat(CATALOG[sym].chg) ? DASH.yellow : CATALOG[sym].chg > 0 ? DASH.green : DASH.red }} />
                 {sym}
-                {locked ? <small>en cartera</small> : (
-                  <button type="button" aria-label={`Sacar ${sym}`} className="inv-icon-btn" onClick={() => onRemove(sym)}>×</button>
+                {locked ? <small>{tr("en cartera")}</small> : (
+                  <button type="button" aria-label={tr("Sacar {0}", sym)} className="inv-icon-btn" onClick={() => onRemove(sym)}>×</button>
                 )}
               </span>
             );
@@ -1082,23 +1082,30 @@ function NavIcon({ tab }: { tab: MainTab }) {
   return <svg {...p} aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6" /><circle cx="12" cy="8" r="0.8" fill="currentColor" stroke="none" /></svg>;
 }
 
-function DashShell({ tab, onChange, stamp, stampTone = "ok", children }: { tab: MainTab; onChange: (tab: MainTab) => void; stamp: string; stampTone?: "ok" | "warn" | "old"; children?: ReactNode }) {
+function DashShell({ tab, onChange, stamp, stampTone = "ok", lang, onLang, children }: { tab: MainTab; onChange: (tab: MainTab) => void; stamp: string; stampTone?: "ok" | "warn" | "old"; lang: Lang; onLang: (l: Lang) => void; children?: ReactNode }) {
   return (
     <div className="inv-dash">
       <aside className="inv-side">
-        <div className="inv-brand"><span className="inv-logo">S</span><span className="inv-brand-text">Seguimiento</span></div>
-        <nav aria-label="Secciones">
+        <div className="inv-brand"><span className="inv-logo">S</span><span className="inv-brand-text">{tr("Inversiones")}</span></div>
+        <nav aria-label={tr("Secciones")}>
           {TABS.map((item) => (
             <button key={item.value} type="button" aria-current={item.value === tab ? "page" : undefined} className={item.value === tab ? "inv-nav-btn inv-nav-on" : "inv-nav-btn"} onClick={() => onChange(item.value)}>
               <NavIcon tab={item.value} />
-              <span>{item.label}</span>
+              <span className="inv-nav-long">{tr(item.label)}</span>
+              <span className="inv-nav-short">{tr(item.short)}</span>
             </button>
           ))}
         </nav>
+        <label className="inv-lang">
+          <span>{tr("Idioma")}</span>
+          <select value={lang} onChange={(e) => onLang(e.target.value as Lang)}>
+            {LANGS.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+          </select>
+        </label>
       </aside>
       <div className="inv-main">
         <header className="inv-top">
-          <h1>Seguimiento de inversiones</h1>
+          <h1>{tr("Seguimiento de inversiones")}</h1>
           <div className={`inv-stamp inv-stamp-${stampTone}`}>{stamp}</div>
         </header>
         <main className="inv-body">{children}</main>
@@ -1120,14 +1127,14 @@ function CostValueBars({ rows, total }: { rows: { label: string; cost: number; v
         </div>
         <div className="inv-cv-nums">
           <span>{MONEY(value)}</span>
-          <span className="inv-cv-sub" style={{ color: up ? DASH.green : DASH.red }}>{PCT(cost ? (value / cost - 1) * 100 : 0)} · costo {MONEY(cost)}</span>
+          <span className="inv-cv-sub" style={{ color: up ? DASH.green : DASH.red }}>{PCT(cost ? (value / cost - 1) * 100 : 0)}{tr(" · costo ")}{MONEY(cost)}</span>
         </div>
       </div>
     );
   };
   return (
     <div className="inv-cv">
-      {line("Total", total.cost, total.value, true)}
+      {line(tr("Total"), total.cost, total.value, true)}
       {rows.map((r) => line(r.label, r.cost, r.value))}
     </div>
   );
@@ -1138,7 +1145,7 @@ function quoteRow(sym: string, held: boolean): TableCell[] {
   const session = quoteCcyOf(sym) === "AUD" ? D.sessions.asx : D.sessions.ny;
   const stale = session && q.asOf && q.asOf < session;
   const px = stale ? { text: `${quotePx(sym, q.price)} · al ${fmtDM(q.asOf)}`, tone: "warning" as const } : quotePx(sym, q.price);
-  return [<ToneDot chg={q.chg} label={sym} />, held ? "en cartera" : "", px, { text: PCT(q.chg), tone: tone(q.chg) }, { text: PCT(q.m1), tone: tone(q.m1) }, { text: PCT(q.m3), tone: tone(q.m3) }];
+  return [<ToneDot chg={q.chg} label={sym} />, held ? tr("en cartera") : "", px, { text: PCT(q.chg), tone: tone(q.chg) }, { text: PCT(q.m1), tone: tone(q.m1) }, { text: PCT(q.m3), tone: tone(q.m3) }];
 }
 
 function changeOf(q: Quote, w: HeatWindow): number {
@@ -1214,10 +1221,10 @@ function BackupPanel({
   const [pending, setPending] = useState<Full | null>(null);
 
   const status = mode === "memory"
-    ? "Este navegador no deja guardar: descargá un respaldo para no perder lo que cargues."
+    ? tr("Este navegador no deja guardar: descargá un respaldo para no perder lo que cargues.")
     : mode === "loading"
       ? ""
-      : lastSavedAt ? `Tu cartera se guarda sola en este navegador. Último cambio: ${formatStampBA(lastSavedAt)}.` : "Tu cartera se guarda sola en este navegador.";
+      : lastSavedAt ? tr("Tu cartera se guarda sola en este navegador. Último cambio: {0}.", formatStampBA(lastSavedAt)) : tr("Tu cartera se guarda sola en este navegador.");
 
   const offer = (data: Full, okMsg = "") => {
     setPending(data);
@@ -1232,12 +1239,12 @@ function BackupPanel({
     const ok = downloadJsonFile(name, json);
     setPending(null);
     if (ok) {
-      setMsg(`Se descargó ${name}.`);
+      setMsg(tr("Se descargó {0}.", name));
       return;
     }
     const packed = buildBackupCode(watch, lots, sales, extras);
     setCode(packed);
-    setMsg("Este navegador no dejó descargar el archivo. Abrí «Pasar por mensaje» y copiá el código.");
+    setMsg(tr("Este navegador no dejó descargar el archivo. Abrí «Pasar por mensaje» y copiá el código."));
   };
 
   const onFile = (input: HTMLInputElement) => {
@@ -1258,7 +1265,7 @@ function BackupPanel({
     };
     reader.onerror = () => {
       setPending(null);
-      setErr("No pude leer ese archivo.");
+      setErr(tr("No pude leer ese archivo."));
       setMsg("");
     };
     reader.readAsText(file);
@@ -1271,10 +1278,10 @@ function BackupPanel({
     const ok = await copyText(packed);
     setErr("");
     if (ok) {
-      setMsg("Código copiado. Pegalo en el otro dispositivo, en este mismo lugar.");
+      setMsg(tr("Código copiado. Pegalo en el otro dispositivo, en este mismo lugar."));
       return;
     }
-    setMsg("No pude copiar al portapapeles. Copiá a mano el código del cuadro.");
+    setMsg(tr("No pude copiar al portapapeles. Copiá a mano el código del cuadro."));
   };
 
   const pasteCode = async () => {
@@ -1299,28 +1306,28 @@ function BackupPanel({
   const n = (k: number, one: string, many: string) => `${k} ${k === 1 ? one : many}`;
 
   return (
-    <Section heading="Respaldo" caption="Para llevar tu cartera a otro celular o computadora, o recuperarla si se borra este navegador.">
+    <Section heading={tr("Respaldo")} caption={tr("Para llevar tu cartera a otro celular o computadora, o recuperarla si se borra este navegador.")}>
       <input ref={fileRef} type="file" accept="application/json,.json,text/plain" style={{ display: "none" }} onChange={(e) => onFile(e.currentTarget)} />
       <div className="inv-row">
-        <Button label="Descargar respaldo" variant="primary" onClick={download} />
-        <Button label="Cargar un respaldo" onClick={() => fileRef.current?.click()} />
+        <Button label={tr("Descargar respaldo")} variant="primary" onClick={download} />
+        <Button label={tr("Cargar un respaldo")} onClick={() => fileRef.current?.click()} />
       </div>
       {status ? <p className="inv-hint">{status}</p> : null}
-      <Section heading="Pasar por mensaje, sin archivo" collapsible defaultOpen={false}>
-        <p className="inv-hint">En este dispositivo, copiá el código y mandátelo. En el otro, pegalo acá y tocá «Recuperar».</p>
-        <textarea className="inv-area" aria-label="Código de respaldo" value={code} placeholder="Pegá acá un código de respaldo" autoComplete="off" spellCheck={false} onChange={(e) => setCode(e.target.value)} />
+      <Section heading={tr("Pasar por mensaje, sin archivo")} collapsible defaultOpen={false}>
+        <p className="inv-hint">{tr("En este dispositivo, copiá el código y mandátelo. En el otro, pegalo acá y tocá «Recuperar».")}</p>
+        <textarea className="inv-area" aria-label={tr("Código de respaldo")} value={code} placeholder={tr("Pegá acá un código de respaldo")} autoComplete="off" spellCheck={false} onChange={(e) => setCode(e.target.value)} />
         <div className="inv-row">
-          <Button label="Copiar mi código" onClick={() => { void copyCode(); }} />
-          <Button label="Recuperar" onClick={() => { void pasteCode(); }} />
+          <Button label={tr("Copiar mi código")} onClick={() => { void copyCode(); }} />
+          <Button label={tr("Recuperar")} onClick={() => { void pasteCode(); }} />
         </div>
       </Section>
       {pending ? (
-        <Callout tone="warning" lead={`El respaldo trae ${n(pending.watch.length, "título", "títulos")} y ${n(pending.lots.length, "compra", "compras")}.`}>
-          Reemplazar deja solo lo del respaldo. Combinar suma lo que falte, sin duplicar.
+        <Callout tone="warning" lead={tr("El respaldo trae {0} y {1}.", n(pending.watch.length, tr("título"), tr("títulos")), n(pending.lots.length, tr("compra"), tr("compras")))}>
+          {tr("Reemplazar deja solo lo del respaldo. Combinar suma lo que falte, sin duplicar.")}
           <div className="inv-row" style={{ marginTop: 10 }}>
-            <Button label="Reemplazar" variant="primary" onClick={() => { onReplace(pending); setPending(null); setErr(""); setMsg("Se reemplazó la cartera de este navegador con el respaldo."); }} />
-            <Button label="Combinar" onClick={() => { onMerge(pending); setPending(null); setErr(""); setMsg("Se combinó el respaldo con lo que ya tenías."); }} />
-            <Button label="Cancelar" onClick={() => { setPending(null); setMsg(""); }} />
+            <Button label={tr("Reemplazar")} variant="primary" onClick={() => { onReplace(pending); setPending(null); setErr(""); setMsg(tr("Se reemplazó la cartera de este navegador con el respaldo.")); }} />
+            <Button label={tr("Combinar")} onClick={() => { onMerge(pending); setPending(null); setErr(""); setMsg(tr("Se combinó el respaldo con lo que ya tenías.")); }} />
+            <Button label={tr("Cancelar")} onClick={() => { setPending(null); setMsg(""); }} />
           </div>
         </Callout>
       ) : null}
@@ -1333,7 +1340,7 @@ function BackupPanel({
 /* Minimal offline CSV / XLSX / XLS importer. */
 
 const TICKER_HEADERS = ["accion", "acciones", "ticker", "titulo", "title", "symbol", "stock", "papel", "instrumento", "activo"];
-const MARKET_HEADERS = ["mercado/moneda", "mercado moneda", "mercado", "moneda", "currency", "market", "ccy", "plaza"];
+const MARKET_HEADERS = ["mercado/moneda", "market/currency", "market currency", "mercado moneda", "mercado", "moneda", "currency", "market", "ccy", "plaza"];
 const QTY_HEADERS = ["cantidad", "qty", "quantity", "shares", "cant", "cantidad de acciones", "unidades"];
 const PRICE_HEADERS = ["precio de compra", "precio compra", "precio", "price", "cost", "purchase price", "px", "costo", "costo unitario", "precio unitario"];
 const DATE_HEADERS = ["fecha de compra", "fecha compra", "fecha", "date", "purchase date", "dia"];
@@ -1421,38 +1428,38 @@ function parseImportDate(raw: unknown): string | null {
 function parseMarket(raw: unknown): { ok: true; ccy: Ccy } | { ok: false; error: string } {
   const s = normHeader(raw);
   const compact = s.replace(/\s+/g, "");
-  if (!s) return { ok: false, error: "Falta el mercado o la moneda." };
+  if (!s) return { ok: false, error: tr("Falta el mercado o la moneda.") };
   if (/(austral|asx|\baud\b|australiano)/.test(s) || compact === "au" || compact === "a") return { ok: true, ccy: "AUD" };
   if (/(byma|merval|peso|ars|bcba|argentina|\barg\b)/.test(s) || compact === "ars") return { ok: true, ccy: "ARS" };
   if (/(nyse|nasdaq|eeuu|ee uu|estados unidos|estadosunidos|united states|unitedstates|\busd\b|\bus\b|\bny\b|\busa\b|dolar|dollar)/.test(s) || /(nyse|nasdaq|eeuu|estadosunidos|unitedstates|usd|usa)/.test(compact) || compact === "us") return { ok: true, ccy: "USD" };
-  return { ok: false, error: "No reconocí el mercado o la moneda \"" + String(raw).trim() + "\". Usá USD, ARS/BYMA o AUD/ASX." };
+  return { ok: false, error: tr("No reconocí el mercado o la moneda \"") + String(raw).trim() + tr("\". Usá USD, ARS/BYMA o AUD/ASX.") };
 }
 
 function mapTicker(raw: unknown, ccy: Ccy, catalog: Record<string, unknown>, ba: Record<string, unknown>): { ok: true; ticker: string } | { ok: false; error: string } {
   let t = String(raw ?? "").trim().toUpperCase().replace(/\s+/g, "");
-  if (!t) return { ok: false, error: "Falta el ticker." };
+  if (!t) return { ok: false, error: tr("Falta el ticker.") };
   t = t.replace(/^\./, "");
   if (t.endsWith(".BA")) t = t.slice(0, -3);
   if (ccy === "AUD") {
     if (!t.endsWith(".AX")) t = t + ".AX";
-    if (!catalog[t]) return { ok: false, error: t + " no está en el catálogo de ASX." };
+    if (!catalog[t]) return { ok: false, error: t + tr(" no está en el catálogo de ASX.") };
     return { ok: true, ticker: t };
   }
   if (t.endsWith(".AX")) {
-    if (ccy === "ARS") return { ok: false, error: "Los títulos de ASX no se pueden cargar en pesos (no hay .BA)." };
+    if (ccy === "ARS") return { ok: false, error: tr("Los títulos de ASX no se pueden cargar en pesos (no hay .BA).") };
     if (catalog[t]) return { ok: true, ticker: t };
     t = t.slice(0, -3);
   }
   if (ccy === "ARS") {
-    if (!catalog[t]) return { ok: false, error: t + " no está en el catálogo." };
-    if (!ba[t]) return { ok: false, error: "No hay cotización BYMA (.BA) para " + t + " en esta página. Cargalo en USD o sacá esa fila." };
+    if (!catalog[t]) return { ok: false, error: t + tr(" no está en el catálogo.") };
+    if (!ba[t]) return { ok: false, error: tr("No hay cotización BYMA (.BA) para ") + t + tr(" en esta página. Cargalo en USD o sacá esa fila.") };
     return { ok: true, ticker: t };
   }
   if (catalog[t]) return { ok: true, ticker: t };
   if (catalog[t + ".AX"] && !catalog[t]) {
-    return { ok: false, error: t + " en este catálogo es de ASX (" + t + ".AX). Poné AUD o ASX en Mercado/Moneda, o usá el ticker " + t + ".AX." };
+    return { ok: false, error: t + tr(" en este catálogo es de ASX (") + t + ".AX). Poné AUD o ASX en Mercado/Moneda, o usá el ticker " + t + ".AX." };
   }
-  return { ok: false, error: t + " no está en el catálogo." };
+  return { ok: false, error: t + tr(" no está en el catálogo.") };
 }
 
 function utf8Decode(bytes: Uint8Array): string {
@@ -1941,7 +1948,7 @@ function cellStr(v: unknown): string {
 function interpretGrid(rows: unknown[][], catalog: Record<string, unknown>, ba: Record<string, unknown>): { ok: boolean; error?: string; valid: { row: number; ticker: string; ccy: Ccy; qty: number; price: number; date: string }[]; errors: { row: number; ticker: string; market: string; qty: string; price: string; date: string; error: string }[]; headerRow?: number } {
   const header = findHeaderMap(rows);
   if (!header) {
-    return { ok: false, error: "No encontré las columnas necesarias. Tiene que haber Acción (o ticker), Mercado/Moneda, Cantidad y Precio de compra. Podés descargar la plantilla para ver el formato.", valid: [], errors: [] };
+    return { ok: false, error: tr("No encontré las columnas necesarias. Tiene que haber Acción (o ticker), Mercado/Moneda, Cantidad y Precio de compra. Podés descargar la plantilla para ver el formato."), valid: [], errors: [] };
   }
   const { map, row: headerRow } = header;
   const valid: { row: number; ticker: string; ccy: Ccy; qty: number; price: number; date: string }[] = [];
@@ -1980,7 +1987,7 @@ function interpretGrid(rows: unknown[][], catalog: Record<string, unknown>, ba: 
     }
   }
   if (!valid.length && !errors.length) {
-    return { ok: false, error: "El archivo no tiene filas de compras debajo del encabezado.", valid: [], errors: [] };
+    return { ok: false, error: tr("El archivo no tiene filas de compras debajo del encabezado."), valid: [], errors: [] };
   }
   return { ok: true, valid, errors, headerRow: headerRow + 1 };
 }
@@ -2006,11 +2013,11 @@ async function parseImportFile(name: string, buffer: ArrayBuffer | Uint8Array, c
     else if (kind === "xls") rows = readXlsRows(buffer);
     else if (kind === "csv") rows = parseCsvText(utf8Decode(buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer)));
     else {
-      return { ok: false, error: "Ese archivo no parece un Excel o un CSV. Usá .xlsx, .xls o .csv, o descargá la plantilla.", valid: [], errors: [] };
+      return { ok: false, error: tr("Ese archivo no parece un Excel o un CSV. Usá .xlsx, .xls o .csv, o descargá la plantilla."), valid: [], errors: [] };
     }
     return interpretGrid(rows, catalog, ba);
   } catch (e) {
-    const msg = e instanceof Error && e.message ? e.message : "No pude leer ese archivo.";
+    const msg = e instanceof Error && e.message ? e.message : tr("No pude leer ese archivo.");
     return { ok: false, error: msg, valid: [], errors: [] };
   }
 }
@@ -2216,21 +2223,21 @@ function ExcelImportPanel({
     const xlsxOk = downloadBytes("plantilla-compras.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", xlsx);
     const csvOk = xlsxOk ? false : downloadBytes("plantilla-compras.csv", "text/csv;charset=utf-8", csv);
     if (xlsxOk) {
-      setMsg("Se descargó plantilla-compras.xlsx. Completala y arrastrala acá.");
+      setMsg(tr("Se descargó plantilla-compras.xlsx. Completala y arrastrala acá."));
       return;
     }
     if (csvOk) {
-      setMsg("Se descargó plantilla-compras.csv. Completala y arrastrala acá.");
+      setMsg(tr("Se descargó plantilla-compras.csv. Completala y arrastrala acá."));
       return;
     }
-    setMsg("Este navegador no dejó descargar la plantilla. Armá un Excel con las columnas del ejemplo.");
+    setMsg(tr("Este navegador no dejó descargar la plantilla. Armá un Excel con las columnas del ejemplo."));
   };
 
   const previewGrid = (rows: unknown[][]) => {
     const parsed = interpretGrid(rows, CATALOG, BA);
     if (!parsed.ok && !parsed.valid.length && !parsed.errors.length) {
       setPending(null);
-      setErr(parsed.error || "No pude leer esos datos.");
+      setErr(parsed.error || tr("No pude leer esos datos."));
       return;
     }
     setPending({ valid: parsed.valid, errors: parsed.errors });
@@ -2243,10 +2250,10 @@ function ExcelImportPanel({
     const text = raw.trim();
     if (!text) {
       setPending(null);
-      setErr("Pegá las celdas copiadas desde Excel, con la fila de encabezados.");
+      setErr(tr("Pegá las celdas copiadas desde Excel, con la fila de encabezados."));
       return;
     }
-    setSource("lo que pegaste");
+    setSource(tr("lo que pegaste"));
     previewGrid(parseCsvText(text));
   };
 
@@ -2262,7 +2269,7 @@ function ExcelImportPanel({
       const buf = reader.result;
       if (!(buf instanceof ArrayBuffer)) {
         setBusy(false);
-        setErr("No pude leer ese archivo.");
+        setErr(tr("No pude leer ese archivo."));
         return;
       }
       void (async () => {
@@ -2270,7 +2277,7 @@ function ExcelImportPanel({
         setBusy(false);
         if (!parsed.ok && !parsed.valid.length && !parsed.errors.length) {
           setPending(null);
-          setErr(parsed.error || "No pude leer ese archivo.");
+          setErr(parsed.error || tr("No pude leer ese archivo."));
           return;
         }
         setPending({ valid: parsed.valid, errors: parsed.errors });
@@ -2281,7 +2288,7 @@ function ExcelImportPanel({
     reader.onerror = () => {
       setBusy(false);
       setPending(null);
-      setErr("No pude leer ese archivo.");
+      setErr(tr("No pude leer ese archivo."));
     };
     reader.readAsArrayBuffer(file);
   };
@@ -2295,15 +2302,15 @@ function ExcelImportPanel({
     setErr("");
     setPaste("");
     setShowPaste(false);
-    const k = `${incoming.length} compra${incoming.length === 1 ? "" : "s"}`;
-    setMsg(mode === "add" ? `Se agregaron ${k} a tu cartera. Las que ya estaban iguales no se duplicaron.` : `Tu cartera ahora tiene las ${k} del archivo.`);
+    const k = incoming.length === 1 ? tr("1 compra") : tr("{0} compras", incoming.length);
+    setMsg(mode === "add" ? tr("Se agregaron {0} a tu cartera. Las que ya estaban iguales no se duplicaron.", k) : tr("Tu cartera ahora tiene las {0} del archivo.", k));
   };
 
   const nValid = pending?.valid.length ?? 0;
   const nErr = pending?.errors.length ?? 0;
 
   return (
-    <Section heading="Importar compras desde Excel" caption="Acepta .xlsx, .xls y .csv. El archivo se lee en este dispositivo y no se sube a ningún lado.">
+    <Section heading={tr("Importar compras desde Excel")} caption={tr("Acepta .xlsx, .xls y .csv. El archivo se lee en este dispositivo y no se sube a ningún lado.")}>
       <input
         ref={fileRef}
         type="file"
@@ -2321,67 +2328,67 @@ function ExcelImportPanel({
             onDragLeave={() => setOver(false)}
             onDrop={(e) => { e.preventDefault(); setOver(false); readFile(e.dataTransfer.files?.[0]); }}
           >
-            <strong>{busy ? "Leyendo el archivo…" : "Arrastrá tu Excel acá"}</strong>
-            <span>o hacé clic para elegirlo</span>
+            <strong>{busy ? tr("Leyendo el archivo…") : tr("Arrastrá tu Excel acá")}</strong>
+            <span>{tr("o hacé clic para elegirlo")}</span>
           </button>
           <div className="inv-row">
-            <Button label="Descargar plantilla" onClick={downloadTemplate} />
-            <Button label={showPaste ? "Ocultar pegado" : "Pegar celdas copiadas"} onClick={() => setShowPaste((v) => !v)} />
+            <Button label={tr("Descargar plantilla")} onClick={downloadTemplate} />
+            <Button label={showPaste ? tr("Ocultar pegado") : tr("Pegar celdas copiadas")} onClick={() => setShowPaste((v) => !v)} />
           </div>
           {showPaste ? (
             <>
               <textarea
                 className="inv-area"
-                aria-label="Celdas copiadas desde Excel"
+                aria-label={tr("Celdas copiadas desde Excel")}
                 value={paste}
-                placeholder="Copiá las celdas en Excel (con los encabezados) y pegalas acá"
+                placeholder={tr("Copiá las celdas en Excel (con los encabezados) y pegalas acá")}
                 autoComplete="off"
                 spellCheck={false}
                 onChange={(e) => setPaste(e.target.value)}
                 onPaste={(e) => { const t = e.clipboardData.getData("text"); if (t.trim()) { e.preventDefault(); setPaste(t); previewText(t); } }}
               />
-              <Button label="Revisar" variant="primary" onClick={() => previewText(paste)} />
+              <Button label={tr("Revisar")} variant="primary" onClick={() => previewText(paste)} />
             </>
           ) : null}
-          <Section heading="Qué columnas tiene que tener" collapsible defaultOpen={false}>
+          <Section heading={tr("Qué columnas tiene que tener")} collapsible defaultOpen={false}>
             <Table
-              columns={["Acción", "Mercado/Moneda", "Cantidad", "Precio de compra", "Fecha de compra"]}
+              columns={[tr("Acción"), tr("Mercado/Moneda"), tr("Cantidad"), tr("Precio de compra"), tr("Fecha de compra")]}
               align={["start", "start", "end", "end", "start"]}
               rows={[["PBR", "USD", "10", "17,30", "16/11/2026"], ["GGAL", "ARS", "200", "6.040", "03/02/2026"], ["BHP.AX", "AUD", "5", "55,37", "16/11/2026"]]}
             />
-            <p className="inv-hint">Acción es el ticker. Mercado/Moneda: USD (o NYSE, NASDAQ), ARS (o BYMA, pesos) o AUD (o ASX). La fecha es opcional, pero con ella el costo usa el dólar de ese día. Los encabezados también pueden estar en inglés.</p>
+            <p className="inv-hint">{tr("Acción es el ticker. Mercado/Moneda: USD (o NYSE, NASDAQ), ARS (o BYMA, pesos) o AUD (o ASX). La fecha es opcional, pero con ella el costo usa el dólar de ese día. Los encabezados también pueden estar en inglés.")}</p>
           </Section>
         </>
       ) : (
         <>
-          <Callout tone={nValid ? "info" : "warning"} lead={`${source}: ${nValid} ${nValid === 1 ? "compra lista" : "compras listas"} para importar${nErr ? `, ${nErr} ${nErr === 1 ? "fila con error" : "filas con error"}` : ""}.`}>
-            {nErr ? "Las filas con error no se importan. Corregilas en el Excel y volvé a cargarlo, o importá solo las que están bien." : null}
+          <Callout tone={nValid ? "info" : "warning"} lead={tr("{0}: {1} {2} para importar{3}.", source, nValid, nValid === 1 ? tr("compra lista") : tr("compras listas"), nErr ? `, ${nErr} ${nErr === 1 ? tr("fila con error") : tr("filas con error")}` : "")}>
+            {nErr ? tr("Las filas con error no se importan. Corregilas en el Excel y volvé a cargarlo, o importá solo las que están bien.") : null}
           </Callout>
           {nErr ? (
-            <Section heading="Filas con error">
+            <Section heading={tr("Filas con error")}>
               <Table
-                columns={["Fila", "Lo que dice", "Problema"]}
+                columns={[tr("Fila"), tr("Lo que dice"), tr("Problema")]}
                 align={["end", "start", "start"]}
                 rows={pending.errors.map((e) => [String(e.row), [e.ticker, e.market, e.qty, e.price, e.date].filter(Boolean).join(" · "), { text: e.error, tone: "danger" as const }])}
               />
             </Section>
           ) : null}
           {nValid ? (
-            <Section heading="Compras a importar">
+            <Section heading={tr("Compras a importar")}>
               <Table
-                columns={["Fila", "Título", "Moneda", "Cantidad", "Precio", "Fecha", "Dólar de ese día"]}
+                columns={[tr("Fila"), tr("Título"), tr("Moneda"), tr("Cantidad"), tr("Precio"), tr("Fecha"), tr("Dólar de ese día")]}
                 align={["end", "start", "start", "end", "end", "start", "end"]}
                 rows={pending.valid.map((v) => {
                   const fx = v.date ? mepOn(v.date) : null;
-                  return [String(v.row), v.ticker, v.ccy, qtyText(v.qty), nativeMoney(v.ccy, v.price), v.date ? formatDate(v.date) : "—", fx ? PESOS(fx, 2) : { text: "se usa el de hoy", tone: "warning" as const }];
+                  return [String(v.row), v.ticker, v.ccy, qtyText(v.qty), nativeMoney(v.ccy, v.price), v.date ? formatDate(v.date) : "—", fx ? PESOS(fx, 2) : { text: tr("se usa el de hoy"), tone: "warning" as const }];
                 })}
               />
             </Section>
           ) : null}
           <div className="inv-row">
-            {nValid ? <Button label={`Agregar ${nValid === 1 ? "la compra" : `las ${nValid} compras`}`} variant="primary" onClick={() => apply("add")} /> : null}
-            {nValid ? <Button label="Reemplazar toda mi cartera" onClick={() => apply("replace")} /> : null}
-            <Button label="Cancelar" onClick={() => { setPending(null); setErr(""); setMsg(""); }} />
+            {nValid ? <Button label={tr("Agregar {0}", nValid === 1 ? tr("la compra") : tr("las {0} compras", nValid))} variant="primary" onClick={() => apply("add")} /> : null}
+            {nValid ? <Button label={tr("Reemplazar toda mi cartera")} onClick={() => apply("replace")} /> : null}
+            <Button label={tr("Cancelar")} onClick={() => { setPending(null); setErr(""); setMsg(""); }} />
           </div>
         </>
       )}
@@ -2416,7 +2423,7 @@ function unitOf(x: { ticker: string; ccy: Ccy; ced?: boolean }): Unit {
       ? { ok: true, usd, native: q.price, dayUsd, dayNative: q.dayChg, market: "ASX" }
       : { ok: true, usd, native: usd, dayUsd, dayNative: dayUsd, market: "ASX" };
   }
-  return { ok: true, usd: q.price, native: q.price, dayUsd: q.dayChg, dayNative: q.dayChg, market: x.ticker.endsWith("-USD") ? "Cripto" : "Nueva York" };
+  return { ok: true, usd: q.price, native: q.price, dayUsd: q.dayChg, dayNative: q.dayChg, market: x.ticker.endsWith("-USD") ? tr("Cripto") : tr("Nueva York") };
 }
 
 const EXTRA_KINDS = ["Bono", "Obligación negociable", "Fondo común", "Cripto", "Efectivo", "Plazo fijo", "Otro"];
@@ -2435,7 +2442,7 @@ function demoPortfolio(): { lots: Lot[]; sales: Sale[]; extras: Extra[] } {
     { id: "ej6", ticker: "MSFT", qty: 2, price: Math.round((CATALOG.MSFT?.price ?? 500) * 1.04), date: ago(60), ccy: "USD" },
   ].filter((l) => pick(l.ticker)) as Lot[];
   const sales: Sale[] = pick("SPY") ? [{ id: "ejv1", ticker: "SPY", qty: 1, price: Math.round((CATALOG.SPY?.price ?? 600) * 0.97), date: ago(90), ccy: "USD", fee: 2 }] : [];
-  const extras: Extra[] = [{ id: "ejx1", name: "Dólares en la cuenta", kind: "Efectivo", ccy: "USD", cost: 500, value: 500, date: ago(30) }];
+  const extras: Extra[] = [{ id: "ejx1", name: tr("Dólares en la cuenta"), kind: "Efectivo", ccy: "USD", cost: 500, value: 500, date: ago(30) }];
   return { lots, sales, extras };
 }
 
@@ -2487,6 +2494,8 @@ export default function InversionesPage() {
   const [dataVer, setDataVer] = useState(0);
   const [now, setNow] = useState(() => new Date());
   const [installEvt, setInstallEvt] = useState<{ prompt: () => void } | null>(null);
+  const [lang, setLangState] = useState<Lang>(() => { const l = readLang(); setLang(l); return l; });
+  const changeLang = (l: Lang) => { setLang(l, true); setLangState(l); };
 
   const lotCcy: Ccy = market === "CED" ? "USD" : market;
   const lotCed = market === "CED";
@@ -2616,7 +2625,7 @@ export default function InversionesPage() {
     loadPortfolio(MAIN_PORTFOLIO.id, pf.list.filter((p) => p.id !== pf.active));
   };
   const openDemo = () => {
-    const list = pf.list.some((p) => p.id === "ejemplo") ? pf.list : [...pf.list, { id: "ejemplo", name: "Ejemplo" }];
+    const list = pf.list.some((p) => p.id === "ejemplo") ? pf.list : [...pf.list, { id: "ejemplo", name: tr("Ejemplo") }];
     loadPortfolio("ejemplo", list, demoPortfolio());
   };
 
@@ -2683,8 +2692,8 @@ export default function InversionesPage() {
       ? portfolioHistory(sr.pieces, { weeks: D.hist.weeks, series: (t) => D.hist?.series[t] ?? null, unitUsdToday: (x) => { const u = unitOf(x); return u.ok ? u.usd : null; }, benchmark: "SPY" }, env)
       : { points: [], skipped: 0 };
     const parts = [
-      ...positions.filter((p) => p.ok).map((p) => ({ titulo: p.label, sector: D.meta?.[p.ticker]?.[0] ?? "Otros", pais: p.ccy === "ARS" && BA[p.ticker]?.kind === "local" ? "Argentina" : D.meta?.[p.ticker]?.[1] ?? "Otros", value: p.valueUsd })),
-      ...extraRows.map((r) => ({ titulo: r.x.name, sector: r.x.kind, pais: "Otros activos", value: r.valueUsd })),
+      ...positions.filter((p) => p.ok).map((p) => ({ titulo: p.label, sector: D.meta?.[p.ticker]?.[0] ?? tr("Otros"), pais: p.ccy === "ARS" && BA[p.ticker]?.kind === "local" ? tr("Argentina") : D.meta?.[p.ticker]?.[1] ?? tr("Otros"), value: p.valueUsd })),
+      ...extraRows.map((r) => ({ titulo: tr(r.x.name), sector: r.x.kind, pais: tr("Otros activos"), value: r.valueUsd })),
     ];
     return {
       rows, positions, extraRows, realized, received, history, parts, unmatched: sr.unmatched,
@@ -2696,7 +2705,7 @@ export default function InversionesPage() {
       pctArs: costArs ? ((valueArs - costArs) / costArs) * 100 : 0,
       dayPct: prev ? (dayUsd / prev) * 100 : 0,
     };
-  }, [lots, sales, extras, dataVer]);
+  }, [lots, sales, extras, dataVer, lang]);
 
   const followed = ORDER.filter((s) => watch.includes(s) || computed.positions.some((p) => p.ticker === s));
   const heldTickers = new Set(computed.positions.map((p) => p.ticker));
@@ -2738,21 +2747,21 @@ export default function InversionesPage() {
     const qty = parseNum(qtyStr, lotCcy);
     const price = parseNum(pxStr, lotCcy);
     const date = parseDate(dateStr);
-    if (!CATALOG[lotTicker]) { setFormError("Elegí un título de la lista."); return; }
-    if ((market === "ARS" || market === "CED") && !BA[lotTicker]) { setFormError(`No hay cotización en BYMA para ${lotTicker}. Cargalo como comprado en Nueva York.`); return; }
-    if (qty === null || !(qty > 0)) { setFormError("La cantidad tiene que ser un número mayor a cero."); return; }
-    if (price === null || !(price > 0)) { setFormError("El precio tiene que ser un número mayor a cero."); return; }
-    if (date === null) { setFormError("Escribí la fecha como DD/MM/AAAA, o dejala vacía."); return; }
+    if (!CATALOG[lotTicker]) { setFormError(tr("Elegí un título de la lista.")); return; }
+    if ((market === "ARS" || market === "CED") && !BA[lotTicker]) { setFormError(tr("No hay cotización en BYMA para {0}. Cargalo como comprado en Nueva York.", lotTicker)); return; }
+    if (qty === null || !(qty > 0)) { setFormError(tr("La cantidad tiene que ser un número mayor a cero.")); return; }
+    if (price === null || !(price > 0)) { setFormError(tr("El precio tiene que ser un número mayor a cero.")); return; }
+    if (date === null) { setFormError(tr("Escribí la fecha como DD/MM/AAAA, o dejala vacía.")); return; }
     const fxIn = fxStr.trim() ? parseNum(fxStr, "ARS") : null;
-    if (fxStr.trim() && (fxIn === null || !(fxIn > 0))) { setFormError("El dólar de ese día tiene que ser un número mayor a cero (por ejemplo 1.575,50), o quedar vacío."); return; }
+    if (fxStr.trim() && (fxIn === null || !(fxIn > 0))) { setFormError(tr("El dólar de ese día tiene que ser un número mayor a cero (por ejemplo 1.575,50), o quedar vacío.")); return; }
     const feeIn = feeStr.trim() ? parseNum(feeStr, lotCcy) : null;
-    if (feeStr.trim() && (feeIn === null || feeIn < 0)) { setFormError("La comisión tiene que ser un número, o quedar vacía."); return; }
+    if (feeStr.trim() && (feeIn === null || feeIn < 0)) { setFormError(tr("La comisión tiene que ser un número, o quedar vacía.")); return; }
     const lot: Lot = { id: editingId ?? newId(), ticker: lotTicker, qty, price, date, ccy: lotCcy };
     if (fxIn) lot.fx = fxIn;
     if (feeIn) lot.fee = feeIn;
     if (lotCed) lot.ced = true;
     const next = editingId ? lots.map((l) => (l.id === editingId ? lot : l)) : [...lots, lot];
-    if (applySales(next, sales).unmatched.length) { setFormError("Con ese cambio quedarían ventas sin compras que las respalden. Quitá primero la venta."); return; }
+    if (applySales(next, sales).unmatched.length) { setFormError(tr("Con ese cambio quedarían ventas sin compras que las respalden. Quitá primero la venta.")); return; }
     setLots(next);
     clearLotForm();
     if (!watch.includes(lotTicker)) setWatch((w) => [...w, lotTicker]);
@@ -2767,7 +2776,7 @@ export default function InversionesPage() {
   };
   const removeLot = (id: string) => {
     const next = lots.filter((l) => l.id !== id);
-    if (applySales(next, sales).unmatched.length) { setFormError("Esa compra tiene ventas cargadas. Quitá primero la venta."); return; }
+    if (applySales(next, sales).unmatched.length) { setFormError(tr("Esa compra tiene ventas cargadas. Quitá primero la venta.")); return; }
     setLots(next);
     setConfirmClear(false);
     if (editingId === id) clearLotForm();
@@ -2781,12 +2790,12 @@ export default function InversionesPage() {
     const qty = parseNum(sQty, sellPos.ccy);
     const price = parseNum(sPx, sellPos.ccy);
     const date = parseDate(sDate);
-    if (qty === null || !(qty > 0)) { setSellError("La cantidad tiene que ser un número mayor a cero."); return; }
-    if (qty > sellPos.qty + 1e-9) { setSellError(`Tenés ${qtyText(sellPos.qty)}; no podés vender más que eso.`); return; }
-    if (price === null || !(price > 0)) { setSellError("El precio de venta tiene que ser un número mayor a cero."); return; }
-    if (!date) { setSellError("Escribí la fecha de la venta como DD/MM/AAAA."); return; }
+    if (qty === null || !(qty > 0)) { setSellError(tr("La cantidad tiene que ser un número mayor a cero.")); return; }
+    if (qty > sellPos.qty + 1e-9) { setSellError(tr("Tenés {0}; no podés vender más que eso.", qtyText(sellPos.qty))); return; }
+    if (price === null || !(price > 0)) { setSellError(tr("El precio de venta tiene que ser un número mayor a cero.")); return; }
+    if (!date) { setSellError(tr("Escribí la fecha de la venta como DD/MM/AAAA.")); return; }
     const feeIn = sFee.trim() ? parseNum(sFee, sellPos.ccy) : null;
-    if (sFee.trim() && (feeIn === null || feeIn < 0)) { setSellError("La comisión tiene que ser un número, o quedar vacía."); return; }
+    if (sFee.trim() && (feeIn === null || feeIn < 0)) { setSellError(tr("La comisión tiene que ser un número, o quedar vacía.")); return; }
     const sale: Sale = { id: newId(), ticker: sellPos.ticker, qty, price, date, ccy: sellPos.ccy };
     if (feeIn) sale.fee = feeIn;
     if (sellPos.ced) sale.ced = true;
@@ -2805,10 +2814,10 @@ export default function InversionesPage() {
     const cost = parseNum(xCost, xCcy);
     const value = parseNum(xValue, xCcy);
     const date = parseDate(xDate);
-    if (!xName.trim()) { setXError("Ponele un nombre (por ejemplo «Bono AL30» o «Fondo en dólares»)."); return; }
-    if (cost === null || cost < 0) { setXError("Lo que pusiste tiene que ser un número."); return; }
-    if (value === null || value < 0) { setXError("Lo que vale hoy tiene que ser un número."); return; }
-    if (date === null) { setXError("Escribí la fecha como DD/MM/AAAA, o dejala vacía."); return; }
+    if (!xName.trim()) { setXError(tr("Ponele un nombre (por ejemplo «Bono AL30» o «Fondo en dólares»).")); return; }
+    if (cost === null || cost < 0) { setXError(tr("Lo que pusiste tiene que ser un número.")); return; }
+    if (value === null || value < 0) { setXError(tr("Lo que vale hoy tiene que ser un número.")); return; }
+    if (date === null) { setXError(tr("Escribí la fecha como DD/MM/AAAA, o dejala vacía.")); return; }
     const x: Extra = { id: xId ?? newId(), name: xName.trim().slice(0, 60), kind: xKind, ccy: xCcy, cost, value, date };
     setExtras((prev) => (xId ? prev.map((e) => (e.id === xId ? x : e)) : [...prev, x]));
     setXOpen(false); setXId(null);
@@ -2829,10 +2838,10 @@ export default function InversionesPage() {
   const hasNote = (sym: string, iso: string) => D.notes.calendar.some((e) => e.ticker === sym && e.date === iso);
   for (const sym of followed) {
     const d = DIV[sym];
-    if (d?.nextEx && !hasNote(sym, d.nextEx)) calAll.push({ kind: "div", date: d.nextEx, ticker: sym, title: "Fecha ex de dividendo", detail: d.nextPay ? `Pago el ${fmtIso(d.nextPay)}.` : "", src: "Yahoo Finance" });
-    if (d?.nextPay && !hasNote(sym, d.nextPay)) calAll.push({ kind: "div", date: d.nextPay, ticker: sym, title: "Pago de dividendo", detail: d.nextEx ? `Fecha ex ${fmtIso(d.nextEx)}.` : "", src: "Yahoo Finance" });
+    if (d?.nextEx && !hasNote(sym, d.nextEx)) calAll.push({ kind: "div", date: d.nextEx, ticker: sym, title: tr("Fecha ex de dividendo"), detail: d.nextPay ? tr("Pago el {0}.", fmtIso(d.nextPay)) : "", src: "Yahoo Finance" });
+    if (d?.nextPay && !hasNote(sym, d.nextPay)) calAll.push({ kind: "div", date: d.nextPay, ticker: sym, title: tr("Pago de dividendo"), detail: d.nextEx ? tr("Fecha ex {0}.", fmtIso(d.nextEx)) : "", src: "Yahoo Finance" });
     const e = D.earnings[sym];
-    if (e && !hasNote(sym, e.date)) calAll.push({ kind: "earn", date: e.date, ticker: sym, title: e.estimate ? "Resultados (fecha estimada)" : "Resultados trimestrales", detail: "", src: "Yahoo Finance" });
+    if (e && !hasNote(sym, e.date)) calAll.push({ kind: "earn", date: e.date, ticker: sym, title: e.estimate ? tr("Resultados (fecha estimada)") : tr("Resultados trimestrales"), detail: "", src: "Yahoo Finance" });
   }
   const calMine = calAll
     .filter((e) => followed.includes(e.ticker) && e.date >= todayIso && e.date <= calHorizon)
@@ -2845,15 +2854,15 @@ export default function InversionesPage() {
   const okPositions = computed.positions.filter((p) => p.ok);
   const costValue = [
     ...okPositions.map((p) => ({ label: p.label, cost: p.costUsd, value: p.valueUsd })),
-    ...computed.extraRows.map((r) => ({ label: r.x.name, cost: r.costUsd, value: r.valueUsd })),
+    ...computed.extraRows.map((r) => ({ label: tr(r.x.name), cost: r.costUsd, value: r.valueUsd })),
   ].sort((a, b) => b.value - a.value);
-  const alloc = allocation(computed.parts.map((p) => ({ label: p[allocBy], value: p.value })));
+  const alloc = allocation(computed.parts.map((p) => ({ label: allocBy === "titulo" ? p.titulo : tr(p[allocBy]), value: p.value })));
   const pieParts = alloc.map((a) => ({ label: a.label, value: a.value, display: `${MONEY(a.value)} · ${YLD(a.pct, 1)}` }));
-  const bySector = allocation(computed.parts.map((p) => ({ label: p.sector, value: p.value })));
+  const bySector = allocation(computed.parts.map((p) => ({ label: tr(p.sector), value: p.value })));
   const byTitle = allocation(computed.parts.map((p) => ({ label: p.titulo, value: p.value })));
   const warnings: string[] = [];
-  if (byTitle.length > 1 && byTitle[0].pct > 35) warnings.push(`${byTitle[0].label} es el ${YLD(byTitle[0].pct, 0)} de tu cartera.`);
-  if (bySector.length > 1 && bySector[0].pct > 60 && bySector[0].label !== "Índices") warnings.push(`El ${YLD(bySector[0].pct, 0)} está en un solo sector: ${bySector[0].label}.`);
+  if (byTitle.length > 1 && byTitle[0].pct > 35) warnings.push(tr("{0} es el {1} de tu cartera.", byTitle[0].label, YLD(byTitle[0].pct, 0)));
+  if (bySector.length > 1 && bySector[0].pct > 60 && bySector[0].label !== tr("Índices")) warnings.push(tr("El {0} está en un solo sector: {1}.", YLD(bySector[0].pct, 0), bySector[0].label));
 
   // Evolución: valor, invertido y S&P 500 con las mismas fechas
   const histAll = computed.history.points;
@@ -2873,7 +2882,7 @@ export default function InversionesPage() {
     const lo = Math.min(...vals);
     const hi = Math.max(...vals);
     const pad = (hi - lo) * 0.08 || 1;
-    return { points: pts.map((p) => ({ label: `${MESES[Number(p.w.slice(5, 7)) - 1]} ${p.w.slice(2, 4)}`, value: p.v })), floor: lo - pad, ceil: hi + pad };
+    return { points: pts.map((p) => ({ label: `${monthShort(Number(p.w.slice(5, 7)) - 1)} ${p.w.slice(2, 4)}`, value: p.v })), floor: lo - pad, ceil: hi + pad };
   })();
 
   // Dividendos de los últimos 12 meses por mes de la fecha ex, con las cantidades de hoy.
@@ -2894,7 +2903,7 @@ export default function InversionesPage() {
   }
   const monthPoints = monthKeys.map((k) => {
     const v = byMonth.get(k) ?? 0;
-    return { label: MESES[Number(k.slice(5, 7)) - 1], value: Math.round(v * 100) / 100, display: formatDec(v, v >= 100 ? 0 : 2) };
+    return { label: monthShort(Number(k.slice(5, 7)) - 1), value: Math.round(v * 100) / 100, display: formatDec(v, v >= 100 ? 0 : 2) };
   });
   const monthTotal = monthPoints.reduce((s, p) => s + p.value, 0);
   const receivedYears = Object.entries(computed.received.byYear).sort((a, b) => a[0].localeCompare(b[0]));
@@ -2903,51 +2912,51 @@ export default function InversionesPage() {
   const curLabel = (c: Ccy) => (c === "ARS" ? "ARS" : c === "AUD" ? "A$" : "USD");
   const formDate = parseDate(dateStr);
   const formMep = formDate ? mepOn(formDate) : null;
-  const fxPlaceholder = formMep ? `Automático: ${formatDec(formMep, 2)}` : "Automático";
+  const fxPlaceholder = formMep ? tr("Automático: {0}", formatDec(formMep, 2)) : tr("Automático");
 
   const idxLevel = (r: IndexRow) => r.kind === "tasa" ? YLD(r.level, 3) : r.kind === "usd" ? `USD ${formatDec(r.level)}` : r.kind === "fx" ? formatDec(r.level, 4) : formatDec(r.level);
   const bp = (n: number | null | undefined): TableCell => {
     if (n == null) return "—";
     const v = n * 100;
-    return { text: `${v > 0 ? "+" : v < 0 ? "−" : ""}${formatDec(Math.abs(v), 1)} pb`, tone: tone(-v) };
+    return { text: `${v > 0 ? "+" : v < 0 ? "−" : ""}${formatDec(Math.abs(v), 1)} ${tr("pb")}`, tone: tone(-v) };
   };
   const pctCell = (n: number | null | undefined): TableCell => ({ text: PCT(n), tone: tone(n) });
   const sgn = (n: number) => (n > 0 ? "ui-tone-success" : n < 0 ? "ui-tone-danger" : undefined);
   const money = (ccy: Ccy, n: number) => nativeMoney(ccy, n);
   const isDemo = pf.active === "ejemplo";
-  const pfName = pf.list.find((p) => p.id === pf.active)?.name ?? MAIN_PORTFOLIO.name;
+  const pfName = tr(pf.list.find((p) => p.id === pf.active)?.name ?? MAIN_PORTFOLIO.name);
 
   const lotForm = (
     <div className="inv-form">
       <div className="inv-form-grid">
-        <Select label="Título" options={ORDER.map((s) => ({ value: s, label: `${s} · ${CATALOG[s].name}` }))} value={lotTicker} onChange={setLotTicker} />
+        <Select label={tr("Título")} options={ORDER.map((s) => ({ value: s, label: `${s} · ${CATALOG[s].name}` }))} value={lotTicker} onChange={setLotTicker} />
         <Select
-          label="Dónde lo compraste"
+          label={tr("Dónde lo compraste")}
           options={isAsxTicker(lotTicker)
-            ? [{ value: "AUD", label: "Australia (ASX), en A$" }, { value: "USD", label: "En dólares" }]
+            ? [{ value: "AUD", label: tr("Australia (ASX), en A$") }, { value: "USD", label: tr("En dólares") }]
             : [
-                { value: "USD", label: lotTicker.endsWith("-USD") ? "En dólares" : "Nueva York, en dólares" },
+                { value: "USD", label: lotTicker.endsWith("-USD") ? tr("En dólares") : tr("Nueva York, en dólares") },
                 ...(baOfForm ? [
-                  { value: "ARS", label: `Argentina (${baOfForm.symbol}), en pesos` },
-                  { value: "CED", label: `Argentina (${baOfForm.symbol.replace(/\.BA$/, "")}D), en dólares` },
+                  { value: "ARS", label: tr("Argentina ({0}), en pesos", baOfForm.symbol) },
+                  { value: "CED", label: tr("Argentina ({0}D), en dólares", baOfForm.symbol.replace(/\.BA$/, "")) },
                 ] : []),
               ]}
           value={market}
           onChange={(v: string) => setMarket(v === "ARS" || v === "AUD" || v === "CED" ? v : "USD")}
         />
-        <Input label="Cantidad" value={qtyStr} onChange={setQtyStr} placeholder={lotCcy === "ARS" ? "1.500" : "10"} />
-        <Input label={`Precio (${curLabel(lotCcy)})`} value={pxStr} onChange={setPxStr} placeholder={lotCcy === "ARS" ? "6.040" : "25,50"} />
-        <Input label="Fecha de compra" value={dateStr} onChange={setDateStr} placeholder="DD/MM/AAAA" />
-        <Input label={`Comisión (${curLabel(lotCcy)})`} value={feeStr} onChange={setFeeStr} placeholder="Opcional" />
-        <Input label="Dólar de ese día" value={fxStr} onChange={setFxStr} placeholder={fxPlaceholder} />
+        <Input label={tr("Cantidad")} value={qtyStr} onChange={setQtyStr} placeholder={lotCcy === "ARS" ? "1.500" : "10"} />
+        <Input label={tr("Precio ({0})", curLabel(lotCcy))} value={pxStr} onChange={setPxStr} placeholder={lotCcy === "ARS" ? "6.040" : "25,50"} />
+        <Input label={tr("Fecha de compra")} value={dateStr} onChange={setDateStr} placeholder="DD/MM/AAAA" />
+        <Input label={tr("Comisión ({0})", curLabel(lotCcy))} value={feeStr} onChange={setFeeStr} placeholder={tr("Opcional")} />
+        <Input label={tr("Dólar de ese día")} value={fxStr} onChange={setFxStr} placeholder={fxPlaceholder} />
       </div>
       <div className="inv-row">
-        <Button label={editingId ? "Guardar cambios" : "Agregar compra"} variant="primary" onClick={saveLot} />
-        {editingId ? <Button label="Cancelar" onClick={clearLotForm} /> : null}
+        <Button label={editingId ? tr("Guardar cambios") : tr("Agregar compra")} variant="primary" onClick={saveLot} />
+        {editingId ? <Button label={tr("Cancelar")} onClick={clearLotForm} /> : null}
         {(market === "ARS" || market === "CED") && baOfForm ? (
           <span className="inv-hint">
-            {market === "ARS" ? `${baOfForm.symbol} cotiza a ${PESOS(baOfForm.price, baOfForm.price % 1 === 0 ? 0 : 2)}.` : `Se valúa a ${MONEY(baOfForm.price / MEP_VENTA)} (precio en pesos ÷ dólar MEP).`}
-            {baOfForm.ratio ? ` ${baOfForm.ratio >= 1 ? `${baOfForm.ratio} ${baOfForm.kind === "local" ? "acciones locales" : "CEDEARs"} = 1 acción de Nueva York` : `1 ${baOfForm.kind === "local" ? "acción local" : "CEDEAR"} = ${Math.round(1 / baOfForm.ratio)} acciones de Nueva York`}.` : ""}
+            {market === "ARS" ? tr("{0} cotiza a {1}.", baOfForm.symbol, PESOS(baOfForm.price, baOfForm.price % 1 === 0 ? 0 : 2)) : tr("Se valúa a {0} (precio en pesos ÷ dólar MEP).", MONEY(baOfForm.price / MEP_VENTA))}
+            {baOfForm.ratio ? ` ${baOfForm.ratio >= 1 ? tr("{0} {1} = 1 acción de Nueva York", baOfForm.ratio, baOfForm.kind === "local" ? tr("acciones locales") : tr("CEDEARs")) : tr("1 {0} = {1} acciones de Nueva York", baOfForm.kind === "local" ? tr("acción local") : "CEDEAR", Math.round(1 / baOfForm.ratio))}.` : ""}
           </span>
         ) : null}
       </div>
@@ -2957,135 +2966,135 @@ export default function InversionesPage() {
 
   return (
     <Page
-      title="Seguimiento de inversiones"
-      sources={[`Precios, dividendos, resultados y noticias: Yahoo Finance. Dólar: DolarApi y ArgentinaDatos. Nueva York al cierre del ${nyDay}, Sídney del ${asxDay}, Buenos Aires del ${baDay}. No es una recomendación de inversión.`]}
+      title={tr("Seguimiento de inversiones")}
+      sources={[tr("Precios, dividendos, resultados y noticias: Yahoo Finance. Dólar: DolarApi y ArgentinaDatos. Nueva York al cierre del {0}, Sídney del {1}, Buenos Aires del {2}. No es una recomendación de inversión.", nyDay, asxDay, baDay)]}
     >
-      <DashShell tab={tab} onChange={setTab} stamp={`Actualizado ${fresh.text}`} stampTone={fresh.tone}>
-      {fresh.tone === "old" ? <Callout tone="warning" lead="Los precios están desactualizados.">La última actualización fue el {dataStamp}.</Callout> : null}
-      {mode === "memory" ? <Callout tone="warning" lead="Este navegador no deja guardar la cartera.">Lo que cargues se pierde al cerrar la página. Descargá un respaldo en «Importar y respaldo».</Callout> : null}
+      <DashShell tab={tab} onChange={setTab} stamp={tr("Actualizado {0}", fresh.text)} stampTone={fresh.tone} lang={lang} onLang={changeLang}>
+      {fresh.tone === "old" ? <Callout tone="warning" lead={tr("Los precios están desactualizados.")}>{tr("La última actualización fue el ")}{dataStamp}.</Callout> : null}
+      {mode === "memory" ? <Callout tone="warning" lead={tr("Este navegador no deja guardar la cartera.")}>{tr("Lo que cargues se pierde al cerrar la página. Descargá un respaldo en «Importar y respaldo».")}</Callout> : null}
 
       {tab === "cartera" ? (
       <>
         <div className="inv-pf">
           {pfEdit ? (
             <>
-              <input className="inv-input" style={{ maxWidth: 220 }} aria-label="Nombre de la cartera" autoFocus value={pfEdit.name} placeholder="Nombre de la cartera" onChange={(e) => setPfEdit({ ...pfEdit, name: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") savePfName(); }} />
-              <Button label="Guardar" variant="primary" onClick={savePfName} />
-              <Button label="Cancelar" onClick={() => setPfEdit(null)} />
+              <input className="inv-input" style={{ maxWidth: 220 }} aria-label={tr("Nombre de la cartera")} autoFocus value={pfEdit.name} placeholder={tr("Nombre de la cartera")} onChange={(e) => setPfEdit({ ...pfEdit, name: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") savePfName(); }} />
+              <Button label={tr("Guardar")} variant="primary" onClick={savePfName} />
+              <Button label={tr("Cancelar")} onClick={() => setPfEdit(null)} />
             </>
           ) : (
             <>
-              <select aria-label="Cartera" value={pf.active} onChange={(e) => loadPortfolio(e.target.value, pf.list)}>
-                {pf.list.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              <select aria-label={tr("Cartera")} value={pf.active} onChange={(e) => loadPortfolio(e.target.value, pf.list)}>
+                {pf.list.map((p) => <option key={p.id} value={p.id}>{tr(p.name)}</option>)}
               </select>
-              <Button label="+ Nueva cartera" onClick={() => setPfEdit({ mode: "new", name: "" })} />
-              <Button label="Cambiar nombre" onClick={() => setPfEdit({ mode: "rename", name: pfName })} />
-              {pf.active !== MAIN_PORTFOLIO.id && !isDemo ? <Button label="Borrar esta cartera" onClick={deletePortfolio} /> : null}
+              <Button label={tr("+ Nueva cartera")} onClick={() => setPfEdit({ mode: "new", name: "" })} />
+              <Button label={tr("Cambiar nombre")} onClick={() => setPfEdit({ mode: "rename", name: pfName })} />
+              {pf.active !== MAIN_PORTFOLIO.id && !isDemo ? <Button label={tr("Borrar esta cartera")} onClick={deletePortfolio} /> : null}
             </>
           )}
         </div>
         {isDemo ? (
           <div className="inv-banner">
-            <span>Esta es una cartera de ejemplo, con compras inventadas, para que veas cómo funciona.</span>
-            <Button label="Salir y borrar el ejemplo" variant="primary" onClick={deletePortfolio} />
+            <span>{tr("Esta es una cartera de ejemplo, con compras inventadas, para que veas cómo funciona.")}</span>
+            <Button label={tr("Salir y borrar el ejemplo")} variant="primary" onClick={deletePortfolio} />
           </div>
         ) : null}
         {hasPort ? (
           <div className="inv-sum">
             <div>
-              <div className="inv-sum-label">Valor de {pfName}</div>
-              <div className="inv-sum-value">{MONEY(computed.valueUsd)} <span className={`inv-pill ${computed.dayUsd >= 0 ? "inv-pill-up" : "inv-pill-down"}`}>{PCT(computed.dayPct)} hoy</span></div>
-              <div className="inv-sum-sub">{PESOS(computed.valueArs, 0)} al dólar MEP de hoy ({PESOS(MEP_VENTA, 0)})</div>
+              <div className="inv-sum-label">{tr("Valor de ")}{pfName}</div>
+              <div className="inv-sum-value">{MONEY(computed.valueUsd)} <span className={`inv-pill ${computed.dayUsd >= 0 ? "inv-pill-up" : "inv-pill-down"}`}>{PCT(computed.dayPct)}{tr(" hoy")}</span></div>
+              <div className="inv-sum-sub">{PESOS(computed.valueArs, 0)}{tr(" al dólar MEP de hoy (")}{PESOS(MEP_VENTA, 0)})</div>
             </div>
             <dl className="inv-sum-stats">
-              <div><dt>Resultado en dólares</dt><dd className={sgn(computed.pnlUsd)}>{MONEY(computed.pnlUsd)}<small>{PCT(computed.pct)}</small></dd></div>
-              <div><dt>Resultado en pesos</dt><dd className={sgn(computed.pnlArs)}>{PESOS(computed.pnlArs, 0)}<small>{PCT(computed.pctArs)}</small></dd></div>
-              {sales.length ? <div><dt>Ya vendido</dt><dd className={sgn(computed.realizedUsd)}>{MONEY(computed.realizedUsd)}<small>resultado de {sales.length === 1 ? "1 venta" : `${sales.length} ventas`}</small></dd></div> : null}
-              <div><dt>Dividendos cobrados</dt><dd>{MONEY(computed.received.total)}<small>estimado</small></dd></div>
+              <div><dt>{tr("Resultado en dólares")}</dt><dd className={sgn(computed.pnlUsd)}>{MONEY(computed.pnlUsd)}<small>{PCT(computed.pct)}</small></dd></div>
+              <div><dt>{tr("Resultado en pesos")}</dt><dd className={sgn(computed.pnlArs)}>{PESOS(computed.pnlArs, 0)}<small>{PCT(computed.pctArs)}</small></dd></div>
+              {sales.length ? <div><dt>{tr("Ya vendido")}</dt><dd className={sgn(computed.realizedUsd)}>{MONEY(computed.realizedUsd)}<small>{tr("resultado de ")}{sales.length === 1 ? tr("1 venta") : tr("{0} ventas", sales.length)}</small></dd></div> : null}
+              <div><dt>{tr("Dividendos cobrados")}</dt><dd>{MONEY(computed.received.total)}<small>{tr("estimado")}</small></dd></div>
             </dl>
           </div>
         ) : (
           <div className="inv-empty">
-            <strong>Todavía no cargaste compras</strong>
-            Agregá la primera acá abajo, importá todas desde un Excel, o mirá un ejemplo.
+            <strong>{tr("Todavía no cargaste compras")}</strong>
+            {tr("Agregá la primera acá abajo, importá todas desde un Excel, o mirá un ejemplo.")}
           </div>
         )}
         <div className="inv-actions">
-          <Button label="+ Agregar compra" variant="primary" onClick={() => document.getElementById("compras")?.scrollIntoView({ behavior: "smooth" })} />
-          <Button label="+ Otro activo" onClick={() => { openExtra(); setTimeout(() => document.getElementById("otros")?.scrollIntoView({ behavior: "smooth" }), 50); }} />
-          <Button label="Importar desde Excel" onClick={() => setTab("datos")} />
-          <Button label="Guardar respaldo" onClick={() => setTab("datos")} />
-          {!hasPort && !isDemo ? <Button label="Ver un ejemplo" onClick={openDemo} /> : null}
+          <Button label={tr("+ Agregar compra")} variant="primary" onClick={() => document.getElementById("compras")?.scrollIntoView({ behavior: "smooth" })} />
+          <Button label={tr("+ Otro activo")} onClick={() => { openExtra(); setTimeout(() => document.getElementById("otros")?.scrollIntoView({ behavior: "smooth" }), 50); }} />
+          <Button label={tr("Importar desde Excel")} onClick={() => setTab("datos")} />
+          <Button label={tr("Guardar respaldo")} onClick={() => setTab("datos")} />
+          {!hasPort && !isDemo ? <Button label={tr("Ver un ejemplo")} onClick={openDemo} /> : null}
         </div>
         {weekEvents.length > 0 ? (
           <div className="inv-week">
             {weekEvents.map((e) => (
               <div key={`${e.ticker}-${e.date}-${e.title}`} className={`inv-week-card inv-week-${e.kind}`} title={e.detail}>
-                <div className="inv-week-date">{e.date === todayIso ? "Hoy" : fmtIso(e.date, false)}</div>
+                <div className="inv-week-date">{e.date === todayIso ? tr("Hoy") : fmtIso(e.date, false)}</div>
                 <div className="inv-week-tk">{e.ticker}</div>
                 <div className="inv-week-what">{e.title}</div>
               </div>
             ))}
           </div>
         ) : null}
-        {warnings.length ? <Callout tone="warning" lead="Cartera concentrada.">{warnings.join(" ")}</Callout> : null}
-        {computed.unmatched.length ? <Callout tone="danger">Hay ventas cargadas por más cantidad de la que compraste. Revisá la tabla de ventas.</Callout> : null}
+        {warnings.length ? <Callout tone="warning" lead={tr("Cartera concentrada.")}>{warnings.join(" ")}</Callout> : null}
+        {computed.unmatched.length ? <Callout tone="danger">{tr("Hay ventas cargadas por más cantidad de la que compraste. Revisá la tabla de ventas.")}</Callout> : null}
 
         {histAll.length > 1 && histLast ? (
-          <Section heading="Cómo viene tu cartera" actions={
-            <Segmented<"all" | "y1" | "m3"> options={[{ value: "all", label: "Todo" }, { value: "y1", label: "1 año" }, { value: "m3", label: "3 meses" }]} value={histRange} onChange={setHistRange} />
+          <Section heading={tr("Cómo viene tu cartera")} actions={
+            <Segmented<"all" | "y1" | "m3"> options={[{ value: "all", label: tr("Todo") }, { value: "y1", label: tr("1 año") }, { value: "m3", label: tr("3 meses") }]} value={histRange} onChange={setHistRange} />
           }>
             <MultiLine
-              labels={histPts.map((p) => `${Number(p.week.slice(8, 10))} ${MESES[Number(p.week.slice(5, 7)) - 1]} ${p.week.slice(2, 4)}`)}
+              labels={histPts.map((p) => `${Number(p.week.slice(8, 10))} ${monthShort(Number(p.week.slice(5, 7)) - 1)} ${p.week.slice(2, 4)}`)}
               unit="USD"
               format={(v: number) => formatDec(v, 0)}
               series={[
-                { name: "Tu cartera", color: "#22c55e", values: histPts.map((p) => p.value) },
-                { name: "Lo mismo en el S&P 500", color: "#38bdf8", values: histPts.map((p) => p.bench) },
-                { name: "Lo que pusiste (dólares guardados)", color: "#9aa6bf", values: histPts.map((p) => p.invested), dashed: true },
+                { name: tr("Tu cartera"), color: "#22c55e", values: histPts.map((p) => p.value) },
+                { name: tr("Lo mismo en el S&P 500"), color: "#38bdf8", values: histPts.map((p) => p.bench) },
+                { name: tr("Lo que pusiste (dólares guardados)"), color: "#9aa6bf", values: histPts.map((p) => p.invested), dashed: true },
               ]}
             />
             <p className="inv-hint">
-              Hoy tus títulos valen {MONEY(histLast.value)} y pusiste {MONEY(histLast.invested)} (neto de ventas).
-              {histLast.bench != null ? ` Con las mismas compras y ventas en el S&P 500 tendrías ${MONEY(histLast.bench)}.` : ""}
-              {computed.history.skipped ? ` No incluye ${computed.history.skipped === 1 ? "una compra" : `${computed.history.skipped} compras`} sin fecha.` : ""}
-              {extras.length ? " No incluye los otros activos." : ""}
+              {tr("Hoy tus títulos valen ")}{MONEY(histLast.value)}{tr(" y pusiste ")}{MONEY(histLast.invested)}{tr(" (neto de ventas).")}
+              {histLast.bench != null ? tr(" Con las mismas compras y ventas en el S&P 500 tendrías {0}.", MONEY(histLast.bench)) : ""}
+              {computed.history.skipped ? tr(" No incluye {0} sin fecha.", computed.history.skipped === 1 ? tr("una compra") : `${computed.history.skipped} compras`) : ""}
+              {extras.length ? tr(" No incluye los otros activos.") : ""}
             </p>
           </Section>
         ) : null}
 
         {okPositions.length || computed.positions.length ? (
-          <Section heading="Posiciones">
+          <Section heading={tr("Posiciones")}>
             <Table
               sortable
-              columns={["Título", "Mercado", "Cantidad", "Costo", "Valor", "Resultado", "%", "% en dólares", "Dividendo s/costo", ""]}
+              columns={[tr("Título"), tr("Mercado"), tr("Cantidad"), tr("Costo"), tr("Valor"), tr("Resultado"), "%", tr("% en dólares"), tr("Dividendo s/costo"), ""]}
               align={["start", "start", "end", "end", "end", "end", "end", "end", "end", "end"]}
               rows={computed.positions.map((p) => [
                 p.ticker,
                 p.market,
                 qtyText(p.qty),
                 money(p.ccy, p.costN),
-                p.ok ? money(p.ccy, p.valueN) : "Sin cotización",
+                p.ok ? money(p.ccy, p.valueN) : tr("Sin cotización"),
                 p.ok ? { text: money(p.ccy, p.pnlN), tone: tone(p.pnlN) } : "—",
                 p.ok ? { text: PCT(p.pct), tone: tone(p.pct) } : "—",
                 p.ok ? { text: PCT(p.pctUsd), tone: tone(p.pctUsd) } : "—",
                 p.yoc > 0 ? YLD(p.yoc) : "—",
-                <Button label="Vender" onClick={() => startSell(p.key)} />,
+                <Button label={tr("Vender")} onClick={() => startSell(p.key)} />,
               ])}
             />
             {sellPos ? (
               <div className="inv-inline">
-                <h3>Vender {sellPos.ticker} ({sellPos.market})</h3>
+                <h3>{tr("Vender ")}{sellPos.ticker} ({sellPos.market})</h3>
                 <div className="inv-inline-grid">
-                  <Input label={`Cantidad (tenés ${qtyText(sellPos.qty)})`} value={sQty} onChange={setSQty} placeholder={qtyText(sellPos.qty)} />
-                  <Input label={`Precio de venta (${curLabel(sellPos.ccy)})`} value={sPx} onChange={setSPx} placeholder={formatDec(unitOf(sellPos).native)} />
-                  <Input label="Fecha de la venta" value={sDate} onChange={setSDate} placeholder="DD/MM/AAAA" />
-                  <Input label={`Comisión (${curLabel(sellPos.ccy)})`} value={sFee} onChange={setSFee} placeholder="Opcional" />
+                  <Input label={tr("Cantidad (tenés {0})", qtyText(sellPos.qty))} value={sQty} onChange={setSQty} placeholder={qtyText(sellPos.qty)} />
+                  <Input label={tr("Precio de venta ({0})", curLabel(sellPos.ccy))} value={sPx} onChange={setSPx} placeholder={formatDec(unitOf(sellPos).native)} />
+                  <Input label={tr("Fecha de la venta")} value={sDate} onChange={setSDate} placeholder="DD/MM/AAAA" />
+                  <Input label={tr("Comisión ({0})", curLabel(sellPos.ccy))} value={sFee} onChange={setSFee} placeholder={tr("Opcional")} />
                 </div>
                 <div className="inv-row">
-                  <Button label="Registrar venta" variant="primary" onClick={saveSale} />
-                  <Button label="Cancelar" onClick={() => setSellKey(null)} />
-                  <span className="inv-hint">Se descuentan primero las compras más viejas.</span>
+                  <Button label={tr("Registrar venta")} variant="primary" onClick={saveSale} />
+                  <Button label={tr("Cancelar")} onClick={() => setSellKey(null)} />
+                  <span className="inv-hint">{tr("Se descuentan primero las compras más viejas.")}</span>
                 </div>
                 {sellError ? <Callout tone="danger">{sellError}</Callout> : null}
               </div>
@@ -3095,28 +3104,28 @@ export default function InversionesPage() {
 
         {costValue.length ? (
           <Grid columns={2}>
-            <Section heading="Costo y valor, en dólares" caption="Gris: lo que pagaste, al dólar del día de compra. Color: lo que vale hoy.">
+            <Section heading={tr("Costo y valor, en dólares")} caption={tr("Gris: lo que pagaste, al dólar del día de compra. Color: lo que vale hoy.")}>
               <CostValueBars rows={costValue} total={{ cost: computed.costUsd, value: computed.valueUsd }} />
             </Section>
-            <Section heading="Cómo está repartida" actions={
-              <Segmented<"titulo" | "sector" | "pais"> options={[{ value: "titulo", label: "Título" }, { value: "sector", label: "Sector" }, { value: "pais", label: "País" }]} value={allocBy} onChange={setAllocBy} />
+            <Section heading={tr("Cómo está repartida")} actions={
+              <Segmented<"titulo" | "sector" | "pais"> options={[{ value: "titulo", label: tr("Título") }, { value: "sector", label: tr("Sector") }, { value: "pais", label: tr("País") }]} value={allocBy} onChange={setAllocBy} />
             }>
-              <Pie parts={pieParts} total={MONEY(computed.valueUsd)} label="Valor" />
+              <Pie parts={pieParts} total={MONEY(computed.valueUsd)} label={tr("Valor")} />
             </Section>
           </Grid>
         ) : null}
 
-        <Section heading={editingId ? "Editar compra" : lots.length ? "Compras" : "Agregar una compra"} id="compras">
+        <Section heading={editingId ? tr("Editar compra") : lots.length ? tr("Compras") : tr("Agregar una compra")} id="compras">
           {lotForm}
           {computed.fxToday > 0 ? (
             <Callout tone="warning">
-              {computed.fxToday === 1 ? "Una compra no tiene fecha" : `${computed.fxToday} compras no tienen fecha`}, así que su costo se convierte con el dólar de hoy. Tocá «Editar» para ponerle la fecha.
+              {computed.fxToday === 1 ? tr("Una compra no tiene fecha") : tr("{0} compras no tienen fecha", computed.fxToday)}{tr(", así que su costo se convierte con el dólar de hoy. Tocá «Editar» para ponerle la fecha.")}
             </Callout>
           ) : null}
           {computed.rows.length ? (
             <Table
               sortable
-              columns={["Título", "Mercado", "Cantidad × precio", "Fecha", "Comisión", "Dólar de compra", "Valor", "%", ""]}
+              columns={[tr("Título"), tr("Mercado"), tr("Cantidad × precio"), tr("Fecha"), tr("Comisión"), tr("Dólar de compra"), tr("Valor"), "%", ""]}
               align={["start", "start", "start", "start", "end", "end", "end", "end", "end"]}
               rows={computed.rows.map((row) => [
                 row.lot.ticker,
@@ -3125,11 +3134,11 @@ export default function InversionesPage() {
                 row.lot.date ? formatDate(row.lot.date) : "—",
                 row.lot.fee ? money(row.lot.ccy, row.lot.fee) : "—",
                 row.fxSrc === "hoy" ? { text: `${PESOS(row.fxRate, 2)} (hoy)`, tone: "warning" as const } : PESOS(row.fxRate, 2),
-                row.ok ? money(row.lot.ccy, row.valueN) : "Sin cotización",
+                row.ok ? money(row.lot.ccy, row.valueN) : tr("Sin cotización"),
                 row.ok ? { text: PCT(row.pct), tone: tone(row.pct) } : "—",
                 <span className="inv-row" style={{ justifyContent: "flex-end", flexWrap: "nowrap" }}>
-                  <Button label="Editar" onClick={() => { const full = lots.find((l) => l.id === row.lot.id); if (full) editLot(full); }} />
-                  <Button label="Quitar" onClick={() => removeLot(row.lot.id)} />
+                  <Button label={tr("Editar")} onClick={() => { const full = lots.find((l) => l.id === row.lot.id); if (full) editLot(full); }} />
+                  <Button label={tr("Quitar")} onClick={() => removeLot(row.lot.id)} />
                 </span>,
               ])}
             />
@@ -3137,10 +3146,10 @@ export default function InversionesPage() {
         </Section>
 
         {computed.realized.length ? (
-          <Section heading="Ventas" caption="El resultado compara lo cobrado con lo que habían costado esos títulos, cada uno al dólar de su fecha.">
+          <Section heading={tr("Ventas")} caption={tr("El resultado compara lo cobrado con lo que habían costado esos títulos, cada uno al dólar de su fecha.")}>
             <Table
               sortable
-              columns={["Fecha", "Título", "Cantidad × precio", "Cobrado", "Resultado", "Resultado en dólares", ""]}
+              columns={[tr("Fecha"), tr("Título"), tr("Cantidad × precio"), tr("Cobrado"), tr("Resultado"), tr("Resultado en dólares"), ""]}
               align={["start", "start", "start", "end", "end", "end", "end"]}
               rows={computed.realized.map((r) => [
                 formatDate(r.sale.date),
@@ -3149,89 +3158,89 @@ export default function InversionesPage() {
                 money(r.sale.ccy, r.proceedsNative),
                 { text: `${money(r.sale.ccy, r.proceedsNative - r.costNative)} (${PCT(r.costNative ? (r.proceedsNative / r.costNative - 1) * 100 : 0)})`, tone: tone(r.proceedsNative - r.costNative) },
                 { text: `${MONEY(r.pnlUsd)} (${PCT(r.costUsd ? (r.pnlUsd / r.costUsd) * 100 : 0)})`, tone: tone(r.pnlUsd) },
-                <Button label="Quitar" onClick={() => setSales((prev) => prev.filter((s) => s.id !== r.sale.id))} />,
+                <Button label={tr("Quitar")} onClick={() => setSales((prev) => prev.filter((s) => s.id !== r.sale.id))} />,
               ])}
-              footer={["Total", "", "", "", "", { text: MONEY(computed.realizedUsd), tone: tone(computed.realizedUsd) }, ""]}
+              footer={[tr("Total"), "", "", "", "", { text: MONEY(computed.realizedUsd), tone: tone(computed.realizedUsd) }, ""]}
             />
           </Section>
         ) : null}
 
         {extras.length || xOpen ? (
-          <Section heading="Otros activos" id="otros" caption="Bonos, obligaciones negociables, fondos, efectivo o lo que no tenga cotización acá. El valor de hoy lo actualizás vos.">
+          <Section heading={tr("Otros activos")} id="otros" caption={tr("Bonos, obligaciones negociables, fondos, efectivo o lo que no tenga cotización acá. El valor de hoy lo actualizás vos.")}>
             {extras.length ? (
               <Table
-                columns={["Nombre", "Tipo", "Fecha", "Pusiste", "Vale hoy", "%", ""]}
+                columns={[tr("Nombre"), tr("Tipo"), tr("Fecha"), tr("Pusiste"), tr("Vale hoy"), "%", ""]}
                 align={["start", "start", "start", "end", "end", "end", "end"]}
                 rows={computed.extraRows.map((r) => [
-                  r.x.name, r.x.kind, r.x.date ? formatDate(r.x.date) : "—", money(r.x.ccy, r.x.cost), money(r.x.ccy, r.x.value),
+                  tr(r.x.name), tr(r.x.kind), r.x.date ? formatDate(r.x.date) : "—", money(r.x.ccy, r.x.cost), money(r.x.ccy, r.x.value),
                   { text: PCT(r.pct), tone: tone(r.pct) },
                   <span className="inv-row" style={{ justifyContent: "flex-end", flexWrap: "nowrap" }}>
-                    <Button label="Actualizar" onClick={() => openExtra(r.x)} />
-                    <Button label="Quitar" onClick={() => setExtras((prev) => prev.filter((e) => e.id !== r.x.id))} />
+                    <Button label={tr("Actualizar")} onClick={() => openExtra(r.x)} />
+                    <Button label={tr("Quitar")} onClick={() => setExtras((prev) => prev.filter((e) => e.id !== r.x.id))} />
                   </span>,
                 ])}
               />
             ) : null}
             {xOpen ? (
               <div className="inv-inline">
-                <h3>{xId ? "Actualizar activo" : "Agregar otro activo"}</h3>
+                <h3>{xId ? tr("Actualizar activo") : tr("Agregar otro activo")}</h3>
                 <div className="inv-inline-grid">
-                  <Input label="Nombre" value={xName} onChange={setXName} placeholder="Bono AL30" />
-                  <Select label="Tipo" options={EXTRA_KINDS.map((k) => ({ value: k, label: k }))} value={xKind} onChange={setXKind} />
-                  <Select label="Moneda" options={[{ value: "USD", label: "Dólares" }, { value: "ARS", label: "Pesos" }]} value={xCcy} onChange={(v: string) => setXCcy(v === "ARS" ? "ARS" : "USD")} />
-                  <Input label="Fecha" value={xDate} onChange={setXDate} placeholder="DD/MM/AAAA" />
-                  <Input label={`Lo que pusiste (${xCcy})`} value={xCost} onChange={setXCost} placeholder="1.000" />
-                  <Input label={`Lo que vale hoy (${xCcy})`} value={xValue} onChange={setXValue} placeholder="1.100" />
+                  <Input label={tr("Nombre")} value={xName} onChange={setXName} placeholder={tr("Bono AL30")} />
+                  <Select label={tr("Tipo")} options={EXTRA_KINDS.map((k) => ({ value: k, label: tr(k) }))} value={xKind} onChange={setXKind} />
+                  <Select label={tr("Moneda")} options={[{ value: "USD", label: tr("Dólares") }, { value: "ARS", label: tr("Pesos") }]} value={xCcy} onChange={(v: string) => setXCcy(v === "ARS" ? "ARS" : "USD")} />
+                  <Input label={tr("Fecha")} value={xDate} onChange={setXDate} placeholder="DD/MM/AAAA" />
+                  <Input label={tr("Lo que pusiste ({0})", xCcy)} value={xCost} onChange={setXCost} placeholder="1.000" />
+                  <Input label={tr("Lo que vale hoy ({0})", xCcy)} value={xValue} onChange={setXValue} placeholder="1.100" />
                 </div>
                 <div className="inv-row">
-                  <Button label={xId ? "Guardar cambios" : "Agregar"} variant="primary" onClick={saveExtra} />
-                  <Button label="Cancelar" onClick={() => { setXOpen(false); setXId(null); }} />
+                  <Button label={xId ? tr("Guardar cambios") : tr("Agregar")} variant="primary" onClick={saveExtra} />
+                  <Button label={tr("Cancelar")} onClick={() => { setXOpen(false); setXId(null); }} />
                 </div>
                 {xError ? <Callout tone="danger">{xError}</Callout> : null}
               </div>
-            ) : <Button label="+ Otro activo" onClick={() => openExtra()} />}
+            ) : <Button label={tr("+ Otro activo")} onClick={() => openExtra()} />}
           </Section>
         ) : null}
 
         {hasPort && !isDemo ? (
           confirmClear ? (
             <div className="inv-row">
-              <span>¿Borrar todas las compras, ventas y otros activos de {pfName}?</span>
-              <Button label="Sí, borrar todo" variant="primary" onClick={() => { setLots([]); setSales([]); setExtras([]); resetForms(); }} />
-              <Button label="Cancelar" onClick={() => setConfirmClear(false)} />
+              <span>{tr("¿Borrar todas las compras, ventas y otros activos de ")}{pfName}?</span>
+              <Button label={tr("Sí, borrar todo")} variant="primary" onClick={() => { setLots([]); setSales([]); setExtras([]); resetForms(); }} />
+              <Button label={tr("Cancelar")} onClick={() => setConfirmClear(false)} />
             </div>
-          ) : <Button label="Vaciar esta cartera" onClick={() => setConfirmClear(true)} />
+          ) : <Button label={tr("Vaciar esta cartera")} onClick={() => setConfirmClear(true)} />
         ) : null}
       </>
       ) : null}
 
       {tab === "calor" ? (
       <>
-        <Section heading="Tu lista" caption="Estos títulos aparecen acá, en Dividendos y en Noticias. Los que tenés en cartera se agregan solos." actions={<Button label="Volver a la lista inicial" onClick={() => setWatch([...DEFAULT_WATCH])} />}>
+        <Section heading={tr("Tu lista")} caption={tr("Estos títulos aparecen acá, en Dividendos y en Noticias. Los que tenés en cartera se agregan solos.")} actions={<Button label={tr("Volver a la lista inicial")} onClick={() => setWatch([...DEFAULT_WATCH])} />}>
           <WatchPicker followed={followed} held={heldTickers} onAdd={addToWatch} onRemove={removeFromWatch} />
         </Section>
         {followed.length > 0 ? (
           <>
-            <Section heading="Mapa de calor" caption={okPositions.length ? "El tamaño de cada recuadro sigue el valor de tu posición." : undefined} actions={
-              <Segmented<HeatWindow> options={[{ value: "d", label: "Hoy" }, { value: "m1", label: "1 mes" }, { value: "m3", label: "3 meses" }]} value={heatWin} onChange={setHeatWin} />
+            <Section heading={tr("Mapa de calor")} caption={okPositions.length ? tr("El tamaño de cada recuadro sigue el valor de tu posición.") : undefined} actions={
+              <Segmented<HeatWindow> options={[{ value: "d", label: tr("Hoy") }, { value: "m1", label: tr("1 mes") }, { value: "m3", label: tr("3 meses") }]} value={heatWin} onChange={setHeatWin} />
             }>
               <HeatTiles items={heatItems} cap={heatCap} />
             </Section>
-            <Section heading="Precios">
-              <Table sortable columns={["Título", "", "Precio", "Hoy", "1 mes", "3 meses"]} align={["start", "start", "end", "end", "end", "end"]} rows={followed.map((s) => quoteRow(s, heldTickers.has(s)))} />
+            <Section heading={tr("Precios")}>
+              <Table sortable columns={[tr("Título"), "", tr("Precio"), tr("Hoy"), tr("1 mes"), tr("3 meses")]} align={["start", "start", "end", "end", "end", "end"]} rows={followed.map((s) => quoteRow(s, heldTickers.has(s)))} />
             </Section>
-            <Section heading="Gráfico" actions={
+            <Section heading={tr("Gráfico")} actions={
               <div className="inv-row">
                 <Select options={followed.map((s) => ({ value: s, label: `${s} · ${CATALOG[s].name}` }))} value={followed.includes(chartSym) ? chartSym : followed[0]} onChange={setChartSym} />
-                <Segmented<"m3" | "y1" | "y5"> options={[{ value: "m3", label: "3 meses" }, { value: "y1", label: "1 año" }, { value: "y5", label: "5 años" }]} value={chartRange} onChange={setChartRange} />
+                <Segmented<"m3" | "y1" | "y5"> options={[{ value: "m3", label: tr("3 meses") }, { value: "y1", label: tr("1 año") }, { value: "y5", label: tr("5 años") }]} value={chartRange} onChange={setChartRange} />
               </div>
             }>
               {chartQ && chartData ? (
                 <>
                   <LineChart points={chartData.points} floor={chartData.floor} ceiling={chartData.ceil} unit={quoteCcyOf(chartSym) === "AUD" ? "A$" : "USD"} format={(v: number) => formatDec(v)} labels={[`${chartSym} · ${chartQ.name}`]} />
                   <Properties items={[
-                    { label: "Hoy", value: `${quotePx(chartSym, chartQ.low)} a ${pxDec(chartQ.high)}` },
-                    { label: "52 semanas", value: `${quotePx(chartSym, chartQ.lo52)} a ${pxDec(chartQ.hi52)}` },
+                    { label: tr("Hoy"), value: `${quotePx(chartSym, chartQ.low)} a ${pxDec(chartQ.high)}` },
+                    { label: tr("52 semanas"), value: `${quotePx(chartSym, chartQ.lo52)} a ${pxDec(chartQ.hi52)}` },
                   ]} />
                 </>
               ) : null}
@@ -3245,49 +3254,49 @@ export default function InversionesPage() {
       <>
         {hasPort ? (
           <Metrics metrics={[
-            { value: MONEY(computed.received.total), label: "Ya cobraste (estimado)", detail: receivedYears.length ? receivedYears.map(([y, v]) => `${y}: ${MONEY(v)}`).join(" · ") : "Según tus fechas de compra" },
-            { value: MONEY(computed.ttmInc), label: "Cobrarías en un año", detail: "Con lo que tenés hoy" },
-            { value: computed.costUsd ? YLD((computed.ttmInc / computed.costUsd) * 100) : "—", label: "Rendimiento sobre tu costo", detail: computed.valueUsd ? `${YLD((computed.ttmInc / computed.valueUsd) * 100)} sobre el valor de hoy` : "" },
+            { value: MONEY(computed.received.total), label: tr("Ya cobraste (estimado)"), detail: receivedYears.length ? receivedYears.map(([y, v]) => `${y}: ${MONEY(v)}`).join(" · ") : tr("Según tus fechas de compra") },
+            { value: MONEY(computed.ttmInc), label: tr("Cobrarías en un año"), detail: tr("Con lo que tenés hoy") },
+            { value: computed.costUsd ? YLD((computed.ttmInc / computed.costUsd) * 100) : "—", label: tr("Rendimiento sobre tu costo"), detail: computed.valueUsd ? tr("{0} sobre el valor de hoy", YLD((computed.ttmInc / computed.valueUsd) * 100)) : "" },
           ]} />
         ) : null}
         {followed.length === 0 ? (
-          <div className="inv-empty"><strong>Tu lista está vacía</strong>Agregá títulos en Seguimiento para ver sus dividendos.</div>
+          <div className="inv-empty"><strong>{tr("Tu lista está vacía")}</strong>{tr("Agregá títulos en Seguimiento para ver sus dividendos.")}</div>
         ) : (
-          <Section heading="Dividendos de tu lista" caption="Monto por acción de los últimos 12 meses y rendimiento sobre el precio de hoy.">
+          <Section heading={tr("Dividendos de tu lista")} caption={tr("Monto por acción de los últimos 12 meses y rendimiento sobre el precio de hoy.")}>
             <Table
               sortable
-              columns={["Título", "12 meses", "Rendimiento", "Frecuencia", "Último", "Próximo"]}
+              columns={[tr("Título"), tr("12 meses"), tr("Rendimiento"), tr("Frecuencia"), tr("Último"), tr("Próximo")]}
               align={["start", "end", "end", "start", "start", "start"]}
               rows={followed.map((s) => {
                 const d = DIV[s];
-                if (!d || (d.ttm === 0 && !d.lastEx)) return [s, "—", "—", "No paga", "—", "—"];
-                const next = [d.nextEx ? `ex ${fmtIso(d.nextEx, false)}` : "", d.nextPay ? `pago ${fmtIso(d.nextPay, false)}` : "", D.notes.divNotes[s] ?? ""].filter(Boolean).join(", ");
+                if (!d || (d.ttm === 0 && !d.lastEx)) return [s, "—", "—", tr("No paga"), "—", "—"];
+                const next = [d.nextEx ? `ex ${fmtIso(d.nextEx, false)}` : "", d.nextPay ? tr("pago {0}", fmtIso(d.nextPay, false)) : "", D.notes.divNotes[s] ?? ""].filter(Boolean).join(", ");
                 return [s, divAmt(s, d.ttm), d.ttm > 0 ? YLD((d.ttm / CATALOG[s].price) * 100) : "—", freqText(d), d.lastEx ? `${fmtIso(d.lastEx)}, ${d.lastAmt != null ? divAmt(s, d.lastAmt) : ""}` : "—", next || "—"];
               })}
             />
           </Section>
         )}
         <Grid columns={2}>
-          <Section heading="Lo que cobrarías en un año" caption="Con las cantidades de hoy, en dólares y antes de impuestos. Los CEDEARs y las acciones locales cobran según su ratio.">
+          <Section heading={tr("Lo que cobrarías en un año")} caption={tr("Con las cantidades de hoy, en dólares y antes de impuestos. Los CEDEARs y las acciones locales cobran según su ratio.")}>
             {computed.ttmInc === 0 ? (
-              <p className="inv-hint">{okPositions.length ? "Tus posiciones no pagaron dividendos en los últimos 12 meses." : "Cargá compras en Cartera para ver el estimado."}</p>
+              <p className="inv-hint">{okPositions.length ? tr("Tus posiciones no pagaron dividendos en los últimos 12 meses.") : tr("Cargá compras en Cartera para ver el estimado.")}</p>
             ) : (
               <>
                 <Table
-                  columns={["Título", "Cantidad", "Por unidad", "Al año", "Sobre tu costo"]}
+                  columns={[tr("Título"), tr("Cantidad"), tr("Por unidad"), tr("Al año"), tr("Sobre tu costo")]}
                   align={["start", "end", "end", "end", "end"]}
                   rows={okPositions.filter((p) => p.ttmInc > 0).map((p) => [p.label, qtyText(p.qty), `USD ${formatDec(p.ttmInc / p.qty, 3)}`, MONEY(p.ttmInc), YLD(p.yoc)])}
-                  footer={["Total", "", "", MONEY(computed.ttmInc), ""]}
+                  footer={[tr("Total"), "", "", MONEY(computed.ttmInc), ""]}
                 />
-                {monthTotal > 0 ? <Section heading="Por mes, en dólares"><Columns points={monthPoints} /></Section> : null}
+                {monthTotal > 0 ? <Section heading={tr("Por mes, en dólares")}><Columns points={monthPoints} /></Section> : null}
               </>
             )}
           </Section>
-          <Section heading="Próximos 60 días" caption="Fechas ex, pagos y resultados de tu lista.">
+          <Section heading={tr("Próximos 60 días")} caption={tr("Fechas ex, pagos y resultados de tu lista.")}>
             {calMine.length === 0 ? (
-              <p className="inv-hint">No hay fechas en los próximos 60 días.</p>
+              <p className="inv-hint">{tr("No hay fechas en los próximos 60 días.")}</p>
             ) : (
-              <Table columns={["Fecha", "Título", "Qué pasa"]} rows={calMine.map((e) => [e.date === todayIso ? "Hoy" : fmtIso(e.date, false), e.ticker, e.title])} />
+              <Table columns={[tr("Fecha"), tr("Título"), tr("Qué pasa")]} rows={calMine.map((e) => [e.date === todayIso ? tr("Hoy") : fmtIso(e.date, false), e.ticker, e.title])} />
             )}
           </Section>
         </Grid>
@@ -3296,17 +3305,17 @@ export default function InversionesPage() {
 
       {tab === "mercado" ? (
       <>
-        <Section heading="Dólar" caption={`Cotizaciones de DolarApi, ${fxStamp}.`}>
+        <Section heading={tr("Dólar")} caption={tr("Cotizaciones de DolarApi, {0}.", fxStamp)}>
           <Metrics metrics={[
-            { value: PESOS(D.fx.mep.venta, 1), label: "MEP", detail: `Compra ${PESOS(D.fx.mep.compra, 1)}` },
-            ...(D.fx.ccl ? [{ value: PESOS(D.fx.ccl.venta, 1), label: "Contado con liquidación", detail: `Compra ${PESOS(D.fx.ccl.compra, 1)}` }] : []),
-            ...(D.fx.oficial ? [{ value: PESOS(D.fx.oficial.venta, 0), label: "Oficial", detail: `Compra ${PESOS(D.fx.oficial.compra, 0)}` }] : []),
-            ...(D.fx.blue ? [{ value: PESOS(D.fx.blue.venta, 0), label: "Blue", detail: `Compra ${PESOS(D.fx.blue.compra, 0)}` }] : []),
+            { value: PESOS(D.fx.mep.venta, 1), label: "MEP", detail: tr("Compra {0}", PESOS(D.fx.mep.compra, 1)) },
+            ...(D.fx.ccl ? [{ value: PESOS(D.fx.ccl.venta, 1), label: tr("Contado con liquidación"), detail: tr("Compra {0}", PESOS(D.fx.ccl.compra, 1)) }] : []),
+            ...(D.fx.oficial ? [{ value: PESOS(D.fx.oficial.venta, 0), label: tr("Oficial"), detail: tr("Compra {0}", PESOS(D.fx.oficial.compra, 0)) }] : []),
+            ...(D.fx.blue ? [{ value: PESOS(D.fx.blue.venta, 0), label: tr("Blue"), detail: tr("Compra {0}", PESOS(D.fx.blue.compra, 0)) }] : []),
           ]} />
         </Section>
-        <Section heading="Mercados">
+        <Section heading={tr("Mercados")}>
           <Table
-            columns={["", "Nivel", "Hoy", "1 mes", "3 meses"]}
+            columns={["", tr("Nivel"), tr("Hoy"), tr("1 mes"), tr("3 meses")]}
             align={["start", "end", "end", "end", "end"]}
             rows={D.indices.map((r) => r.kind === "tasa"
               ? [r.label, idxLevel(r), bp(r.chgAbs), bp(r.m1Abs), bp(r.m3Abs)]
@@ -3314,18 +3323,18 @@ export default function InversionesPage() {
           />
           {D.notes.market ? <Text>{D.notes.market}</Text> : null}
         </Section>
-        <Section heading="CEDEARs y acciones locales (BYMA)" caption="El dólar implícito es el que resulta de comparar el precio en pesos con el de Nueva York: si está por encima del MEP, ese CEDEAR está caro en pesos.">
+        <Section heading={tr("CEDEARs y acciones locales (BYMA)")} caption={tr("El dólar implícito es el que resulta de comparar el precio en pesos con el de Nueva York: si está por encima del MEP, ese CEDEAR está caro en pesos.")}>
           <Table
             sortable
             filterable
-            columns={["Título", "Símbolo", "Tipo", "Ratio", "Precio", "Hoy", "Dólar implícito", "Contra el MEP"]}
+            columns={[tr("Título"), tr("Símbolo"), tr("Tipo"), tr("Ratio"), tr("Precio"), tr("Hoy"), tr("Dólar implícito"), tr("Contra el MEP")]}
             align={["start", "start", "start", "end", "end", "end", "end", "end"]}
             rows={ORDER.filter((s) => BA[s]).map((s) => {
               const b = BA[s]!;
               const imp = b.ratio && CATALOG[s].price ? (b.price * b.ratio) / CATALOG[s].price : null;
               const gap = imp ? (imp / MEP_VENTA - 1) * 100 : null;
               return [
-                s, b.symbol, b.kind === "cedear" ? "CEDEAR" : "Acción local",
+                s, b.symbol, b.kind === "cedear" ? "CEDEAR" : tr("Acción local"),
                 b.ratio ? (b.ratio >= 1 ? `${b.ratio}:1` : `1:${Math.round(1 / b.ratio)}`) : "—",
                 PESOS(b.price, b.price % 1 === 0 ? 0 : 2), { text: PCT(b.chg), tone: tone(b.chg) },
                 imp ? PESOS(imp, 0) : "—", gap != null ? PCT(gap, 1) : "—",
@@ -3338,7 +3347,7 @@ export default function InversionesPage() {
 
       {tab === "analisis" ? (
         followed.length === 0 ? (
-          <div className="inv-empty"><strong>Tu lista está vacía</strong>Agregá títulos en Seguimiento para ver sus noticias.</div>
+          <div className="inv-empty"><strong>{tr("Tu lista está vacía")}</strong>{tr("Agregá títulos en Seguimiento para ver sus noticias.")}</div>
         ) : (
           <div className="inv-news-grid">
             {followed.map((sym) => {
@@ -3351,7 +3360,7 @@ export default function InversionesPage() {
                     <h3>{sym} <span>{q.name}</span></h3>
                     <div className="inv-news-px">{quotePx(sym, q.price)} <span className={sgn(q.chg)}>{PCT(q.chg)}</span></div>
                   </div>
-                  <p className="inv-hint">1 mes {PCT(q.m1)}, 3 meses {PCT(q.m3)}.{e ? ` Presenta resultados el ${fmtIso(e.date, false)}${e.estimate ? " (estimado)" : ""}.` : ""}</p>
+                  <p className="inv-hint">{tr("1 mes ")}{PCT(q.m1)}{tr(", 3 meses ")}{PCT(q.m3)}.{e ? tr(" Presenta resultados el {0}{1}.", fmtIso(e.date, false), e.estimate ? " (estimado)" : "") : ""}</p>
                   {note && note.text ? <Text>{note.text}</Text> : null}
                   {note && note.news.length > 0 ? (
                     <ul className="inv-news-list">
@@ -3362,7 +3371,7 @@ export default function InversionesPage() {
                         </li>
                       ))}
                     </ul>
-                  ) : <p className="inv-hint">Sin noticias recientes.</p>}
+                  ) : <p className="inv-hint">{tr("Sin noticias recientes.")}</p>}
                 </article>
               );
             })}
@@ -3392,40 +3401,40 @@ export default function InversionesPage() {
             setExtras(mergeById(extras, data.extras));
           }}
         />
-        <p className="inv-hint">El respaldo y la importación trabajan sobre la cartera que tenés abierta: {pfName}.</p>
+        <p className="inv-hint">{tr("El respaldo y la importación trabajan sobre la cartera que tenés abierta: ")}{pfName}.</p>
       </>
       ) : null}
 
       {tab === "info" ? (
       <>
-        <Section heading="Tenerla en el celular">
-          {installEvt ? <Button label="Instalar en este dispositivo" variant="primary" onClick={() => { installEvt.prompt(); setInstallEvt(null); }} /> : null}
+        <Section heading={tr("Tenerla en el celular")}>
+          {installEvt ? <Button label={tr("Instalar en este dispositivo")} variant="primary" onClick={() => { installEvt.prompt(); setInstallEvt(null); }} /> : null}
           <ol className="inv-help">
-            <li><b>iPhone o iPad (Safari).</b> Tocá el botón Compartir (el cuadrado con la flecha) y elegí «Agregar a inicio».</li>
-            <li><b>Android (Chrome).</b> Tocá los tres puntos de arriba a la derecha y elegí «Agregar a la pantalla principal» o «Instalar app».</li>
-            <li><b>Computadora (Chrome o Edge).</b> Tocá el ícono de instalar que aparece a la derecha de la barra de direcciones.</li>
+            <li><b>{tr("iPhone o iPad (Safari).")}</b>{tr(" Tocá el botón Compartir (el cuadrado con la flecha) y elegí «Agregar a inicio».")}</li>
+            <li><b>{tr("Android (Chrome).")}</b>{tr(" Tocá los tres puntos de arriba a la derecha y elegí «Agregar a la pantalla principal» o «Instalar app».")}</li>
+            <li><b>{tr("Computadora (Chrome o Edge).")}</b>{tr(" Tocá el ícono de instalar que aparece a la derecha de la barra de direcciones.")}</li>
           </ol>
-          <p className="inv-hint">Queda con su ícono, se abre a pantalla completa y funciona sin conexión con los últimos precios que haya bajado.</p>
+          <p className="inv-hint">{tr("Queda con su ícono, se abre a pantalla completa y funciona sin conexión con los últimos precios que haya bajado.")}</p>
         </Section>
-        <Section heading="Cómo funciona">
+        <Section heading={tr("Cómo funciona")}>
           <ol className="inv-help">
-            <li><b>Tus datos son solo tuyos.</b> Todo se guarda en este navegador y no se manda a ningún lado. Para pasarlo a otro dispositivo, usá «Importar y respaldo».</li>
-            <li><b>Cargá cada compra con su fecha.</b> Así el costo se convierte con el dólar MEP de ese día: el resultado en dólares descuenta la devaluación y el resultado en pesos la incluye. La comisión, si la cargás, se suma al costo.</li>
-            <li><b>Elegí dónde compraste.</b> En pesos se usa el precio del CEDEAR o de la acción local; en Nueva York, el de allá; un CEDEAR en dólares se valúa con su precio en pesos dividido el MEP.</li>
-            <li><b>Ventas.</b> Tocá «Vender» en la posición. Se descuentan primero las compras más viejas y el resultado queda guardado en «Ventas».</li>
-            <li><b>Otros activos.</b> Bonos, fondos o efectivo se cargan con lo que pusiste y lo que valen hoy; ese valor lo actualizás vos.</li>
-            <li><b>Varias carteras.</b> Podés tener una por persona o por broker y cambiar entre ellas arriba de todo en Cartera.</li>
-            <li><b>El gráfico de la cartera</b> compara tus títulos con haber puesto la misma plata, en las mismas fechas, en el S&P 500. Las posiciones en pesos se siguen con el precio de Nueva York.</li>
-            <li><b>Los dividendos</b> son estimados, antes de impuestos: lo que pagó cada título después de tu fecha de compra, por tu cantidad (ajustada por el ratio en los CEDEARs).</li>
-            <li><b>Los precios no son en vivo.</b> Se actualizan cada 30 minutos mientras los mercados están abiertos, con unos 15 minutos de demora.</li>
-            <li><b>Los números con punto.</b> En pesos, «12.350» es doce mil trescientos cincuenta. En dólares, «17.945» es diecisiete con 945.</li>
+            <li><b>{tr("Tus datos son solo tuyos.")}</b>{tr(" Todo se guarda en este navegador y no se manda a ningún lado. Para pasarlo a otro dispositivo, usá «Importar y respaldo».")}</li>
+            <li><b>{tr("Cargá cada compra con su fecha.")}</b>{tr(" Así el costo se convierte con el dólar MEP de ese día: el resultado en dólares descuenta la devaluación y el resultado en pesos la incluye. La comisión, si la cargás, se suma al costo.")}</li>
+            <li><b>{tr("Elegí dónde compraste.")}</b>{tr(" En pesos se usa el precio del CEDEAR o de la acción local; en Nueva York, el de allá; un CEDEAR en dólares se valúa con su precio en pesos dividido el MEP.")}</li>
+            <li><b>{tr("Ventas.")}</b>{tr(" Tocá «Vender» en la posición. Se descuentan primero las compras más viejas y el resultado queda guardado en «Ventas».")}</li>
+            <li><b>{tr("Otros activos.")}</b>{tr(" Bonos, fondos o efectivo se cargan con lo que pusiste y lo que valen hoy; ese valor lo actualizás vos.")}</li>
+            <li><b>{tr("Varias carteras.")}</b>{tr(" Podés tener una por persona o por broker y cambiar entre ellas arriba de todo en Cartera.")}</li>
+            <li><b>{tr("El gráfico de la cartera")}</b>{tr(" compara tus títulos con haber puesto la misma plata, en las mismas fechas, en el S&P 500. Las posiciones en pesos se siguen con el precio de Nueva York.")}</li>
+            <li><b>{tr("Los dividendos")}</b>{tr(" son estimados, antes de impuestos: lo que pagó cada título después de tu fecha de compra, por tu cantidad (ajustada por el ratio en los CEDEARs).")}</li>
+            <li><b>{tr("Los precios no son en vivo.")}</b>{tr(" Se actualizan cada 30 minutos mientras los mercados están abiertos, con unos 15 minutos de demora.")}</li>
+            <li><b>{tr("Los números con punto.")}</b>{tr(" En pesos, «12.350» es doce mil trescientos cincuenta. En dólares, «17.945» es diecisiete con 945.")}</li>
           </ol>
         </Section>
       </>
       ) : null}
 
       <Floating edge="bottom" align="end">
-        <BackToTop label="Volver arriba" />
+        <BackToTop label={tr("Volver arriba")} />
       </Floating>
       </DashShell>
     </Page>

@@ -110,3 +110,17 @@ test("historia: compras anteriores a los datos de la referencia entran cuando ha
   near(points[1].bench, 500);
   near(points[2].bench, 550);
 });
+
+test("idiomas: todos los textos tienen traducción al inglés", async () => {
+  const { collectKeys } = await import("./textos.mjs");
+  const fs = await import("node:fs");
+  const en = JSON.parse(fs.readFileSync(new URL("../src/lang/en.json", import.meta.url), "utf8"));
+  const missing = collectKeys().filter((k) => !(k in en));
+  assert.deepEqual(missing, []);
+  // Las variables {0}, {1}... tienen que estar en la traducción
+  for (const [k, v] of Object.entries(en)) {
+    const a = (k.match(/\{\d+\}/g) || []).sort().join();
+    const b = (v.match(/\{\d+\}/g) || []).sort().join();
+    assert.equal(b, a, `variables distintas en: ${k}`);
+  }
+});

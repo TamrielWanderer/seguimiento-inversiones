@@ -12,6 +12,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
+import { tr } from "./i18n";
 
 export { useEffect, useMemo, useRef, useState };
 export type { CSSProperties, ReactNode };
@@ -120,12 +121,15 @@ function sortValue(c: TableCell): number | string {
   return t.toLowerCase();
 }
 
+// En el celular las tablas largas muestran las primeras filas y un botón para ver el resto.
+const MOBILE_ROWS = 12;
 export function Table({ columns, rows, align, sortable = false, filterable = false, footer }: {
   columns: string[]; rows: TableCell[][]; align?: ("start" | "end" | "center")[]; sortable?: boolean; filterable?: boolean; footer?: TableCell[];
 }) {
   const al = (i: number) => (align?.[i] === "end" ? "right" : align?.[i] === "center" ? "center" : "left");
   const [sort, setSort] = useState<{ col: number; dir: 1 | -1 } | null>(null);
   const [q, setQ] = useState("");
+  const [all, setAll] = useState(false);
   const shown = useMemo(() => {
     let r = rows;
     const needle = q.trim().toLowerCase();
@@ -141,13 +145,16 @@ export function Table({ columns, rows, align, sortable = false, filterable = fal
     return r;
   }, [rows, sort, q]);
   const cell = (c: TableCell, j: number, Tag: "td" | "th" = "td") => {
-    if (isToneCell(c)) return <Tag key={j} style={{ textAlign: al(j) }} className={toneClass(c.tone).trim()}>{c.text}</Tag>;
+    // data-label: en pantallas angostas cada fila se muestra como tarjeta y la celda lleva su encabezado
+    const label = columns[j] || undefined;
+    const blank = c === "" || c === null || c === undefined;
+    if (isToneCell(c)) return <Tag key={j} data-label={label} style={{ textAlign: al(j) }} className={toneClass(c.tone).trim()}>{c.text}</Tag>;
     const long = typeof c === "string" && c.length > 42;
-    return <Tag key={j} style={{ textAlign: al(j) }} className={long ? "ui-wrap" : undefined}>{c as ReactNode}</Tag>;
+    return <Tag key={j} data-label={label} style={{ textAlign: al(j) }} className={[long ? "ui-wrap" : "", blank ? "ui-blank" : ""].join(" ").trim() || undefined}>{c as ReactNode}</Tag>;
   };
   return (
     <div className="ui-table-box">
-      {filterable ? <input className="inv-input ui-table-filter" type="search" aria-label="Filtrar la tabla" placeholder="Filtrar…" value={q} onChange={(e) => setQ(e.target.value)} /> : null}
+      {filterable ? <input className="inv-input ui-table-filter" type="search" aria-label={tr("Filtrar la tabla")} placeholder={tr("Filtrar…")} value={q} onChange={(e) => setQ(e.target.value)} /> : null}
       <div className="ui-table-wrap">
         <table className="ui-table">
           <thead>
@@ -162,12 +169,13 @@ export function Table({ columns, rows, align, sortable = false, filterable = fal
             </tr>
           </thead>
           <tbody>
-            {shown.map((r, i) => <tr key={i}>{r.map((c, j) => cell(c, j))}</tr>)}
-            {shown.length === 0 ? <tr><td colSpan={columns.length} className="ui-table-empty">Sin resultados</td></tr> : null}
+            {shown.map((r, i) => <tr key={i} className={!all && i >= MOBILE_ROWS ? "ui-row-extra" : undefined}>{r.map((c, j) => cell(c, j))}</tr>)}
+            {shown.length === 0 ? <tr><td colSpan={columns.length} className="ui-table-empty">{tr("Sin resultados")}</td></tr> : null}
           </tbody>
           {footer ? <tfoot><tr>{footer.map((c, j) => cell(c, j))}</tr></tfoot> : null}
         </table>
       </div>
+      {!all && shown.length > MOBILE_ROWS ? <button type="button" className="ui-btn ui-more" onClick={() => setAll(true)}>{tr("Ver las {0} filas", shown.length)}</button> : null}
     </div>
   );
 }
@@ -485,7 +493,7 @@ export function Floating({ children }: { edge?: string; align?: string; children
   return <div className="ui-floating">{Children.toArray(children)}</div>;
 }
 
-export function BackToTop({ label = "Volver arriba" }: { label?: string }) {
+export function BackToTop({ label = tr("Volver arriba") }: { label?: string }) {
   const [show, setShow] = useState(false);
   useEffect(() => {
     const on = () => setShow(window.scrollY > 600);
