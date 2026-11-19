@@ -68,7 +68,7 @@ jobs:
             echo "Sin cambios."
           else
             git commit -m "Datos del $(TZ=America/Argentina/Buenos_Aires date +'%d/%m/%Y %H:%M')"
-            git pull --rebase --autostash
+            git pull --rebase --autostash -X theirs
             git push
           fi
 
