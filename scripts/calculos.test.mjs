@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, cleanBars, newsFromSearch, newsKeywords, baQuoteFromChart, isAmbiguousTicker } from "./calculos.mjs";
-import { buildDataset, injectIntoPage } from "./armar.mjs";
+import { buildDataset, dataModule } from "./armar.mjs";
 
 // Serie diaria de días hábiles, a las 14:30 UTC (apertura de NY), con cierre = base + i
 function series(fromIso, days, { base = 100, hourUtc = 14.5, step = 1 } = {}) {
@@ -120,7 +120,7 @@ test("DolarApi y la historia del MEP", () => {
   assert.equal(thin.find(([d]) => d === "2020-01-10")[1], rows.find((r) => r.fecha === "2020-01-10").venta);
 });
 
-test("armar: deja afuera lo inválido y reemplaza solo el bloque de datos", () => {
+test("armar: deja afuera lo inválido y escribe el módulo de datos", () => {
   const catalogo = { seguidosPorDefecto: ["AAA", "ZZZ"], titulos: [{ ticker: "AAA", nombre: "A" }, { ticker: "ZZZ", nombre: "Z" }] };
   const mercado = { generatedAt: "2026-11-17T22:00:00Z", sessions: {}, fx: { mep: { compra: 1, venta: 2 } }, catalog: { AAA: { price: 1 } }, ba: {}, div: {}, earnings: {}, indices: [] };
   const noticias = { tickers: { AAA: { date: "2026-11-17", text: "x", news: [{ href: "javascript:alert(1)" }] }, QQQ: { text: "y", news: [] } }, calendar: [{ date: "17/11", ticker: "AAA" }] };
@@ -131,10 +131,8 @@ test("armar: deja afuera lo inválido y reemplaza solo el bloque de datos", () =
   assert.ok(problems.some((p) => p.includes("link inválido")));
   assert.equal(dataset.notes.tickers.AAA.news.length, 0);
   assert.ok(problems.some((p) => p.includes("QQQ")));
-  const page = "a\n// @@DATOS-INICIO x\nconst DATOS: Dataset = {};\n// @@DATOS-FIN\nb\n";
-  const out = injectIntoPage(page, { v: 2 });
-  assert.equal(out, 'a\n// @@DATOS-INICIO x\nconst DATOS: Dataset = {"v":2};\n// @@DATOS-FIN\nb\n');
-  assert.equal(injectIntoPage(out, { v: 3 }).split("@@DATOS-INICIO").length, 2);
+  const mod = dataModule({ v: 2 });
+  assert.ok(mod.endsWith('export const DATOS: Dataset = {"v":2};\n'));
 });
 
 test("titulares de Yahoo: recientes, del título, con link https", () => {

@@ -1,5 +1,5 @@
 // Baja cotizaciones, dividendos, resultados y dólar, y escribe datos/mercado.json.
-// Después arma datos/datos.json y la página (scripts/armar.mjs).
+// Después arma los datos de la página (scripts/armar.mjs).
 //
 //   npm run actualizar                 -> datos reales (Yahoo Finance, DolarApi, ArgentinaDatos)
 //   node scripts/actualizar.mjs --muestra carpeta   -> usa respuestas guardadas (para probar sin red)

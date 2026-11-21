@@ -1,5 +1,6 @@
-// Une catalogo.json + mercado.json + noticias.json en datos.json
-// y lo inyecta en la página, entre las marcas @@DATOS-INICIO y @@DATOS-FIN.
+// Une catalogo.json + mercado.json + noticias.json y escribe los dos archivos generados
+// que usa la página: src/datos.generado.ts (lo que va adentro) y public/datos.json (lo que
+// la página vuelve a pedir para refrescarse). Ninguno de los dos se guarda en el repositorio.
 //
 //   node scripts/armar.mjs            -> arma y valida
 //   node scripts/armar.mjs --check    -> solo valida, no escribe
@@ -12,13 +13,10 @@ export const FILES = {
   catalogo: path.join(ROOT, "datos", "catalogo.json"),
   mercado: path.join(ROOT, "datos", "mercado.json"),
   noticias: path.join(ROOT, "datos", "noticias.json"),
-  datos: path.join(ROOT, "datos", "datos.json"),
-  pagina: path.join(ROOT, "src", "seguimiento.tsx"),
+  generado: path.join(ROOT, "src", "datos.generado.ts"),
   publico: path.join(ROOT, "public", "datos.json"),
 };
 const NOTE_MAX_DAYS = 21;
-const START = "// @@DATOS-INICIO";
-const END = "// @@DATOS-FIN";
 
 export const readJson = (f) => JSON.parse(fs.readFileSync(f, "utf8"));
 
@@ -96,26 +94,19 @@ export function buildDataset(catalogo, mercado, noticias, now = new Date()) {
   return { dataset, problems };
 }
 
-/** Reemplaza el bloque de datos de la página. */
-export function injectIntoPage(pageText, dataset) {
-  const a = pageText.indexOf(START);
-  const b = pageText.indexOf(END);
-  if (a < 0 || b < a) throw new Error(`No encontré las marcas ${START} / ${END} en la página`);
-  const lineEnd = pageText.indexOf("\n", a);
-  const block = `\nconst DATOS: Dataset = ${JSON.stringify(dataset)};\n`;
-  return pageText.slice(0, lineEnd + 1) + block.slice(1) + pageText.slice(b);
+/** El módulo con los datos que importa la página. */
+export function dataModule(dataset) {
+  return `// Archivo generado por scripts/armar.mjs. No editar a mano.\nimport type { Dataset } from "./seguimiento";\nexport const DATOS: Dataset = ${JSON.stringify(dataset)};\n`;
 }
 
 export function armar({ check = false, log = console.log } = {}) {
   const { dataset, problems } = buildDataset(readJson(FILES.catalogo), readJson(FILES.mercado), readJson(FILES.noticias));
   for (const p of problems) log(`  aviso: ${p}`);
   if (!check) {
-    fs.writeFileSync(FILES.datos, JSON.stringify(dataset) + "\n");
     fs.mkdirSync(path.dirname(FILES.publico), { recursive: true });
     fs.writeFileSync(FILES.publico, JSON.stringify(dataset));
-    const page = fs.readFileSync(FILES.pagina, "utf8");
-    fs.writeFileSync(FILES.pagina, injectIntoPage(page, dataset));
-    log(`Listo: ${dataset.order.length} títulos, datos del ${dataset.generatedAt}. Escribí datos/datos.json y la página.`);
+    fs.writeFileSync(FILES.generado, dataModule(dataset));
+    log(`Listo: ${dataset.order.length} títulos, datos del ${dataset.generatedAt}.`);
   }
   return { dataset, problems };
 }

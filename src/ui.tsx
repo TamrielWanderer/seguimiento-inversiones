@@ -368,26 +368,6 @@ export function Columns({ points }: { points: { label: string; value: number; di
   );
 }
 
-export function Bars({ bars }: { bars: { label: string; value: number; display?: string; meta?: string }[]; emphasis?: string }) {
-  const max = Math.max(...bars.map((b) => Math.abs(b.value)), 0) || 1;
-  return (
-    <div className="ui-bars">
-      {bars.map((b, i) => (
-        <div className="ui-bar-row" key={i}>
-          <div className="ui-bar-label">{b.label}</div>
-          <div className="ui-bar-track">
-            <div className="ui-bar-fill" style={{ width: `${(Math.abs(b.value) / max) * 100}%`, background: b.value >= 0 ? "var(--up)" : "var(--down)" }} />
-          </div>
-          <div className={`ui-bar-num${b.value >= 0 ? " ui-tone-success" : " ui-tone-danger"}`}>
-            {b.display ?? b.value}
-            {b.meta ? <span className="ui-bar-meta"> {b.meta}</span> : null}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export function Pie({ parts, total, label }: { parts: { label: string; value: number; display?: string }[]; total?: ReactNode; label?: string }) {
   const sum = parts.reduce((s, p) => s + Math.max(0, p.value), 0) || 1;
   const R = 70;
@@ -423,19 +403,6 @@ export function Pie({ parts, total, label }: { parts: { label: string; value: nu
           </li>
         ))}
       </ul>
-    </div>
-  );
-}
-
-export function LinkCards({ links }: { links: { title: string; site?: string; date?: string; href: string }[] }) {
-  return (
-    <div className="ui-links">
-      {links.map((l, i) => (
-        <a key={i} className="ui-link-card" href={l.href} target="_blank" rel="noopener noreferrer">
-          <span className="ui-link-title">{l.title}</span>
-          <span className="ui-link-meta">{[l.site, l.date].filter(Boolean).join(" · ")}</span>
-        </a>
-      ))}
     </div>
   );
 }

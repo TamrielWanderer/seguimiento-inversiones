@@ -52,7 +52,7 @@ npm run probar       # pruebas de los cálculos
 | `datos/catalogo.json` | Títulos, símbolos BYMA, índices, títulos por defecto y de cuáles buscar noticias (`investigarSiempre`) | Vos |
 | `datos/noticias.json` | Opcional: comentarios y fechas oficiales escritos a mano | Vos |
 | `datos/mercado.json` | Precios, historia, dividendos, resultados, dólar y titulares | `npm run actualizar` |
-| `datos/datos.json`, `public/datos.json` | Todo unido: lo que usa la página | `npm run build` |
+| `src/datos.generado.ts`, `public/datos.json` | Todo unido: lo que usa la página. Se generan solos y no se guardan en el repositorio | `npm run build` |
 
 Para **sumar un título**, agregalo en `datos/catalogo.json`, dentro de `titulos`:
 

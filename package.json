@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Seguimiento de inversiones: aplicación web independiente",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/armar.mjs && vite",
     "actualizar": "node scripts/actualizar.mjs",
     "armar": "node scripts/armar.mjs",
     "build": "node scripts/armar.mjs && tsc --noEmit && vite build",

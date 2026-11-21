@@ -16,7 +16,6 @@ const MONTHS: Record<Lang, string[]> = {
 const LANG_KEY = "familia-inversiones-idioma-v1";
 
 let lang: Lang = "es";
-export const getLang = (): Lang => lang;
 const isLang = (x: unknown): x is Lang => LANGS.some((l) => l.id === x);
 
 /** Idioma guardado; si no hay, el del dispositivo cuando lo tenemos, y si no, español. */
