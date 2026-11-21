@@ -30,6 +30,9 @@ import {
 import { applySales, realizedBySale, receivedDividends, portfolioHistory, allocation, posKey, divFactor, type Ccy, type Lot, type Sale, type Extra, type Env, type DivInfo } from "./calc";
 import { tr, setLang, readLang, monthShort, LANGS, type Lang } from "./i18n";
 import { DATOS } from "./datos.generado";
+import { buildIcs, type IcsEvent } from "./ics";
+import { packSync, unpackSync, newSyncKey, findSync, syncAvailable } from "./sync";
+import qrcode from "qrcode-generator";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Los datos de esta página no se editan a mano.
@@ -588,6 +591,7 @@ function writeTab(tab: MainTab): void {
 const COOKIE_KEY = "familia-inv-bak-v1";
 const COOKIE_MAX = 3500;
 const BACKUP_PREFIX = "SI1.";
+const REPO_URL = "https://github.com/TamrielWanderer/seguimiento-inversiones";
 
 type BackupData = { watch: string[]; lots: Lot[]; sales?: Sale[]; extras?: Extra[]; updatedAt?: string };
 type BackupParse = { ok: true; watch: string[]; lots: Lot[]; sales: Sale[]; extras: Extra[] } | { ok: false; error: string };
@@ -1193,6 +1197,113 @@ function nativeMoney(ccy: Ccy, n: number): string {
 
 type Full = { watch: string[]; lots: Lot[]; sales: Sale[]; extras: Extra[] };
 
+/** Dirección de la página publicada, para que el QR la abra en el otro dispositivo. */
+function syncBaseUrl(): string | null {
+  try {
+    if (/^https?:$/.test(location.protocol)) return location.origin + location.pathname;
+    if (/^https?:\/\//.test(DATA_URL)) return DATA_URL.replace(/[^/]*$/, "");
+  } catch { /* sin ventana */ }
+  return null;
+}
+// Más texto que esto da un QR demasiado denso para leerlo desde una pantalla.
+const QR_MAX_CHARS = 2200;
+
+function QrImage({ text }: { text: string }) {
+  const svg = useMemo(() => {
+    const qr = qrcode(0, "L");
+    qr.addData(text);
+    qr.make();
+    const n = qr.getModuleCount();
+    let d = "";
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c + 4},${r + 4}h1v1h-1z`;
+    return { size: n + 8, d };
+  }, [text]);
+  return (
+    <svg className="inv-qr" viewBox={`0 0 ${svg.size} ${svg.size}`} role="img" aria-label={tr("Código QR con tu cartera cifrada")} shapeRendering="crispEdges">
+      <rect width={svg.size} height={svg.size} fill="#fff" />
+      <path d={svg.d} fill="#000" />
+    </svg>
+  );
+}
+
+function QrSyncPanel({ watch, lots, sales, extras, incoming, onIncoming, onOpen }: {
+  watch: string[]; lots: Lot[]; sales: Sale[]; extras: Extra[];
+  incoming: string | null; onIncoming: (s: string | null) => void; onOpen: (data: Full) => void;
+}) {
+  const [out, setOut] = useState<{ url: string | null; packed: string; key: string } | null>(null);
+  const [typed, setTyped] = useState("");
+  const [err, setErr] = useState("");
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const can = syncAvailable();
+
+  const make = async () => {
+    setErr(""); setMsg(""); setBusy(true);
+    try {
+      const key = newSyncKey();
+      const packed = await packSync({ v: 1, w: watch, l: lots, ...(sales.length ? { s: sales } : {}), ...(extras.length ? { e: extras } : {}) }, key);
+      const base = syncBaseUrl();
+      const url = base ? `${base}#s=${packed}` : null;
+      setOut({ url: url && url.length <= QR_MAX_CHARS ? url : null, packed, key });
+      if (!base) setMsg(tr("Esta copia no está publicada en la web, así que no hay QR: copiá el código cifrado y pegalo en el otro dispositivo, en «Pasar por mensaje»."));
+      else if (url && url.length > QR_MAX_CHARS) setMsg(tr("Tu cartera es demasiado grande para un QR que se pueda leer. Copiá el código cifrado y pegalo en el otro dispositivo, en «Pasar por mensaje»."));
+    } catch {
+      setErr(tr("Este navegador no pudo cifrar la cartera. Usá «Descargar respaldo»."));
+    }
+    setBusy(false);
+  };
+
+  const open = async () => {
+    if (!incoming) return;
+    setErr(""); setBusy(true);
+    try {
+      const parsed = parseBackupObject(await unpackSync(incoming, typed));
+      if (!parsed.ok) setErr(parsed.error);
+      else { onOpen({ watch: parsed.watch, lots: parsed.lots, sales: parsed.sales, extras: parsed.extras }); onIncoming(null); setTyped(""); }
+    } catch {
+      setErr(tr("Esa clave no abre este QR. Revisala en el otro dispositivo y probá de nuevo."));
+    }
+    setBusy(false);
+  };
+
+  return (
+    <>
+      {incoming ? (
+        <Callout tone="info" lead={tr("Llegó una cartera cifrada.")}>
+          {tr("Escribí la clave de 8 caracteres que muestra el otro dispositivo junto al QR.")}
+          <div className="inv-row" style={{ marginTop: 10, alignItems: "flex-end" }}>
+            <Input label={tr("Clave")} value={typed} onChange={setTyped} placeholder="ABCD-2345" />
+            <Button label={tr("Abrir")} variant="primary" disabled={busy || !can} onClick={() => { void open(); }} />
+            <Button label={tr("Cancelar")} onClick={() => { onIncoming(null); setErr(""); }} />
+          </div>
+          {!can ? <p className="inv-hint">{tr("Este navegador no puede descifrar. Abrí la página en Chrome, Safari, Edge o Firefox actualizados.")}</p> : null}
+        </Callout>
+      ) : null}
+      <Section heading={tr("Pasar con un QR cifrado")} collapsible defaultOpen={false}>
+        <p className="inv-hint">{tr("Mostrá el QR en este dispositivo y escanealo con la cámara del otro: se abre esta página y te pide la clave. El QR va cifrado; sin la clave no se puede leer. No pasa nada por ningún servidor.")}</p>
+        <div className="inv-row">
+          <Button label={out ? tr("Generar otro QR") : tr("Mostrar QR")} variant="primary" disabled={busy || !can} onClick={() => { void make(); }} />
+          {out ? <Button label={tr("Copiar código cifrado")} onClick={() => { void copyText(out.url ?? out.packed).then((ok) => setMsg(ok ? tr("Código cifrado copiado. En el otro dispositivo también vas a necesitar la clave.") : tr("No pude copiar al portapapeles."))); }} /> : null}
+          {out ? <Button label={tr("Ocultar")} onClick={() => { setOut(null); setMsg(""); }} /> : null}
+        </div>
+        {!can ? <p className="inv-hint">{tr("Este navegador no puede cifrar. Usá «Descargar respaldo».")}</p> : null}
+        {out ? (
+          <div className="inv-qr-box">
+            {out.url ? <QrImage text={out.url} /> : null}
+            <div className="inv-qr-key">
+              <span>{tr("Clave")}</span>
+              <strong>{out.key}</strong>
+              <small>{tr("Escribila en el otro dispositivo. No la mandes junto con una foto del QR. Cada QR tiene una clave nueva.")}</small>
+            </div>
+          </div>
+        ) : null}
+        {msg ? <p className="inv-hint">{msg}</p> : null}
+      </Section>
+      {err ? <Callout tone="danger" lead={err} /> : null}
+    </>
+  );
+}
+
 function BackupPanel({
   watch,
   lots,
@@ -1200,6 +1311,8 @@ function BackupPanel({
   extras,
   lastSavedAt,
   mode,
+  incoming,
+  onIncoming,
   onReplace,
   onMerge,
 }: {
@@ -1209,6 +1322,8 @@ function BackupPanel({
   extras: Extra[];
   lastSavedAt: string | null;
   mode: PersistMode;
+  incoming: string | null;
+  onIncoming: (s: string | null) => void;
   onReplace: (data: Full) => void;
   onMerge: (data: Full) => void;
 }) {
@@ -1291,6 +1406,14 @@ function BackupPanel({
         setCode(clip);
       }
     }
+    const enc = findSync(text);
+    if (enc) { // es un código cifrado (el del QR): falta la clave
+      onIncoming(enc);
+      setCode("");
+      setErr("");
+      setMsg("");
+      return;
+    }
     const parsed = parseBackupCode(text);
     if (!parsed.ok) {
       setPending(null);
@@ -1319,6 +1442,7 @@ function BackupPanel({
           <Button label={tr("Recuperar")} onClick={() => { void pasteCode(); }} />
         </div>
       </Section>
+      <QrSyncPanel watch={watch} lots={lots} sales={sales} extras={extras} incoming={incoming} onIncoming={onIncoming} onOpen={(data) => offer(data)} />
       {pending ? (
         <Callout tone="warning" lead={tr("El respaldo trae {0} y {1}.", n(pending.watch.length, tr("título"), tr("títulos")), n(pending.lots.length, tr("compra"), tr("compras")))}>
           {tr("Reemplazar deja solo lo del respaldo. Combinar suma lo que falte, sin duplicar.")}
@@ -2488,6 +2612,8 @@ export default function InversionesPage() {
   const [confirmClear, setConfirmClear] = useState(false);
   const [heatWin, setHeatWin] = useState<HeatWindow>("d");
   const [tab, setTab] = useState<MainTab>("cartera");
+  const [syncIn, setSyncIn] = useState<string | null>(null);
+  const [calMsg, setCalMsg] = useState("");
   // Sube cuando llegan datos nuevos de DATA_URL, para recalcular todo.
   const [dataVer, setDataVer] = useState(0);
   const [now, setNow] = useState(() => new Date());
@@ -2558,7 +2684,13 @@ export default function InversionesPage() {
       ? writePersisted(incoming.watch, incoming.lots, incoming.updatedAt, { sales: incoming.sales ?? [], extras: incoming.extras ?? [] })
       : writePersisted(DEFAULT_WATCH, []);
     setMode(ok ? "local" : "memory");
-    setTab(readTab());
+    // Si la página se abrió desde un QR, la cartera cifrada viene después del # (no viaja al servidor).
+    let fromQr: string | null = null;
+    try {
+      fromQr = location.hash.startsWith("#s=") ? findSync(location.hash) : null;
+      if (location.hash.startsWith("#s=")) history.replaceState(null, "", location.pathname + location.search);
+    } catch { /* sin ventana */ }
+    if (fromQr) { setSyncIn(fromQr); setTab("datos"); } else setTab(readTab());
     hydrated.current = true;
   }, []);
 
@@ -2844,6 +2976,15 @@ export default function InversionesPage() {
   const calMine = calAll
     .filter((e) => followed.includes(e.ticker) && e.date >= todayIso && e.date <= calHorizon)
     .sort((a, b) => a.date.localeCompare(b.date) || a.ticker.localeCompare(b.ticker));
+  const exportCalendar = () => {
+    const evs: IcsEvent[] = calAll
+      .filter((e) => e.kind !== "earn" && followed.includes(e.ticker) && e.date >= todayIso)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.ticker.localeCompare(b.ticker))
+      .map((e) => ({ date: e.date, title: `${e.ticker}: ${e.title}`, detail: [CATALOG[e.ticker]?.name ? `${CATALOG[e.ticker].name}.` : "", e.detail, tr("Fuente: {0}. Las fechas pueden cambiar.", e.src)].filter(Boolean).join(" "), uid: `${e.ticker}-${e.title.replace(/[^A-Za-z0-9]+/g, "")}-${e.date}@seguimiento-inversiones` }));
+    if (evs.length === 0) { setCalMsg(tr("No hay fechas de dividendos anunciadas para tu lista.")); return; }
+    const ok = downloadBytes("dividendos.ics", "text/calendar;charset=utf-8", new TextEncoder().encode(buildIcs(evs, tr("Dividendos"))));
+    setCalMsg(ok ? tr("Se descargó dividendos.ics con {0}. Abrilo para sumarlo a tu calendario.", evs.length === 1 ? tr("1 fecha") : tr("{0} fechas", evs.length)) : tr("Este navegador no dejó descargar el archivo."));
+  };
   const weekEnd = addDaysIso(todayIso, 7);
   const weekEvents = calMine.filter((e) => e.date <= weekEnd);
 
@@ -3296,6 +3437,10 @@ export default function InversionesPage() {
             ) : (
               <Table columns={[tr("Fecha"), tr("Título"), tr("Qué pasa")]} rows={calMine.map((e) => [e.date === todayIso ? tr("Hoy") : fmtIso(e.date, false), e.ticker, e.title])} />
             )}
+            <div className="inv-row">
+              <Button label={tr("Agregar dividendos al calendario (.ics)")} onClick={exportCalendar} />
+            </div>
+            <p className="inv-hint">{calMsg || tr("Baja un archivo con las fechas ex y de pago ya anunciadas de tu lista. Sirve para Google Calendar, Outlook y el calendario del celular.")}</p>
           </Section>
         </Grid>
       </>
@@ -3390,6 +3535,8 @@ export default function InversionesPage() {
           extras={extras}
           lastSavedAt={lastSavedAt}
           mode={mode}
+          incoming={syncIn}
+          onIncoming={setSyncIn}
           onReplace={(data) => { setWatch(data.watch); setLots(data.lots); setSales(data.sales); setExtras(data.extras); }}
           onMerge={(data) => {
             const m = mergeBackup({ watch, lots }, data);
@@ -3427,6 +3574,12 @@ export default function InversionesPage() {
             <li><b>{tr("Los precios no son en vivo.")}</b>{tr(" Se actualizan cada 30 minutos mientras los mercados están abiertos, con unos 15 minutos de demora.")}</li>
             <li><b>{tr("Los números con punto.")}</b>{tr(" En pesos, «12.350» es doce mil trescientos cincuenta. En dólares, «17.945» es diecisiete con 945.")}</li>
           </ol>
+        </Section>
+        <Section heading={tr("Código abierto")}>
+          <p className="inv-hint">
+            {tr("Esta aplicación es software libre con licencia MIT: podés usarla, copiarla y modificarla gratis, sin garantía de ningún tipo. Los precios y las noticias pertenecen a sus fuentes.")}{" "}
+            <a className="inv-link" href={REPO_URL} target="_blank" rel="noopener noreferrer">{tr("Ver el código y la licencia")}</a>
+          </p>
         </Section>
       </>
       ) : null}

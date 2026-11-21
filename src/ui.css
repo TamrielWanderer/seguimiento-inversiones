@@ -85,6 +85,13 @@ a { color: var(--lime); }
 .inv-week-tk { font-size: 16px; font-weight: 700; }
 .inv-week-what { color: #c8d0e0; font-size: 12.5px; line-height: 1.3; }
 
+.inv-link { color: var(--accent); }
+.inv-qr-box { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.inv-qr { width: min(100%, 340px); height: auto; border-radius: 12px; flex: 0 0 auto; }
+.inv-qr-key { display: flex; flex-direction: column; gap: 4px; max-width: 300px; }
+.inv-qr-key span { color: var(--muted); font-size: 12.5px; }
+.inv-qr-key strong { font-size: 30px; letter-spacing: 0.08em; font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--accent); }
+.inv-qr-key small { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
 .inv-hint { margin: 0; color: var(--muted); font-size: 13px; max-width: 96ch; }
 .inv-empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 20px; padding: 28px 24px; text-align: center; color: var(--muted); }
 .inv-empty strong { display: block; color: var(--ink); font-size: 17px; margin-bottom: 4px; }

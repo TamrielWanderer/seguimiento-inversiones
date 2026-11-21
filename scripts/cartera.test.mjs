@@ -124,3 +124,30 @@ test("idiomas: todos los textos tienen traducción al inglés", async () => {
     assert.equal(b, a, `variables distintas en: ${k}`);
   }
 });
+
+test("calendario .ics: eventos de día completo, texto escapado y líneas de hasta 75 bytes", async () => {
+  const { buildIcs } = await import("../src/ics.ts");
+  const ics = buildIcs([
+    { date: "2026-12-31", title: "KO: pago de dividendo", detail: "Fecha ex 30/11; estimado, antes de impuestos. " + "ñ".repeat(60), uid: "KO-pay-2026-12-31@x" },
+  ], "Dividendos", new Date("2026-11-21T12:00:00Z"));
+  assert.ok(ics.startsWith("BEGIN:VCALENDAR\r\n") && ics.endsWith("END:VCALENDAR\r\n"));
+  assert.ok(ics.includes("DTSTART;VALUE=DATE:20261231\r\nDTEND;VALUE=DATE:20270101"));
+  assert.ok(ics.includes("DTSTAMP:20261121T120000Z"));
+  assert.ok(ics.replace(/\r\n /g, "").includes(String.raw`Fecha ex 30/11\; estimado\, antes`));
+  for (const l of ics.split("\r\n")) assert.ok(new TextEncoder().encode(l).length <= 75, l);
+});
+
+test("QR cifrado: ida y vuelta, y con otro código no se puede abrir", async () => {
+  const { packSync, unpackSync, newSyncKey, findSync, normalizeKey } = await import("../src/sync.ts");
+  const data = { v: 1, w: ["KO", "MSFT"], l: Array.from({ length: 40 }, (_, i) => ({ id: "l" + i, ticker: "KO", qty: i + 1, price: 60.5, date: "2026-01-15", ccy: "USD" })) };
+  const key = newSyncKey();
+  assert.match(key, /^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/);
+  const packed = await packSync(data, key);
+  assert.ok(packed.length < 900, "comprime: " + packed.length);
+  assert.ok(!packed.includes("KO"));
+  assert.deepEqual(await unpackSync(packed, key.toLowerCase().replace("-", " ")), data);
+  await assert.rejects(unpackSync(packed, "AAAA-AAAA"));
+  assert.equal(findSync("https://x.github.io/app/#s=" + packed), packed);
+  assert.equal(findSync("hola"), null);
+  assert.equal(normalizeKey(" ab-cd 23 "), "ABCD23");
+});

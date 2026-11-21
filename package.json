@@ -2,6 +2,7 @@
   "name": "seguimiento-de-inversiones",
   "version": "3.0.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Seguimiento de inversiones: aplicación web independiente",
   "scripts": {
@@ -12,8 +13,11 @@
     "vista": "vite preview",
     "probar": "node --test scripts/calculos.test.mjs scripts/cartera.test.mjs"
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
+    "qrcode-generator": "^1.5.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

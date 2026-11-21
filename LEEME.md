@@ -114,3 +114,18 @@ Los textos se escriben en español en el código y pasan por `tr("…")`; la tra
 `src/lang/en.json`. Para sumar un idioma: copiá ese archivo (por ejemplo `pt.json`), traducí los
 valores y agregalo en `src/i18n.ts` (`LANGS`, `DICT` y `MONTHS`). `npm run probar` avisa si falta
 algún texto.
+
+## Calendario y QR
+
+- **Dividendos al calendario:** en «Dividendos», el botón «Agregar dividendos al calendario (.ics)» baja
+  las fechas ex y de pago ya anunciadas de tu lista (`src/ics.ts`).
+- **QR cifrado:** en «Importar y respaldo», «Pasar con un QR cifrado» muestra un QR con la cartera
+  comprimida y cifrada (AES-GCM; la clave sale de un código de 8 caracteres con PBKDF2) y el código
+  para escribir en el otro dispositivo (`src/sync.ts`). Es una copia de una sola vez, no una
+  sincronización continua: no hay servidor.
+
+## Licencia
+
+Código bajo licencia MIT (ver `LICENSE`). Incluye React y qrcode-generator, también MIT. Los precios,
+dividendos y noticias pertenecen a sus fuentes (Yahoo Finance, DolarApi, ArgentinaDatos) y no están
+cubiertos por esta licencia.
