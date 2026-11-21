@@ -144,7 +144,7 @@ test("QR cifrado: ida y vuelta, y con otro código no se puede abrir", async () 
   assert.match(key, /^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/);
   const packed = await packSync(data, key);
   assert.ok(packed.length < 900, "comprime: " + packed.length);
-  assert.ok(!packed.includes("KO"));
+  assert.ok(!packed.includes("ticker") && !packed.includes(btoa("ticker").slice(0, 6)));
   assert.deepEqual(await unpackSync(packed, key.toLowerCase().replace("-", " ")), data);
   await assert.rejects(unpackSync(packed, "AAAA-AAAA"));
   assert.equal(findSync("https://x.github.io/app/#s=" + packed), packed);
