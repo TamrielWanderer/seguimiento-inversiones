@@ -16,8 +16,8 @@ It runs in the browser, needs no account, and works in Spanish and English.
   dates into the S&P 500.
 - **Allocation.** How the portfolio is split by holding, sector and country, with a warning when it
   is concentrated.
-- **Watchlist.** A heat map and price table for the tickers you follow, with daily, monthly and
-  yearly changes.
+- **Watchlist.** A heat map and price table for the tickers you follow, with today's change and
+  the change over 3 months, 1 year and 5 years.
 - **Dividends.** Estimated dividends collected so far, expected income for the next year, yield on
   cost, and upcoming ex-dates and payment dates, which can be exported to a calendar (`.ics`).
 - **Market and dollar.** MEP, CCL, official and blue dollar rates, main indices, and a CEDEAR table
