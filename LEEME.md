@@ -115,6 +115,11 @@ Los textos se escriben en español en el código y pasan por `tr("…")`; la tra
 valores y agregalo en `src/i18n.ts` (`LANGS`, `DICT` y `MONTHS`). `npm run probar` avisa si falta
 algún texto.
 
+## Calculadora de plazo fijo
+
+En «Mercado y dólar»: monto, tasa y plazo. Plazo fijo con TNA e interés simple (con renovaciones
+opcionales) o certificado de depósito con APY e interés compuesto (`depositResult` en `src/calc.ts`).
+
 ## Calendario y QR
 
 - **Dividendos al calendario:** en «Dividendos», el botón «Agregar dividendos al calendario (.ics)» baja
@@ -140,3 +145,4 @@ cubiertos por esta licencia.
   dirección de origen (`referrer`) a los sitios que enlaza.
 - Dependabot (`.github/dependabot.yml`) revisa las dependencias cada lunes y propone actualizaciones;
   `.github/workflows/revisar.yml` prueba y compila cada propuesta antes de que la aceptes.
+- La política para avisar de fallas está en `SECURITY.md`.

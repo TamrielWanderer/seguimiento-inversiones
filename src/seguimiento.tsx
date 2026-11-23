@@ -27,7 +27,7 @@ import {
   type Theme,
   type ReactNode,
 } from "./ui";
-import { applySales, realizedBySale, receivedDividends, portfolioHistory, allocation, posKey, divFactor, type Ccy, type Lot, type Sale, type Extra, type Env, type DivInfo } from "./calc";
+import { applySales, realizedBySale, receivedDividends, portfolioHistory, allocation, posKey, divFactor, depositResult, type Ccy, type Lot, type Sale, type Extra, type Env, type DivInfo } from "./calc";
 import { tr, setLang, readLang, monthShort, LANGS, type Lang } from "./i18n";
 import { DATOS } from "./datos.generado";
 import { buildIcs, type IcsEvent } from "./ics";
@@ -1177,6 +1177,61 @@ function nativeMoney(ccy: Ccy, n: number): string {
 
 
 type Full = { watch: string[]; lots: Lot[]; sales: Sale[]; extras: Extra[] };
+
+/** Calculadora de plazo fijo (TNA, interés simple) y de certificado de depósito (APY, compuesto). */
+function DepositCalculator({ mep, todayIso }: { mep: number; todayIso: string }) {
+  const [kind, setKind] = useState<"pf" | "cd">("pf");
+  const [ccy, setCcy] = useState<"ARS" | "USD">("ARS");
+  const [amount, setAmount] = useState("");
+  const [rate, setRate] = useState("");
+  const [term, setTerm] = useState("30");
+  const [renew, setRenew] = useState("0");
+  const pick = (k: "pf" | "cd") => { setKind(k); setCcy(k === "pf" ? "ARS" : "USD"); setTerm(k === "pf" ? "30" : "12"); };
+
+  const a = parseNum(amount, ccy);
+  const r = parseNum(rate);
+  const t = parseNum(term);
+  const n = parseNum(renew) ?? 0;
+  const res = a != null && r != null && t != null
+    ? depositResult(kind === "pf" ? { kind, amount: a, rate: r, days: Math.round(t), renewals: n } : { kind, amount: a, rate: r, months: t })
+    : null;
+  const money = (v: number) => (ccy === "ARS" ? PESOS(v, Math.abs(v) >= 100000 ? 0 : 2) : MONEY(v));
+  const other = (v: number) => (mep > 0 ? (ccy === "ARS" ? MONEY(v / mep) : PESOS(v * mep, 0)) : "");
+  const filled = amount.trim() !== "" && rate.trim() !== "" && term.trim() !== "";
+
+  return (
+    <Section heading={tr("Calculadora de plazo fijo")} caption={tr("Cuánto cobrás al vencimiento, según el monto, la tasa y el plazo.")}>
+      <div className="inv-row">
+        <Segmented<"pf" | "cd"> options={[{ value: "pf", label: tr("Plazo fijo") }, { value: "cd", label: tr("Certificado de depósito (CD)") }]} value={kind} onChange={pick} />
+        <Segmented<"ARS" | "USD"> options={[{ value: "ARS", label: tr("Pesos") }, { value: "USD", label: tr("Dólares") }]} value={ccy} onChange={setCcy} />
+      </div>
+      <div className="inv-row" style={{ alignItems: "flex-end" }}>
+        <Input label={tr("Monto ({0})", ccy === "ARS" ? "$" : "USD")} value={amount} onChange={setAmount} placeholder={ccy === "ARS" ? "1.000.000" : "10.000"} />
+        <Input label={kind === "pf" ? tr("Tasa nominal anual (TNA, %)") : tr("Rendimiento anual (APY, %)")} value={rate} onChange={setRate} placeholder={kind === "pf" ? "32,5" : "4,5"} />
+        <Input label={kind === "pf" ? tr("Plazo (días)") : tr("Plazo (meses)")} value={term} onChange={setTerm} placeholder={kind === "pf" ? "30" : "12"} />
+        {kind === "pf" ? <Input label={tr("Renovaciones")} value={renew} onChange={setRenew} placeholder="0" /> : null}
+      </div>
+      {res ? (
+        <>
+          <Metrics metrics={[
+            { value: money(res.final), label: tr("Cobrás al vencimiento"), detail: tr("El {0}", fmtIso(addDaysIso(todayIso, res.days))) },
+            { value: money(res.interest), label: tr("Intereses"), detail: tr("{0} en {1} días", YLD(res.periodPct), res.days), tone: "success" },
+            { value: YLD(res.tea), label: tr("Tasa efectiva anual"), detail: tr("{0} cada 30 días", YLD(res.tem)) },
+          ]} />
+          <p className="inv-hint">
+            {kind === "pf"
+              ? (n > 0 ? tr("Plazo fijo con interés simple, renovado {0} con capital e intereses a la misma tasa.", n === 1 ? tr("1 vez") : tr("{0} veces", n)) : tr("Plazo fijo con interés simple: monto × TNA × días ÷ 365."))
+              : tr("Certificado de depósito con interés compuesto: monto × (1 + APY) elevado a los años.")}{" "}
+            {other(res.final) ? tr("Al dólar MEP de hoy, lo que cobrás equivale a {0}; ese dólar va a ser otro al vencimiento.", other(res.final)) : ""}{" "}
+            {tr("Antes de impuestos. No es una recomendación de inversión.")}
+          </p>
+        </>
+      ) : (
+        <p className="inv-hint">{filled ? tr("Revisá los números: el monto y el plazo tienen que ser mayores a cero.") : tr("Completá el monto, la tasa y el plazo.")}</p>
+      )}
+    </Section>
+  );
+}
 
 /** Dirección de la página publicada, para que el QR la abra en el otro dispositivo. */
 function syncBaseUrl(): string | null {
@@ -3466,6 +3521,7 @@ export default function InversionesPage() {
             })}
           />
         </Section>
+        <DepositCalculator mep={D.fx.mep.venta} todayIso={todayIso} />
       </>
       ) : null}
 

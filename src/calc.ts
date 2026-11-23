@@ -229,3 +229,41 @@ export function allocation(items: { label: string; value: number }[]): { label: 
     .map(([label, value]) => ({ label, value, pct: total ? (value / total) * 100 : 0 }))
     .sort((a, b) => b.value - a.value);
 }
+
+// ── Plazo fijo y certificado de depósito ────────────────────────────────────
+
+export type DepositInput =
+  /** Plazo fijo argentino: tasa nominal anual (TNA), interés simple por los días del plazo. */
+  | { kind: "pf"; amount: number; rate: number; days: number; renewals?: number }
+  /** Certificado de depósito (CD): rendimiento anual efectivo (APY), interés compuesto. */
+  | { kind: "cd"; amount: number; rate: number; months: number };
+
+export type DepositResult = {
+  /** Lo que cobrás al final: capital más intereses. */
+  final: number;
+  interest: number;
+  /** Rendimiento de todo el período, en %. */
+  periodPct: number;
+  /** Tasa efectiva anual, en %. */
+  tea: number;
+  /** Tasa efectiva cada 30 días, en %. */
+  tem: number;
+  /** Días totales, contando las renovaciones. */
+  days: number;
+};
+
+/** rate va en % anual (por ejemplo 32.5). En el plazo fijo, renewals renueva capital más intereses. */
+export function depositResult(d: DepositInput): DepositResult | null {
+  if (!(d.amount > 0) || !(d.rate >= 0)) return null;
+  const r = d.rate / 100;
+  if (d.kind === "pf") {
+    const n = Math.max(0, Math.floor(d.renewals ?? 0)) + 1;
+    if (!(d.days > 0)) return null;
+    const per = 1 + (r * d.days) / 365;
+    const final = d.amount * per ** n;
+    return { final, interest: final - d.amount, periodPct: (per ** n - 1) * 100, tea: (per ** (365 / d.days) - 1) * 100, tem: (per ** (30 / d.days) - 1) * 100, days: d.days * n };
+  }
+  if (!(d.months > 0)) return null;
+  const final = d.amount * (1 + r) ** (d.months / 12);
+  return { final, interest: final - d.amount, periodPct: (final / d.amount - 1) * 100, tea: d.rate, tem: ((1 + r) ** (30 / 365) - 1) * 100, days: Math.round((d.months * 365) / 12) };
+}

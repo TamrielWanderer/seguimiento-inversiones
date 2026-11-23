@@ -151,3 +151,21 @@ test("QR cifrado: ida y vuelta, y con otro código no se puede abrir", async () 
   assert.equal(findSync("hola"), null);
   assert.equal(normalizeKey(" ab-cd 23 "), "ABCD23");
 });
+
+test("plazo fijo y CD: intereses, tasas efectivas y renovaciones", async () => {
+  const { depositResult } = await import("../src/calc.ts");
+  const near = (a, b, tol = 0.01) => assert.ok(Math.abs(a - b) < tol, `${a} ≠ ${b}`);
+  // $ 1.000.000 al 36,5 % TNA por 30 días: 1.000.000 × 0,365 × 30/365 = 30.000
+  const pf = depositResult({ kind: "pf", amount: 1_000_000, rate: 36.5, days: 30 });
+  near(pf.interest, 30_000); near(pf.final, 1_030_000); near(pf.tem, 3); near(pf.tea, (1.03 ** (365 / 30) - 1) * 100, 1e-6);
+  // Renovando dos veces capital e intereses: 1,03³
+  const pf3 = depositResult({ kind: "pf", amount: 1_000_000, rate: 36.5, days: 30, renewals: 2 });
+  near(pf3.final, 1_092_727); assert.equal(pf3.days, 90);
+  // CD: USD 10.000 al 4,5 % APY por 18 meses
+  const cd = depositResult({ kind: "cd", amount: 10_000, rate: 4.5, months: 18 });
+  near(cd.final, 10_000 * 1.045 ** 1.5); assert.equal(cd.tea, 4.5);
+  near(depositResult({ kind: "cd", amount: 10_000, rate: 4.5, months: 12 }).interest, 450);
+  assert.equal(depositResult({ kind: "pf", amount: 0, rate: 30, days: 30 }), null);
+  assert.equal(depositResult({ kind: "pf", amount: 100, rate: 30, days: 0 }), null);
+  near(depositResult({ kind: "pf", amount: 100, rate: 0, days: 30 }).interest, 0);
+});
