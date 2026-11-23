@@ -10,6 +10,11 @@ updates:
       time: "09:00"
       timezone: America/Argentina/Buenos_Aires
     open-pull-requests-limit: 5
+    # Los saltos de versión mayor (por ejemplo Vite 6 → 8) suelen pedir cambios en el código:
+    # no se proponen solos. Los arreglos de seguridad se proponen siempre, sean de la versión que sean.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       # Un solo pedido de cambios para las actualizaciones menores, en vez de uno por paquete.
       menores:
