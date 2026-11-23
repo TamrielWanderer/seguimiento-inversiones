@@ -1,0 +1,23 @@
+# Dependabot: avisa y propone la actualización cuando una dependencia tiene una vulnerabilidad
+# conocida, y una vez por semana revisa si hay versiones nuevas.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Argentina/Buenos_Aires
+    open-pull-requests-limit: 5
+    groups:
+      # Un solo pedido de cambios para las actualizaciones menores, en vez de uno por paquete.
+      menores:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Argentina/Buenos_Aires

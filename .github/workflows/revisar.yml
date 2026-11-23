@@ -1,0 +1,24 @@
+name: Revisar cambios propuestos
+
+# Corre las pruebas y compila cada pedido de cambios (por ejemplo, los de Dependabot),
+# para saber si una actualización rompe algo antes de aceptarla. No publica nada.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run probar
+      - run: npm run build

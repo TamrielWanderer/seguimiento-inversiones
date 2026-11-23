@@ -138,3 +138,5 @@ cubiertos por esta licencia.
   código de la página (por su huella SHA-256) y solo se conecta a su propio sitio y al de los datos.
 - Los enlaces de noticias solo se abren si son direcciones `http(s)`, y la página no manda la
   dirección de origen (`referrer`) a los sitios que enlaza.
+- Dependabot (`.github/dependabot.yml`) revisa las dependencias cada lunes y propone actualizaciones;
+  `.github/workflows/revisar.yml` prueba y compila cada propuesta antes de que la aceptes.
