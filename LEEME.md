@@ -35,7 +35,7 @@ Subí `datos.json` e `index.html` de la carpeta `dist` a Netlify (arrastrando la
 app.netlify.com/drop), Cloudflare Pages, Vercel o tu propio servidor. Así no se actualiza sola:
 hay que volver a compilar y subir.
 
-## Comandos (necesitás Node.js 20 o más nuevo)
+## Comandos (necesitás Node.js 22.18 o más nuevo; la publicación usa Node 26)
 
 ```
 npm install          # una vez

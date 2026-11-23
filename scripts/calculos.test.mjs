@@ -196,3 +196,13 @@ test("IRSA: las notas sobre el IRS (impuestos de EE.UU.) no entran", () => {
   // un ticker no ambiguo sigue aceptando la sigla suelta
   assert.equal(newsFromSearch({ news: [mk("PBR Q3 Earnings Call Highlights", 9)] }, { now, ticker: "PBR", keywords: ["petrobras"] }).length, 1);
 });
+
+test("compactJson: mismo contenido, un renglón por dato", async () => {
+  const { compactJson } = await import("./actualizar.mjs");
+  const data = { v: 1, vacio: {}, hist: { weeks: ["2026-01-02", "2026-01-09"], series: Object.fromEntries(Array.from({ length: 60 }, (_, i) => ["T" + i, Array.from({ length: 30 }, (_, j) => (j % 7 ? i + j / 10 : null))])) }, news: { KO: [{ title: "a \"b\"", href: "https://x" }] } };
+  const out = compactJson(data);
+  assert.deepEqual(JSON.parse(out), data);
+  const lines = out.split("\n");
+  assert.ok(lines.length > 60 && lines.length < 80, String(lines.length));
+  assert.ok(lines.some((l) => l.startsWith('   "T7": [')));
+});

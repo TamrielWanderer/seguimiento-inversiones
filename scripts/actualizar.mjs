@@ -239,6 +239,24 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
 }
 
 /**
+ * JSON con un renglón por dato (un título, una noticia, una serie) en vez de uno por número:
+ * el archivo ocupa la mitad y, al actualizarse, solo cambian los renglones de lo que cambió.
+ * Las listas de números y todo lo que ya es corto quedan en una sola línea.
+ */
+export function compactJson(value, depth = 0) {
+  const flat = JSON.stringify(value);
+  const isObj = value && typeof value === "object";
+  const scalars = Array.isArray(value) && value.every((x) => x === null || typeof x !== "object");
+  if (!isObj || scalars || depth >= 3 || (depth > 0 && flat.length <= 4000)) return flat;
+  const pad = " ".repeat(depth + 1);
+  const items = Array.isArray(value)
+    ? value.map((x) => pad + compactJson(x, depth + 1))
+    : Object.entries(value).filter(([, x]) => x !== undefined).map(([k, x]) => `${pad}${JSON.stringify(k)}: ${compactJson(x, depth + 1)}`);
+  if (items.length === 0) return flat;
+  return `${Array.isArray(value) ? "[" : "{"}\n${items.join(",\n")}\n${" ".repeat(depth)}${Array.isArray(value) ? "]" : "}"}`;
+}
+
+/**
  * Corre la actualización completa. No corta el proceso: devuelve qué pasó.
  * saved=false si fallaron más de la mitad de los títulos (no se pisa mercado.json).
  */
@@ -254,7 +272,7 @@ export async function runActualizar({ muestra = MUESTRA, ahora = null, log = con
     log(`Fallaron ${failed} de ${total} títulos: no guardo los precios (¿Yahoo bloqueó el pedido?). Quedan los de la última actualización.`);
     return { saved: false, failed, total, errors: mercado.errors, prevGeneratedAt: prev.generatedAt ?? null };
   }
-  fs.writeFileSync(FILES.mercado, JSON.stringify(mercado, null, 1) + "\n");
+  fs.writeFileSync(FILES.mercado, compactJson(mercado) + "\n");
   armar({ log });
   return { saved: true, failed, total, errors: mercado.errors, generatedAt: mercado.generatedAt };
 }
