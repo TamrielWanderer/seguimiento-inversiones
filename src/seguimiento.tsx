@@ -588,12 +588,10 @@ function writeTab(tab: MainTab): void {
   }
 }
 
-const COOKIE_KEY = "familia-inv-bak-v1";
-const COOKIE_MAX = 3500;
+const LEGACY_COOKIE = "familia-inv-bak-v1";
 const BACKUP_PREFIX = "SI1.";
 const REPO_URL = "https://github.com/TamrielWanderer/seguimiento-inversiones";
 
-type BackupData = { watch: string[]; lots: Lot[]; sales?: Sale[]; extras?: Extra[]; updatedAt?: string };
 type BackupParse = { ok: true; watch: string[]; lots: Lot[]; sales: Sale[]; extras: Extra[] } | { ok: false; error: string };
 
 function lotKey(lot: Lot): string {
@@ -756,36 +754,19 @@ function formatStampBA(iso?: string | null): string {
   return `${parts} ${tr("(hora de Buenos Aires)")}`;
 }
 
-function writeCookieBackup(watch: string[], lots: Lot[], updatedAt: string): boolean {
+/**
+ * Versiones anteriores guardaban una segunda copia de la cartera en una cookie, que el navegador
+ * mandaba al servidor en cada pedido. Ya no se usa: la borramos de los navegadores que la tengan.
+ */
+function dropLegacyCookie(): void {
   try {
     const doc = (globalThis as unknown as { document?: { cookie: string } }).document;
-    if (!doc) return false;
-    const val = encodeURIComponent(JSON.stringify({ w: watch, l: lots, t: updatedAt }));
-    if (val.length > COOKIE_MAX) {
-      doc.cookie = `${COOKIE_KEY}=; Max-Age=0; Path=/; SameSite=Lax`;
-      return false;
-    }
-    doc.cookie = `${COOKIE_KEY}=${val}; Max-Age=31536000; Path=/; SameSite=Lax`;
-    return true;
-  } catch {
-    return false;
-  }
+    if (doc && typeof doc.cookie === "string" && doc.cookie.includes(`${LEGACY_COOKIE}=`)) doc.cookie = `${LEGACY_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax`;
+  } catch { /* sin cookies */ }
 }
 
-function readCookieBackup(): BackupData | null {
-  try {
-    const doc = (globalThis as unknown as { document?: { cookie: string } }).document;
-    if (!doc || typeof doc.cookie !== "string") return null;
-    const row = doc.cookie.split("; ").find((p) => p.startsWith(`${COOKIE_KEY}=`));
-    if (!row) return null;
-    const parsed = JSON.parse(decodeURIComponent(row.slice(COOKIE_KEY.length + 1))) as Record<string, unknown>;
-    const result = parseBackupObject(parsed);
-    if (!result.ok) return null;
-    return { watch: result.watch, lots: result.lots, updatedAt: typeof parsed.t === "string" ? parsed.t : undefined };
-  } catch {
-    return null;
-  }
-}
+/** Solo direcciones web: un enlace que venga mal en los datos no puede ejecutar código. */
+const safeHref = (url: string): string | undefined => (/^https?:\/\//i.test(url) ? url : undefined);
 
 function toBase64(data: Uint8Array): string {
   let bin = "";
@@ -2671,7 +2652,8 @@ export default function InversionesPage() {
     setPf(ports);
     storageKey = keyOfPortfolio(ports.active);
     const stored = readPersisted();
-    const incoming = stored ?? (ports.active === MAIN_PORTFOLIO.id ? readCookieBackup() : null);
+    const incoming = stored;
+    dropLegacyCookie();
     if (incoming) {
       setWatch(incoming.watch);
       setLots(incoming.lots);
@@ -2703,7 +2685,6 @@ export default function InversionesPage() {
     const updatedAt = new Date().toISOString();
     const ok = writePersisted(watch, lots, updatedAt, { sales, extras });
     if (ok) {
-      if (pf.active === MAIN_PORTFOLIO.id) writeCookieBackup(watch, lots, updatedAt);
       setLastSavedAt(updatedAt);
     }
     setMode(ok ? "local" : "memory");
@@ -3509,7 +3490,7 @@ export default function InversionesPage() {
                     <ul className="inv-news-list">
                       {note.news.map((n) => (
                         <li key={n.href}>
-                          <a href={n.href} target="_blank" rel="noopener noreferrer">{n.title}</a>
+                          <a href={safeHref(n.href)} target="_blank" rel="noopener noreferrer">{n.title}</a>
                           <small>{[n.site, n.date].filter(Boolean).join(", ")}</small>
                         </li>
                       ))}

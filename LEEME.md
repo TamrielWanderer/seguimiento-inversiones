@@ -129,3 +129,12 @@ algún texto.
 Código bajo licencia MIT (ver `LICENSE`). Incluye React y qrcode-generator, también MIT. Los precios,
 dividendos y noticias pertenecen a sus fuentes (Yahoo Finance, DolarApi, ArgentinaDatos) y no están
 cubiertos por esta licencia.
+
+## Seguridad y privacidad
+
+- La cartera vive solo en `localStorage` del navegador. No se usan cookies (las versiones viejas
+  guardaban una copia en una cookie; la página la borra sola al abrirse).
+- `vite.config.ts` agrega al compilar una política de seguridad de contenido (CSP): solo corre el
+  código de la página (por su huella SHA-256) y solo se conecta a su propio sitio y al de los datos.
+- Los enlaces de noticias solo se abren si son direcciones `http(s)`, y la página no manda la
+  dirección de origen (`referrer`) a los sitios que enlaza.
