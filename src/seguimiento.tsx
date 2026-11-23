@@ -1260,8 +1260,9 @@ function DepositCalculator({ mep, todayIso }: { mep: number; todayIso: string })
     if (kind === "pf" && ccy === "ARS" && macro.plazoFijo.length) {
       const list = macro.plazoFijo;
       const med = list[Math.floor(list.length / 2)].tna;
+      const tied = list.filter((x) => x.tna === list[0].tna).length;
       rows.push([tr("Contra otros bancos"), points(r - list[0].tna),
-        tr("La mejor tasa publicada es {0} TNA ({1}). La del medio, entre {2} bancos, es {3}.", YLD(list[0].tna), list[0].b, list.length, YLD(med))]);
+        tr("La mejor tasa publicada es {0} TNA ({1}). La del medio, entre {2} bancos, es {3}.", YLD(list[0].tna), tied > 1 ? tr("{0} y {1} más", list[0].b, tied - 1) : list[0].b, list.length, YLD(med))]);
     }
     const tnx = ccy === "USD" ? D.indices.find((i) => i.id === "tnx")?.level : null;
     if (tnx) {
