@@ -30,6 +30,7 @@ import {
 import { applySales, realizedBySale, receivedDividends, portfolioHistory, allocation, posKey, divFactor, depositResult, type Ccy, type Lot, type Sale, type Extra, type Env, type DivInfo } from "./calc";
 import { tr, setLang, readLang, monthShort, LANGS, type Lang } from "./i18n";
 import { DATOS } from "./datos.generado";
+import { readMode, setMode, type Mode } from "./tema";
 import { buildIcs, type IcsEvent } from "./ics";
 import { packSync, unpackSync, newSyncKey, findSync, syncAvailable } from "./sync";
 import qrcode from "qrcode-generator";
@@ -64,7 +65,7 @@ type BaKind = "local" | "cedear";
 type BaQuote = { symbol: string; name: string; kind: BaKind; price: number; chg: number; dayChg: number; asOf?: string; ratio?: number };
 type PersistMode = "loading" | "local" | "memory";
 type HeatWindow = "d" | "m1" | "m3";
-type MainTab = "calor" | "cartera" | "divs" | "mercado" | "analisis" | "datos" | "info";
+type MainTab = "calor" | "cartera" | "divs" | "mercado" | "plazo" | "analisis" | "datos" | "info";
 
 type DivRow = {
   ttm: number;
@@ -195,6 +196,7 @@ const TABS: { value: MainTab; label: string; short: string }[] = [
   { value: "calor", label: "Seguimiento", short: "Lista" },
   { value: "divs", label: "Dividendos", short: "Dividendos" },
   { value: "mercado", label: "Mercado y dólar", short: "Mercado" },
+  { value: "plazo", label: "Plazo fijo y CD", short: "Plazo" },
   { value: "analisis", label: "Noticias", short: "Noticias" },
   { value: "datos", label: "Importar y respaldo", short: "Datos" },
   { value: "info", label: "Ayuda", short: "Ayuda" },
@@ -1060,12 +1062,15 @@ function NavIcon({ tab }: { tab: MainTab }) {
   if (tab === "cartera") return <svg {...p} aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M3 10h18" /><path d="M8 7V6a4 4 0 0 1 8 0v1" /></svg>;
   if (tab === "divs") return <svg {...p} aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M12 7v10" /><path d="M9.5 9.5c.6-1 2.8-1.2 3.6 0s-.2 2.2-1.6 2.5c1.6.2 2.4 1.4 1.6 2.6s-3 1-3.6 0" /></svg>;
   if (tab === "mercado") return <svg {...p} aria-hidden="true"><path d="M4 19V9l5 4 5-8 6 7" /><path d="M4 19h16" /></svg>;
+  if (tab === "plazo") return <svg {...p} aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M8.5 7.5h7" /><path d="M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01" /></svg>;
   if (tab === "analisis") return <svg {...p} aria-hidden="true"><path d="M5 4h10l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" /><path d="M15 4v4h4" /><path d="M8 12h8M8 16h6" /></svg>;
   if (tab === "datos") return <svg {...p} aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3" /><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6" /><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></svg>;
   return <svg {...p} aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6" /><circle cx="12" cy="8" r="0.8" fill="currentColor" stroke="none" /></svg>;
 }
 
 function DashShell({ tab, onChange, stamp, stampTone = "ok", lang, onLang, children }: { tab: MainTab; onChange: (tab: MainTab) => void; stamp: string; stampTone?: "ok" | "warn" | "old"; lang: Lang; onLang: (l: Lang) => void; children?: ReactNode }) {
+  const [mode, setModeState] = useState<Mode>(readMode);
+  const toggleMode = () => { const next: Mode = mode === "dark" ? "light" : "dark"; setMode(next, true); setModeState(next); };
   return (
     <div className="inv-dash">
       <aside className="inv-side">
@@ -1079,12 +1084,22 @@ function DashShell({ tab, onChange, stamp, stampTone = "ok", lang, onLang, child
             </button>
           ))}
         </nav>
-        <label className="inv-lang">
-          <span>{tr("Idioma")}</span>
-          <select value={lang} onChange={(e) => onLang(e.target.value as Lang)}>
-            {LANGS.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-          </select>
-        </label>
+        <div className="inv-tools">
+          <button type="button" className="inv-mode" onClick={toggleMode} aria-label={mode === "dark" ? tr("Cambiar a modo claro") : tr("Cambiar a modo oscuro")} title={mode === "dark" ? tr("Cambiar a modo claro") : tr("Cambiar a modo oscuro")}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {mode === "dark"
+                ? <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>
+                : <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />}
+            </svg>
+            <span>{mode === "dark" ? tr("Modo claro") : tr("Modo oscuro")}</span>
+          </button>
+          <label className="inv-lang">
+            <span>{tr("Idioma")}</span>
+            <select value={lang} onChange={(e) => onLang(e.target.value as Lang)}>
+              {LANGS.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          </label>
+        </div>
       </aside>
       <div className="inv-main">
         <header className="inv-top">
@@ -1200,7 +1215,7 @@ function DepositCalculator({ mep, todayIso }: { mep: number; todayIso: string })
   const filled = amount.trim() !== "" && rate.trim() !== "" && term.trim() !== "";
 
   return (
-    <Section heading={tr("Calculadora de plazo fijo")} caption={tr("Cuánto cobrás al vencimiento, según el monto, la tasa y el plazo.")}>
+    <Section heading={tr("Calculadora de plazo fijo y CD")} caption={tr("Cuánto cobrás al vencimiento, según el monto, la tasa y el plazo.")}>
       <div className="inv-row">
         <Segmented<"pf" | "cd"> options={[{ value: "pf", label: tr("Plazo fijo") }, { value: "cd", label: tr("Certificado de depósito (CD)") }]} value={kind} onChange={pick} />
         <Segmented<"ARS" | "USD"> options={[{ value: "ARS", label: tr("Pesos") }, { value: "USD", label: tr("Dólares") }]} value={ccy} onChange={setCcy} />
@@ -3521,9 +3536,10 @@ export default function InversionesPage() {
             })}
           />
         </Section>
-        <DepositCalculator mep={D.fx.mep.venta} todayIso={todayIso} />
       </>
       ) : null}
+
+      {tab === "plazo" ? <DepositCalculator mep={D.fx.mep.venta} todayIso={todayIso} /> : null}
 
       {tab === "analisis" ? (
         followed.length === 0 ? (

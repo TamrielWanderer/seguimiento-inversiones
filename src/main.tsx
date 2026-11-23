@@ -2,6 +2,9 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./ui.css";
 import InversionesPage from "./seguimiento";
+import { readMode, setMode } from "./tema";
+
+setMode(readMode()); // antes de dibujar, para que no parpadee
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

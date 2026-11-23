@@ -5,7 +5,8 @@ and Australian stocks, valued in dollars and pesos with the MEP dollar rate.
 
 **Open the app:** https://tamrielwanderer.github.io/seguimiento-inversiones/
 
-It runs in the browser, needs no account, and works in Spanish and English.
+It runs in the browser, needs no account, works in Spanish and English, and has a dark and a
+light mode.
 
 ## What it does
 

@@ -117,8 +117,13 @@ algún texto.
 
 ## Calculadora de plazo fijo
 
-En «Mercado y dólar»: monto, tasa y plazo. Plazo fijo con TNA e interés simple (con renovaciones
+Sección propia en el menú («Plazo fijo y CD»): monto, tasa y plazo. Plazo fijo con TNA e interés simple (con renovaciones
 opcionales) o certificado de depósito con APY e interés compuesto (`depositResult` en `src/calc.ts`).
+
+## Modo claro y oscuro
+
+El botón del menú cambia entre los dos y la elección se guarda (`src/tema.ts`). Los colores de cada
+modo son variables CSS al principio de `src/ui.css` (`:root` y `:root[data-theme="light"]`).
 
 ## Calendario y QR
 
