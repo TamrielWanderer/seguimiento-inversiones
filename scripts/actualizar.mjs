@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { armar, FILES, readJson } from "./armar.mjs";
-import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, isoInTz, newsFromSearch, newsKeywords, baQuoteFromChart, isAmbiguousTicker, weekAxis, weeklySeries, mergeDivHist, impliedRatio } from "./calculos.mjs";
+import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, inflationSeries, bankRates, isoInTz, newsFromSearch, newsKeywords, baQuoteFromChart, isAmbiguousTicker, weekAxis, weeklySeries, mergeDivHist, impliedRatio } from "./calculos.mjs";
 
 const DAY = 86400000;
 const args = process.argv.slice(2);
@@ -36,6 +36,8 @@ async function realSources() {
     news: (sym) => yf.search(sym, { quotesCount: 0, newsCount: 20 }),
     dolares: () => getJson("https://dolarapi.com/v1/dolares"),
     mepHist: () => getJson("https://api.argentinadatos.com/v1/cotizaciones/dolares/bolsa"),
+    inflacion: () => getJson("https://api.argentinadatos.com/v1/finanzas/indices/inflacion"),
+    plazoFijo: () => getJson("https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo"),
   };
 }
 
@@ -62,6 +64,8 @@ function sampleSources(dir) {
     },
     dolares: async () => load("dolares"),
     mepHist: async () => load("mep_hist"),
+    inflacion: async () => load("inflacion"),
+    plazoFijo: async () => load("plazo_fijo"),
   };
 }
 
@@ -199,6 +203,23 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
     fail("Historia del MEP", e);
   }
 
+  // Inflación y tasas de plazo fijo, para la calculadora. Cambian poco: solo en la corrida completa.
+  const macro = { inflacion: prev.macro?.inflacion || [], plazoFijo: prev.macro?.plazoFijo || [] };
+  if (!rapido) {
+    try {
+      const inf = inflationSeries(await src.inflacion());
+      if (inf.length) macro.inflacion = inf;
+    } catch (e) {
+      fail("Inflación", e);
+    }
+    try {
+      const pf = bankRates(await src.plazoFijo());
+      if (pf.length) macro.plazoFijo = pf;
+    } catch (e) {
+      fail("Tasas de plazo fijo", e);
+    }
+  }
+
   // Control de ratios: si el precio deja de coincidir con el ratio cargado, puede haber cambiado.
   for (const t of catalogo.titulos) {
     const r = t.byma?.ratio;
@@ -223,6 +244,7 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
     },
     fx,
     mepHist,
+    macro,
     catalog,
     ba,
     div,

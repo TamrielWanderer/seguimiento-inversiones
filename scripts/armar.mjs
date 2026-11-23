@@ -73,6 +73,7 @@ export function buildDataset(catalogo, mercado, noticias, now = new Date()) {
     sessions: mercado.sessions,
     fx: mercado.fx,
     mepHist: mercado.mepHist || [],
+    macro: { inflacion: mercado.macro?.inflacion || [], plazoFijo: mercado.macro?.plazoFijo || [] },
     watchDefault: catalogo.seguidosPorDefecto.filter((s) => known.has(s)),
     order,
     aliases,

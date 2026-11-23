@@ -119,6 +119,9 @@ algún texto.
 
 Sección propia en el menú («Plazo fijo y CD»): monto, tasa y plazo. Plazo fijo con TNA e interés simple (con renovaciones
 opcionales) o certificado de depósito con APY e interés compuesto (`depositResult` en `src/calc.ts`).
+Debajo compara el resultado contra la inflación, el dólar MEP, otros bancos y un bono del Tesoro. La
+inflación mensual (INDEC) y las tasas de plazo fijo por banco (BCRA) salen de ArgentinaDatos y se
+bajan en la corrida completa (`macro` en `datos/mercado.json`).
 
 ## Modo claro y oscuro
 

@@ -27,7 +27,7 @@ import {
   type Theme,
   type ReactNode,
 } from "./ui";
-import { applySales, realizedBySale, receivedDividends, portfolioHistory, allocation, posKey, divFactor, depositResult, type Ccy, type Lot, type Sale, type Extra, type Env, type DivInfo } from "./calc";
+import { applySales, realizedBySale, receivedDividends, portfolioHistory, allocation, posKey, divFactor, depositResult, inflationOver, realReturn, compoundInflation, depositInOtherCurrency, type Ccy, type Lot, type Sale, type Extra, type Env, type DivInfo } from "./calc";
 import { tr, setLang, readLang, monthShort, LANGS, type Lang } from "./i18n";
 import { DATOS } from "./datos.generado";
 import { readMode, setMode, type Mode } from "./tema";
@@ -103,6 +103,8 @@ export type Dataset = {
   sessions: { ny?: string; asx?: string; ba?: string; fx?: string };
   fx: { mep: Pair; ccl: Pair | null; oficial: Pair | null; blue: Pair | null; audusd: number; audusdChg: number | null };
   mepHist: [string, number][];
+  /** Inflación mensual [mes, %] y tasas de plazo fijo por banco (TNA, %), para la calculadora. */
+  macro?: { inflacion: [string, number][]; plazoFijo: { b: string; tna: number }[] };
   watchDefault: string[];
   order: string[];
   aliases: Record<string, string[]>;
@@ -1201,6 +1203,12 @@ function DepositCalculator({ mep, todayIso }: { mep: number; todayIso: string })
   const [rate, setRate] = useState("");
   const [term, setTerm] = useState("30");
   const [renew, setRenew] = useState("0");
+  // Supuestos para medir el resultado real: arrancan con el último dato conocido y se pueden cambiar.
+  const macro = D.macro ?? { inflacion: [], plazoFijo: [] };
+  const lastInf = macro.inflacion.length ? macro.inflacion[macro.inflacion.length - 1] : null;
+  const [inflM, setInflM] = useState(() => (lastInf ? formatDec(lastInf[1], 1) : ""));
+  const [inflUs, setInflUs] = useState("");
+  const [mepEnd, setMepEnd] = useState(() => (mep > 0 ? formatDec(mep, 0) : ""));
   const pick = (k: "pf" | "cd") => { setKind(k); setCcy(k === "pf" ? "ARS" : "USD"); setTerm(k === "pf" ? "30" : "12"); };
 
   const a = parseNum(amount, ccy);
@@ -1213,6 +1221,54 @@ function DepositCalculator({ mep, todayIso }: { mep: number; todayIso: string })
   const money = (v: number) => (ccy === "ARS" ? PESOS(v, Math.abs(v) >= 100000 ? 0 : 2) : MONEY(v));
   const other = (v: number) => (mep > 0 ? (ccy === "ARS" ? MONEY(v / mep) : PESOS(v * mep, 0)) : "");
   const filled = amount.trim() !== "" && rate.trim() !== "" && term.trim() !== "";
+
+  const monthName = (ym: string) => `${monthShort(Number(ym.slice(5, 7)) - 1)} ${ym.slice(0, 4)}`;
+  const points = (v: number) => ({ text: tr("{0} puntos", `${v > 0 ? "+" : v < 0 ? "−" : ""}${formatDec(Math.abs(v), 2)}`), tone: tone(v) });
+  const pctCell = (v: number) => ({ text: PCT(v), tone: tone(v) });
+  const otherMoney = (v: number) => (ccy === "ARS" ? MONEY(v) : PESOS(v, 0));
+  const rows: (string | { text: string; tone?: "success" | "danger" })[][] = [];
+  if (res && a != null && r != null) {
+    const infIn = parseNum(ccy === "ARS" ? inflM : inflUs);
+    if (infIn != null && infIn > -100) {
+      const over = inflationOver(infIn, res.days, ccy === "ARS" ? 30 : 365);
+      rows.push([ccy === "ARS" ? tr("Contra la inflación") : tr("Contra la inflación de EE.UU."), pctCell(realReturn(res.periodPct, over)),
+        tr("Con esa inflación los precios suben {0} en {1} días. Lo que cobrás compra lo mismo que {2} de hoy.", YLD(over), res.days, money(res.final / (1 + over / 100)))]);
+    }
+    rows.push([tr("Inflación de equilibrio"), ccy === "ARS" ? tr("{0} mensual", YLD(res.tem)) : tr("{0} anual", YLD(res.tea)),
+      tr("Si la inflación queda por debajo, ganás poder de compra; si queda por encima, lo perdés.")]);
+    const end = parseNum(mepEnd, "ARS");
+    const conv = end != null ? depositInOtherCurrency(a, res.final, ccy, mep, end) : null;
+    if (conv && end != null) {
+      rows.push([ccy === "ARS" ? tr("En dólares") : tr("En pesos"), pctCell(conv.pct),
+        tr("Hoy son {0}. Al vencimiento, con el MEP a {1}, serían {2}.", otherMoney(conv.start), PESOS(end, 0), otherMoney(conv.end))]);
+    }
+    if (ccy === "ARS" && mep > 0) {
+      rows.push([tr("Dólar de equilibrio"), PESOS(mep * (1 + res.periodPct / 100), 0),
+        tr("Si el MEP termina por debajo, ganaste en dólares. Si termina por encima, convenía comprar dólares.")]);
+      const past = mepOn(addDaysIso(todayIso, -res.days));
+      const again = past ? depositInOtherCurrency(a, res.final, "ARS", past, mep) : null;
+      if (past && again) {
+        rows.push([tr("Si el dólar repitiera los últimos {0} días", res.days), pctCell(again.pct),
+          tr("En ese tiempo el MEP pasó de {0} a {1} ({2}).", PESOS(past, 0), PESOS(mep, 0), PCT((mep / past - 1) * 100, 1))]);
+      }
+      const inf12 = compoundInflation(macro.inflacion, 12);
+      if (inf12 != null && lastInf) {
+        rows.push([tr("Contra la inflación de los últimos 12 meses"), pctCell(realReturn(res.tea, inf12)),
+          tr("Los precios subieron {0} en 12 meses (hasta {1}). Tu tasa efectiva anual es {2}.", YLD(inf12, 1), monthName(lastInf[0]), YLD(res.tea))]);
+      }
+    }
+    if (kind === "pf" && ccy === "ARS" && macro.plazoFijo.length) {
+      const list = macro.plazoFijo;
+      const med = list[Math.floor(list.length / 2)].tna;
+      rows.push([tr("Contra otros bancos"), points(r - list[0].tna),
+        tr("La mejor tasa publicada es {0} TNA ({1}). La del medio, entre {2} bancos, es {3}.", YLD(list[0].tna), list[0].b, list.length, YLD(med))]);
+    }
+    const tnx = ccy === "USD" ? D.indices.find((i) => i.id === "tnx")?.level : null;
+    if (tnx) {
+      rows.push([tr("Contra un bono del Tesoro de EE.UU. a 10 años"), points(res.tea - tnx),
+        tr("El bono a 10 años rinde {0} anual. Tu tasa efectiva anual es {1}.", YLD(tnx), YLD(res.tea))]);
+    }
+  }
 
   return (
     <Section heading={tr("Calculadora de plazo fijo y CD")} caption={tr("Cuánto cobrás al vencimiento, según el monto, la tasa y el plazo.")}>
@@ -1240,6 +1296,20 @@ function DepositCalculator({ mep, todayIso }: { mep: number; todayIso: string })
             {other(res.final) ? tr("Al dólar MEP de hoy, lo que cobrás equivale a {0}; ese dólar va a ser otro al vencimiento.", other(res.final)) : ""}{" "}
             {tr("Antes de impuestos. No es una recomendación de inversión.")}
           </p>
+          <Section heading={tr("Cuánto rinde de verdad")} caption={tr("El resultado contra la inflación, el dólar y otras opciones. Los supuestos son tuyos: cambialos para ver distintos escenarios.")}>
+            <div className="inv-row" style={{ alignItems: "flex-end" }}>
+              {ccy === "ARS"
+                ? <Input label={tr("Inflación mensual esperada (%)")} value={inflM} onChange={setInflM} placeholder="2,5" />
+                : <Input label={tr("Inflación anual esperada en EE.UU. (%)")} value={inflUs} onChange={setInflUs} placeholder="3" />}
+              <Input label={tr("Dólar MEP al vencimiento ($)")} value={mepEnd} onChange={setMepEnd} placeholder={mep > 0 ? formatDec(mep, 0) : "1.500"} />
+            </div>
+            <Table columns={[tr("Comparación"), tr("Resultado"), tr("Qué significa")]} rows={rows} />
+            <p className="inv-hint">
+              {lastInf ? tr("Última inflación publicada: {0} en {1} (INDEC).", YLD(lastInf[1], 1), monthName(lastInf[0])) : ""}{" "}
+              {mep > 0 ? tr("Dólar MEP de hoy: {0}.", PESOS(mep, 0)) : ""}{" "}
+              {tr("Nadie conoce la inflación ni el dólar que vienen: son escenarios, no pronósticos.")}
+            </p>
+          </Section>
         </>
       ) : (
         <p className="inv-hint">{filled ? tr("Revisá los números: el monto y el plazo tienen que ser mayores a cero.") : tr("Completá el monto, la tasa y el plazo.")}</p>

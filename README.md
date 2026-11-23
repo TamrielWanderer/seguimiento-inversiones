@@ -24,7 +24,8 @@ light mode.
 - **Market and dollar.** MEP, CCL, official and blue dollar rates, main indices, and a CEDEAR table
   with ratios and the implied dollar rate of each one.
 - **Deposit calculator.** Fixed-term deposits (plazo fijo, with optional renewals) and certificates
-  of deposit: amount, rate and term in, interest and effective rates out.
+  of deposit: amount, rate and term in, interest and effective rates out. It then shows what the
+  deposit really earns against inflation, the dollar, other banks' rates and US Treasuries.
 - **News.** Recent headlines for the companies on your list.
 - **Import and backup.** Import purchases from Excel or CSV, download a backup file, or move the
   portfolio to another device with an encrypted QR code.
@@ -34,7 +35,7 @@ light mode.
 ## Data and privacy
 
 - Prices update about every 30 minutes while markets are open, with a delay of roughly 15 minutes.
-  Sources: Yahoo Finance, DolarApi and ArgentinaDatos.
+  Sources: Yahoo Finance, DolarApi and ArgentinaDatos (which republishes INDEC and BCRA figures).
 - Your portfolio is stored only in your browser. There are no accounts, no server and no cookies.
 - Nothing here is investment advice.
 

@@ -267,3 +267,23 @@ export function depositResult(d: DepositInput): DepositResult | null {
   const final = d.amount * (1 + r) ** (d.months / 12);
   return { final, interest: final - d.amount, periodPct: (final / d.amount - 1) * 100, tea: d.rate, tem: ((1 + r) ** (30 / 365) - 1) * 100, days: Math.round((d.months * 365) / 12) };
 }
+
+/** Cuánto suben los precios en `days` días con una inflación de `pct` % por período de `per` días. */
+export const inflationOver = (pct: number, days: number, per: 30 | 365): number => ((1 + pct / 100) ** (days / per) - 1) * 100;
+
+/** Rendimiento real: lo que queda del rendimiento nominal después de la inflación (todo en %). */
+export const realReturn = (nominalPct: number, inflationPct: number): number => ((1 + nominalPct / 100) / (1 + inflationPct / 100) - 1) * 100;
+
+/** Inflación acumulada de los últimos `n` meses de una serie [mes, %]; null si faltan meses. */
+export function compoundInflation(series: [string, number][], n = 12): number | null {
+  if (series.length < n) return null;
+  return (series.slice(-n).reduce((acc, [, v]) => acc * (1 + v / 100), 1) - 1) * 100;
+}
+
+/** El mismo depósito medido en la otra moneda: entra a `fxStart` y sale a `fxEnd` (pesos por dólar). */
+export function depositInOtherCurrency(amount: number, final: number, ccy: "ARS" | "USD", fxStart: number, fxEnd: number): { start: number; end: number; pct: number } | null {
+  if (!(fxStart > 0) || !(fxEnd > 0) || !(amount > 0)) return null;
+  const start = ccy === "ARS" ? amount / fxStart : amount * fxStart;
+  const end = ccy === "ARS" ? final / fxEnd : final * fxEnd;
+  return { start, end, pct: (end / start - 1) * 100 };
+}

@@ -169,3 +169,27 @@ test("plazo fijo y CD: intereses, tasas efectivas y renovaciones", async () => {
   assert.equal(depositResult({ kind: "pf", amount: 100, rate: 30, days: 0 }), null);
   near(depositResult({ kind: "pf", amount: 100, rate: 0, days: 30 }).interest, 0);
 });
+
+test("plazo fijo contra inflación y dólar", async () => {
+  const { inflationOver, realReturn, compoundInflation, depositInOtherCurrency } = await import("../src/calc.ts");
+  const near = (a, b, tol = 0.005) => assert.ok(Math.abs(a - b) < tol, `${a} ≠ ${b}`);
+  near(inflationOver(2.5, 30, 30), 2.5); near(inflationOver(2.5, 60, 30), 5.0625); near(inflationOver(3, 365, 365), 3);
+  near(realReturn(3, 2.5), (1.03 / 1.025 - 1) * 100); near(realReturn(3, 3), 0); assert.ok(realReturn(2, 3) < 0);
+  near(compoundInflation(Array.from({ length: 12 }, (_, i) => ["m" + i, 2]), 12), (1.02 ** 12 - 1) * 100);
+  assert.equal(compoundInflation([["a", 2]], 12), null);
+  // $ 1.000.000 → $ 1.030.000; el MEP pasa de 1.000 a 1.050: de USD 1.000 a USD 980,95
+  const usd = depositInOtherCurrency(1_000_000, 1_030_000, "ARS", 1000, 1050);
+  near(usd.start, 1000); near(usd.end, 980.952, 0.001); near(usd.pct, -1.905, 0.001);
+  // Si el MEP sube exactamente lo mismo que el interés, queda igual en dólares
+  near(depositInOtherCurrency(1_000_000, 1_030_000, "ARS", 1000, 1030).pct, 0);
+  const ars = depositInOtherCurrency(10_000, 10_450, "USD", 1000, 1200);
+  near(ars.start, 10_000_000); near(ars.end, 12_540_000); near(ars.pct, 25.4);
+});
+
+test("inflación y tasas de plazo fijo de ArgentinaDatos", async () => {
+  const { inflationSeries, bankRates } = await import("./calculos.mjs");
+  assert.deepEqual(inflationSeries([{ fecha: "2026-10-31", valor: 2.4 }, { fecha: "2026-09-30", valor: 2.2 }, { fecha: "mal", valor: 1 }, { fecha: "2026-08-31", valor: null }]), [["2026-09", 2.2], ["2026-10", 2.4]]);
+  assert.equal(inflationSeries(Array.from({ length: 50 }, (_, i) => ({ fecha: `20${10 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, "0")}-28`, valor: 1 }))).length, 36);
+  assert.deepEqual(bankRates([{ entidad: " Banco A ", tnaClientes: 0.265, tnaNoClientes: null }, { entidad: "Banco B", tnaClientes: null, tnaNoClientes: 0.31 }, { entidad: "Banco C", tnaClientes: 28.5 }, { entidad: "Sin tasa" }, null]),
+    [{ b: "Banco B", tna: 31 }, { b: "Banco C", tna: 28.5 }, { b: "Banco A", tna: 26.5 }]);
+});

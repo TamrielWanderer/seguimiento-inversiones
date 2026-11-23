@@ -280,3 +280,32 @@ export function mergeDivHist(prevHist, hist, fromIso) {
 export function impliedRatio(nyPrice, ccl, baPrice) {
   return nyPrice > 0 && ccl > 0 && baPrice > 0 ? (nyPrice * ccl) / baPrice : null;
 }
+
+/**
+ * Inflación mensual de ArgentinaDatos ([{ fecha: "2026-10-31", valor: 2.3 }]) como pares
+ * ["2026-10", 2.3], del más viejo al más nuevo, solo los últimos `keep` meses.
+ */
+export function inflationSeries(rows, keep = 36) {
+  const byMonth = new Map();
+  for (const r of rows || []) {
+    if (!r || typeof r.fecha !== "string" || !Number.isFinite(r.valor) || !/^\d{4}-\d{2}/.test(r.fecha)) continue;
+    byMonth.set(r.fecha.slice(0, 7), round(r.valor, 2));
+  }
+  return Array.from(byMonth.entries()).sort((a, b) => a[0].localeCompare(b[0])).slice(-keep);
+}
+
+/**
+ * Tasas de plazo fijo por banco de ArgentinaDatos ([{ entidad, tnaClientes, tnaNoClientes }]),
+ * como [{ b: banco, tna: % }] de mayor a menor. La fuente las da como fracción (0,2325 = 23,25 %).
+ */
+export function bankRates(rows) {
+  const out = [];
+  for (const r of rows || []) {
+    const raw = [r?.tnaClientes, r?.tnaNoClientes].filter((x) => Number.isFinite(x) && x > 0);
+    if (!r || typeof r.entidad !== "string" || raw.length === 0) continue;
+    const best = Math.max(...raw);
+    const tna = round(best <= 3 ? best * 100 : best, 2); // ≤ 3 es una fracción; más que eso ya viene en %
+    if (tna > 0 && tna < 500) out.push({ b: r.entidad.trim(), tna });
+  }
+  return out.sort((a, b) => b.tna - a.tna || a.b.localeCompare(b.b));
+}
