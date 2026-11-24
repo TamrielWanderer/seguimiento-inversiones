@@ -2844,6 +2844,8 @@ export default function InversionesPage() {
       pnlUsd: p.valueUsd - p.costUsd,
       pct: p.costN ? ((p.valueN - p.costN) / p.costN) * 100 : 0,
       pctUsd: p.costUsd ? ((p.valueUsd - p.costUsd) / p.costUsd) * 100 : 0,
+      // En pesos: el costo al dólar del día de cada compra y el valor al dólar de hoy (incluye la devaluación).
+      pctArs: p.costArs ? ((p.valueArs - p.costArs) / p.costArs) * 100 : 0,
       yoc: p.costUsd ? (p.ttmInc / p.costUsd) * 100 : 0,
     })).sort((a, b) => b.valueUsd - a.valueUsd);
     const extraRows = extras.map((x) => {
@@ -3256,7 +3258,7 @@ export default function InversionesPage() {
           <Section heading={tr("Posiciones")}>
             <Table
               sortable
-              columns={[tr("Título"), tr("Mercado"), tr("Cantidad"), tr("Costo"), tr("Valor"), tr("Resultado"), "%", tr("% en dólares"), tr("Dividendo s/costo"), ""]}
+              columns={[tr("Título"), tr("Mercado"), tr("Cantidad"), tr("Costo"), tr("Valor"), tr("Resultado"), tr("% en pesos"), tr("% en dólares"), tr("Dividendo s/costo"), ""]}
               align={["start", "start", "end", "end", "end", "end", "end", "end", "end", "end"]}
               rows={computed.positions.map((p) => [
                 p.ticker,
@@ -3265,7 +3267,7 @@ export default function InversionesPage() {
                 money(p.ccy, p.costN),
                 p.ok ? money(p.ccy, p.valueN) : tr("Sin cotización"),
                 p.ok ? { text: money(p.ccy, p.pnlN), tone: tone(p.pnlN) } : "—",
-                p.ok ? { text: PCT(p.pct), tone: tone(p.pct) } : "—",
+                p.ok ? { text: PCT(p.pctArs), tone: tone(p.pctArs) } : "—",
                 p.ok ? { text: PCT(p.pctUsd), tone: tone(p.pctUsd) } : "—",
                 p.yoc > 0 ? YLD(p.yoc) : "—",
                 <Button label={tr("Vender")} onClick={() => startSell(p.key)} />,
