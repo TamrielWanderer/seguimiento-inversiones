@@ -154,3 +154,12 @@ cubiertos por esta licencia.
 - Dependabot (`.github/dependabot.yml`) revisa las dependencias cada lunes y propone actualizaciones;
   `.github/workflows/revisar.yml` prueba y compila cada propuesta antes de que la aceptes.
 - La política para avisar de fallas está en `SECURITY.md`.
+
+## Horarios y fuera de hora
+
+- La variación «hoy» compara el último precio de la rueda regular con el cierre de la rueda hábil
+  anterior (el lunes compara contra el viernes; los feriados se saltean).
+- Fuera del horario de Nueva York la página muestra aparte el movimiento del pre-mercado o del
+  after-market (`ext` en cada título), contra el último cierre. El valor de la cartera y los demás
+  números siguen usando el precio de la rueda regular.
+- Las corridas rápidas van de 05:00 a 22:00 de Buenos Aires para cubrir esos horarios.

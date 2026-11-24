@@ -22,6 +22,21 @@ export function cleanBars(quotes, tz) {
     .filter((q, i, arr) => i === arr.length - 1 || arr[i + 1].iso !== q.iso);
 }
 
+/**
+ * A veces, un rato después del cierre, Yahoo devuelve la serie diaria sin la barra de la última
+ * rueda (viene con el cierre vacío), aunque en `meta` sí trae el precio y la hora de esa rueda.
+ * En ese caso se agrega la barra desde `meta`, para no retroceder un día y comparar mal.
+ */
+export function withLatestSession(bars, meta, tz) {
+  const price = meta?.regularMarketPrice;
+  const at = meta?.regularMarketTime ? new Date(meta.regularMarketTime) : null;
+  if (!bars.length || !Number.isFinite(price) || !(price > 0) || !at || Number.isNaN(at.getTime())) return bars;
+  const iso = isoInTz(at, tz);
+  if (iso <= bars[bars.length - 1].iso) return bars;
+  const num = (v) => (Number.isFinite(v) ? v : price);
+  return [...bars, { date: at, iso, close: price, open: price, high: num(meta.regularMarketDayHigh), low: num(meta.regularMarketDayLow) }];
+}
+
 /** Cierre de la última barra con fecha <= ISO pedida. */
 function closeOnOrBefore(bars, iso) {
   let ref = null;
@@ -53,7 +68,7 @@ export function weeklyPoints(bars, lastIso) {
 /** Fila de cotización para el catálogo, a partir del resultado de chart(). */
 export function quoteFromChart(chart, { name, ccy } = {}) {
   const tz = chart?.meta?.exchangeTimezoneName;
-  const bars = cleanBars(chart?.quotes, tz);
+  const bars = withLatestSession(cleanBars(chart?.quotes, tz), chart?.meta, tz);
   if (bars.length < 2) throw new Error("serie sin datos suficientes");
   const last = bars[bars.length - 1];
   const prev = bars[bars.length - 2];
@@ -308,4 +323,26 @@ export function bankRates(rows) {
     if (tna > 0 && tna < 500) out.push({ b: r.entidad.trim(), tna });
   }
   return out.sort((a, b) => b.tna - a.tna || a.b.localeCompare(b.b));
+}
+
+/**
+ * Precio fuera de hora (antes de la apertura o después del cierre de Nueva York), a partir de la
+ * cotización de Yahoo. Devuelve { s: "pre" | "post", price, chg, at }, con chg en % contra el último
+ * cierre regular, o null si el mercado está abierto o no hay operaciones posteriores al cierre.
+ */
+export function extendedFromQuote(q, lastClose) {
+  if (!q || q.marketState === "REGULAR") return null;
+  const ms = (d) => (d instanceof Date ? d.getTime() : typeof d === "string" || typeof d === "number" ? new Date(d).getTime() : NaN);
+  const base = Number.isFinite(q.regularMarketPrice) && q.regularMarketPrice > 0 ? q.regularMarketPrice : lastClose;
+  const reg = ms(q.regularMarketTime);
+  if (!Number.isFinite(base) || !(base > 0) || !Number.isFinite(reg)) return null;
+  const cands = [
+    { s: "pre", price: q.preMarketPrice, at: ms(q.preMarketTime) },
+    { s: "post", price: q.postMarketPrice, at: ms(q.postMarketTime) },
+  ].filter((c) => Number.isFinite(c.price) && c.price > 0 && Number.isFinite(c.at) && c.at > reg);
+  if (cands.length === 0) return null;
+  const c = cands.sort((a, b) => b.at - a.at)[0];
+  const chg = pctChange(c.price, base);
+  if (chg == null || Math.abs(chg) > 60) return null; // un salto así fuera de hora es un dato roto
+  return { s: c.s, price: round(c.price), chg, at: new Date(c.at).toISOString() };
 }

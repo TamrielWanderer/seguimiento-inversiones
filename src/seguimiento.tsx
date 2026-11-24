@@ -59,6 +59,8 @@ type Quote = {
   pts: Pt[];
   ccy?: "USD" | "AUD";
   asOf: string;
+  /** Precio fuera de hora en Nueva York; chg es % contra el último cierre regular. */
+  ext?: { s: "pre" | "post"; price: number; chg: number; at: string };
 };
 
 type BaKind = "local" | "cedear";
@@ -1090,12 +1092,25 @@ function CostValueBars({ rows, total }: { rows: { label: string; cost: number; v
   );
 }
 
-function quoteRow(sym: string, held: boolean): TableCell[] {
+/** El precio fuera de hora de un título, si hay uno reciente (no más de 4 días antes de los datos). */
+function extOf(sym: string): NonNullable<Quote["ext"]> | null {
+  const e = CATALOG[sym]?.ext;
+  if (!e) return null;
+  return Date.parse(D.generatedAt) - Date.parse(e.at) < 4 * 86400000 ? e : null;
+}
+const extLabel = (s: "pre" | "post") => (s === "pre" ? tr("Antes de abrir") : tr("Después del cierre"));
+
+function quoteRow(sym: string, held: boolean, withExt = false): TableCell[] {
   const q = CATALOG[sym];
   const session = quoteCcyOf(sym) === "AUD" ? D.sessions.asx : D.sessions.ny;
   const stale = session && q.asOf && q.asOf < session;
   const px = stale ? { text: `${quotePx(sym, q.price)} · al ${fmtDM(q.asOf)}`, tone: "warning" as const } : quotePx(sym, q.price);
-  return [<ToneDot chg={q.chg} label={sym} />, held ? tr("en cartera") : "", px, { text: PCT(q.chg), tone: tone(q.chg) }, { text: PCT(q.m1), tone: tone(q.m1) }, { text: PCT(q.m3), tone: tone(q.m3) }];
+  return [<ToneDot chg={q.chg} label={sym} />, held ? tr("en cartera") : "", px, { text: PCT(q.chg), tone: tone(q.chg) }, { text: PCT(q.m1), tone: tone(q.m1) }, { text: PCT(q.m3), tone: tone(q.m3) }, ...(withExt ? [extCell(sym)] : [])];
+}
+
+function extCell(sym: string): TableCell {
+  const e = extOf(sym);
+  return e ? { text: `${PCT(e.chg)} · ${quotePx(sym, e.price)}`, tone: tone(e.chg) } : "";
 }
 
 function changeOf(q: Quote, w: HeatWindow): number {
@@ -3014,6 +3029,11 @@ export default function InversionesPage() {
     const ok = downloadBytes("dividendos.ics", "text/calendar;charset=utf-8", new TextEncoder().encode(buildIcs(evs, tr("Dividendos"))));
     setCalMsg(ok ? tr("Se descargó dividendos.ics con {0}. Abrilo para sumarlo a tu calendario.", evs.length === 1 ? tr("1 fecha") : tr("{0} fechas", evs.length)) : tr("Este navegador no dejó descargar el archivo."));
   };
+  // Fuera de hora: qué rueda extendida muestran los datos y cuánto mueve a las posiciones de Nueva York.
+  const extKind = followed.map((s) => extOf(s)?.s).find(Boolean) ?? null;
+  const extHeld = computed.positions.filter((p) => p.ok && p.ccy === "USD" && !p.ced && extOf(p.ticker));
+  const extUsd = extHeld.reduce((sum, p) => sum + (p.valueUsd * (extOf(p.ticker)?.chg ?? 0)) / 100, 0);
+  const extBase = extHeld.reduce((sum, p) => sum + p.valueUsd, 0);
   const weekEnd = addDaysIso(todayIso, 7);
   const weekEvents = calMine.filter((e) => e.date <= weekEnd);
 
@@ -3173,6 +3193,7 @@ export default function InversionesPage() {
               <div className="inv-sum-label">{tr("Valor de ")}{pfName}</div>
               <div className="inv-sum-value">{MONEY(computed.valueUsd)} <span className={`inv-pill ${computed.dayUsd >= 0 ? "inv-pill-up" : "inv-pill-down"}`}>{PCT(computed.dayPct)}{tr(" hoy")}</span></div>
               <div className="inv-sum-sub">{PESOS(computed.valueArs, 0)}{tr(" al dólar MEP de hoy (")}{PESOS(MEP_VENTA, 0)})</div>
+              {extKind && extBase > 0 ? <div className="inv-sum-sub">{extLabel(extKind)}{": "}<strong className={sgn(extUsd)}>{PCT((extUsd / extBase) * 100)}</strong>{" "}{tr("en tus posiciones de Nueva York ({0})", MONEY(extUsd))}</div> : null}
             </div>
             <dl className="inv-sum-stats">
               <div><dt>{tr("Resultado en dólares")}</dt><dd className={sgn(computed.pnlUsd)}>{MONEY(computed.pnlUsd)}<small>{PCT(computed.pct)}</small></dd></div>
@@ -3394,8 +3415,8 @@ export default function InversionesPage() {
             }>
               <HeatTiles items={heatItems} cap={heatCap} />
             </Section>
-            <Section heading={tr("Precios")}>
-              <Table sortable columns={[tr("Título"), "", tr("Precio"), tr("Hoy"), tr("1 mes"), tr("3 meses")]} align={["start", "start", "end", "end", "end", "end"]} rows={followed.map((s) => quoteRow(s, heldTickers.has(s)))} />
+            <Section heading={tr("Precios")} caption={extKind ? tr("«{0}» es el movimiento fuera del horario de Nueva York, contra el último cierre. Los demás números usan el precio de la rueda normal.", extLabel(extKind)) : undefined}>
+              <Table sortable columns={[tr("Título"), "", tr("Precio"), tr("Hoy"), tr("1 mes"), tr("3 meses"), ...(extKind ? [extLabel(extKind)] : [])]} align={["start", "start", "end", "end", "end", "end", "end"]} rows={followed.map((s) => quoteRow(s, heldTickers.has(s), Boolean(extKind)))} />
             </Section>
             <Section heading={tr("Gráfico")} actions={
               <div className="inv-row">

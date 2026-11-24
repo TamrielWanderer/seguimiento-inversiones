@@ -1,8 +1,9 @@
 name: Actualizar y publicar
 
 # Baja los datos, compila la página y la publica en GitHub Pages.
-# - Rápido (solo precios y dólar): de lunes a viernes cada 30 minutos mientras operan Buenos Aires
-#   y Nueva York (10:00 a 18:30 de Buenos Aires). No guarda nada en el repositorio.
+# - Rápido (solo precios y dólar): de lunes a viernes cada 30 minutos, de 05:00 a 22:00 de Buenos
+#   Aires: cubre la rueda de Buenos Aires y la de Nueva York con su antes y su después de hora
+#   (pre-mercado y after-market), en horario de invierno y de verano. No guarda nada en el repositorio.
 # - Completo (además dividendos, resultados, noticias e historia del dólar): a las 18:40 de
 #   Buenos Aires, después del cierre, y a las 03:30 para la sesión de Sídney. Guarda los datos.
 # - Al subir cambios (por ejemplo, editar datos/catalogo.json o datos/noticias.json desde GitHub):
@@ -11,7 +12,8 @@ name: Actualizar y publicar
 # - A mano: pestaña Actions → «Actualizar y publicar» → «Run workflow».
 on:
   schedule:
-    - cron: "*/30 13-21 * * 1-5"
+    - cron: "*/30 8-23 * * 1-5"
+    - cron: "*/30 0 * * 2-6"
     - cron: "40 21 * * 1-5"
     - cron: "30 6 * * 1-5"
   push:
@@ -43,7 +45,7 @@ jobs:
         id: datos
         continue-on-error: true   # si Yahoo no responde, se publica con los datos anteriores
         run: |
-          if [ "${{ github.event.schedule }}" = "*/30 13-21 * * 1-5" ]; then
+          if [ "${{ startsWith(github.event.schedule, '*/30') }}" = "true" ]; then
             npm run actualizar -- --rapido
           else
             npm run actualizar
@@ -59,7 +61,7 @@ jobs:
           VITE_DATA_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/datos.json
 
       - name: Guardar los datos nuevos en el repositorio
-        if: github.event.schedule != '*/30 13-21 * * 1-5'
+        if: ${{ !startsWith(github.event.schedule, '*/30') }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"

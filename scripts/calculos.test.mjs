@@ -206,3 +206,38 @@ test("compactJson: mismo contenido, un renglón por dato", async () => {
   assert.ok(lines.length > 60 && lines.length < 80, String(lines.length));
   assert.ok(lines.some((l) => l.startsWith('   "T7": [')));
 });
+
+test("fuera de hora: pre-mercado, after-market y rueda abierta", async () => {
+  const { extendedFromQuote } = await import("./calculos.mjs");
+  const reg = new Date("2026-11-23T21:00:00Z");
+  // Después del cierre: +1 % contra el cierre regular
+  assert.deepEqual(extendedFromQuote({ marketState: "POST", regularMarketPrice: 200, regularMarketTime: reg, postMarketPrice: 202, postMarketTime: new Date("2026-11-23T22:30:00Z") }, 200),
+    { s: "post", price: 202, chg: 1, at: "2026-11-23T22:30:00.000Z" });
+  // Antes de abrir al día siguiente: gana el dato más nuevo (pre), aunque siga el post de ayer
+  const pre = extendedFromQuote({ marketState: "PRE", regularMarketPrice: 200, regularMarketTime: reg, postMarketPrice: 202, postMarketTime: "2026-11-23T22:30:00Z", preMarketPrice: 197, preMarketTime: "2026-11-24T12:00:00Z" }, 200);
+  assert.equal(pre.s, "pre"); assert.equal(pre.chg, -1.5);
+  // De madrugada (PREPRE) sin pre todavía: queda el after-market de anoche
+  assert.equal(extendedFromQuote({ marketState: "PREPRE", regularMarketPrice: 200, regularMarketTime: reg, postMarketPrice: 202, postMarketTime: "2026-11-23T22:30:00Z" }, 200).s, "post");
+  // Rueda abierta, datos viejos de pre, sin datos, o salto imposible: nada
+  assert.equal(extendedFromQuote({ marketState: "REGULAR", regularMarketPrice: 200, regularMarketTime: reg, preMarketPrice: 197, preMarketTime: "2026-11-24T12:00:00Z" }, 200), null);
+  assert.equal(extendedFromQuote({ marketState: "CLOSED", regularMarketPrice: 200, regularMarketTime: reg, preMarketPrice: 197, preMarketTime: "2026-11-23T12:00:00Z" }, 200), null);
+  assert.equal(extendedFromQuote({ marketState: "CLOSED", regularMarketPrice: 200, regularMarketTime: reg }, 200), null);
+  assert.equal(extendedFromQuote({ marketState: "POST", regularMarketPrice: 200, regularMarketTime: reg, postMarketPrice: 20, postMarketTime: "2026-11-23T22:30:00Z" }, 200), null);
+  assert.equal(extendedFromQuote(null, 200), null);
+});
+
+test("si a la serie le falta la última rueda, se completa con el precio de meta", async () => {
+  const { withLatestSession, quoteFromChart } = await import("./calculos.mjs");
+  const tz = "America/New_York";
+  const day = (iso, close) => ({ date: new Date(`${iso}T14:30:00Z`), open: close, high: close, low: close, close });
+  const quotes = [day("2026-11-18", 100), day("2026-11-19", 102), day("2026-11-20", 99), { date: new Date("2026-11-23T14:30:00Z"), open: null, high: null, low: null, close: null }];
+  const meta = { exchangeTimezoneName: tz, regularMarketPrice: 101.5, regularMarketTime: new Date("2026-11-23T21:00:00Z"), regularMarketDayHigh: 102, regularMarketDayLow: 98.5 };
+  const { row } = quoteFromChart({ quotes, meta });
+  assert.equal(row.asOf, "2026-11-23"); assert.equal(row.price, 101.5);
+  assert.equal(row.chg, 2.53); // contra el viernes (99), no jueves contra viernes
+  assert.equal(row.high, 102); assert.equal(row.low, 98.5);
+  // Si la serie ya trae esa rueda, no se toca
+  const full = [day("2026-11-20", 99), day("2026-11-23", 101)].map((q) => ({ ...q, iso: q.date.toISOString().slice(0, 10) }));
+  assert.equal(withLatestSession(full, meta, tz).length, 2);
+  assert.equal(withLatestSession(full, {}, tz).length, 2);
+});

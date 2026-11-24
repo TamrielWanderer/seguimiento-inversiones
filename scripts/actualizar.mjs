@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { armar, FILES, readJson } from "./armar.mjs";
-import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, inflationSeries, bankRates, isoInTz, newsFromSearch, newsKeywords, baQuoteFromChart, isAmbiguousTicker, weekAxis, weeklySeries, mergeDivHist, impliedRatio } from "./calculos.mjs";
+import { quoteFromChart, dividendsFromChart, applyCalendarEvents, indexFromChart, fxFromDolarApi, mepHistory, inflationSeries, bankRates, extendedFromQuote, isoInTz, newsFromSearch, newsKeywords, baQuoteFromChart, isAmbiguousTicker, weekAxis, weeklySeries, mergeDivHist, impliedRatio } from "./calculos.mjs";
 
 const DAY = 86400000;
 const args = process.argv.slice(2);
@@ -34,6 +34,7 @@ async function realSources() {
     chart: (sym, days = 400) => yf.chart(sym, { period1: new Date(Date.now() - days * DAY), interval: "1d", events: "div" }),
     calendar: async (sym) => (await yf.quoteSummary(sym, { modules: ["calendarEvents"] })).calendarEvents ?? null,
     news: (sym) => yf.search(sym, { quotesCount: 0, newsCount: 20 }),
+    quotes: (syms) => yf.quote(syms, {}, { validateResult: false }),
     dolares: () => getJson("https://dolarapi.com/v1/dolares"),
     mepHist: () => getJson("https://api.argentinadatos.com/v1/cotizaciones/dolares/bolsa"),
     inflacion: () => getJson("https://api.argentinadatos.com/v1/finanzas/indices/inflacion"),
@@ -62,6 +63,7 @@ function sampleSources(dir) {
       for (const n of r.news || []) n.providerPublishTime = new Date(n.providerPublishTime);
       return r;
     },
+    quotes: async () => (fs.existsSync(file("quotes")) ? load("quotes") : []),
     dolares: async () => load("dolares"),
     mepHist: async () => load("mep_hist"),
     inflacion: async () => load("inflacion"),
@@ -101,7 +103,10 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
     try {
       const chart = await src.chart(t.yahoo || t.ticker, days);
       const { row, tz, bars } = quoteFromChart(chart, { name: t.nombre, ccy: t.moneda });
-      catalog[t.ticker] = row;
+      const before = prev.catalog?.[t.ticker];
+      // Nunca retroceder: si Yahoo devuelve una rueda más vieja que la que ya teníamos, queda la que teníamos.
+      catalog[t.ticker] = before?.asOf > row.asOf ? { ...before, name: t.nombre } : row;
+      delete catalog[t.ticker].ext;
       const old = prevHist?.series?.[t.ticker];
       series[t.ticker] = weeklySeries(weeks, bars, rapido && old ? { weeks: prevHist.weeks, values: old } : null);
       let d = dividendsFromChart(chart, row.asOf, tz);
@@ -201,6 +206,26 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
     }
   } catch (e) {
     fail("Historia del MEP", e);
+  }
+
+  // Precios fuera de hora de Nueva York (antes de la apertura y después del cierre). Son un dato
+  // aparte: el precio y la variación del día siguen saliendo de la rueda regular.
+  try {
+    const ny = catalogo.titulos.filter((t) => t.moneda !== "AUD" && catalog[t.ticker]);
+    const bySymbol = new Map(ny.map((t) => [t.yahoo || t.ticker, t.ticker]));
+    const symbols = [...bySymbol.keys()];
+    let n = 0;
+    for (let i = 0; i < symbols.length; i += 50) {
+      const res = await src.quotes(symbols.slice(i, i + 50));
+      for (const q of Array.isArray(res) ? res : [res]) {
+        const ticker = bySymbol.get(q?.symbol);
+        const ext = ticker ? extendedFromQuote(q, catalog[ticker].price) : null;
+        if (ext) { catalog[ticker].ext = ext; n++; }
+      }
+    }
+    log(`Fuera de hora: ${n} títulos con precio.`);
+  } catch (e) {
+    log(`Fuera de hora: sin datos (${e?.message || e}).`);
   }
 
   // Inflación y tasas de plazo fijo, para la calculadora. Cambian poco: solo en la corrida completa.
