@@ -778,90 +778,38 @@ function toBase64(data: Uint8Array): string {
   return btoa(bin);
 }
 
-function tryAnchorClick(href: string, filename: string): boolean {
-  try {
-    const g = globalThis as unknown as {
-      document?: {
-        createElement: (t: string) => {
-          href: string;
-          download: string;
-          target: string;
-          rel: string;
-          style: { display: string };
-          click: () => void;
-        };
-        body?: { appendChild: (n: unknown) => unknown; removeChild: (n: unknown) => unknown };
-      };
-    };
-    if (!g.document?.createElement) return false;
-    const a = g.document.createElement("a");
+/**
+ * Baja un archivo una sola vez. Camino normal: un Blob. Solo si el navegador no lo permite
+ * se intenta con una dirección data: (los dos a la vez bajaban el archivo dos veces).
+ */
+function downloadBytes(filename: string, mime: string, data: Uint8Array): boolean {
+  const click = (href: string): boolean => {
+    const a = document.createElement("a");
     a.href = href;
     a.download = filename;
-    a.target = "_blank";
     a.rel = "noopener";
     a.style.display = "none";
-    g.document.body?.appendChild(a);
+    document.body.appendChild(a);
     a.click();
-    g.document.body?.removeChild(a);
+    document.body.removeChild(a);
     return true;
-  } catch {
-    return false;
-  }
-}
-
-function tryOpenUrl(url: string): boolean {
+  };
   try {
-    const openFn = (globalThis as unknown as { open?: (u: string, t: string) => unknown }).open;
-    if (!openFn) return false;
-    return Boolean(openFn(url, "_blank"));
-  } catch {
-    return false;
-  }
-}
-
-function tryDataUrlDownload(filename: string, mime: string, data: Uint8Array): boolean {
-  try {
-    const url = "data:" + mime + ";base64," + toBase64(data);
-    const clicked = tryAnchorClick(url, filename);
-    const opened = tryOpenUrl(url);
-    return clicked || opened;
-  } catch {
-    return false;
-  }
-}
-
-function downloadJsonFile(filename: string, text: string): boolean {
-  try {
-    const g = globalThis as unknown as {
-      document?: { createElement: (t: string) => HTMLAnchorElement; body?: { appendChild: (n: Node) => Node; removeChild: (n: Node) => Node } };
-      Blob?: new (parts: BlobPart[], opts?: BlobPropertyBag) => Blob;
-      URL?: { createObjectURL: (b: Blob) => string; revokeObjectURL: (u: string) => void };
-    };
-    let blobOk = false;
-    if (g.Blob && g.URL && g.document?.createElement) {
-      const blob = new g.Blob([text], { type: "application/json" });
-      const url = g.URL.createObjectURL(blob);
-      const a = g.document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.rel = "noopener";
-      a.style.display = "none";
-      g.document.body?.appendChild(a);
-      a.click();
-      g.document.body?.removeChild(a);
-      setTimeout(() => { try { g.URL!.revokeObjectURL(url); } catch { /* ignore */ } }, 1000);
-      blobOk = true;
-    }
-    const dataOk = tryDataUrlDownload(filename, "application/json", new TextEncoder().encode(text));
-    return blobOk || dataOk;
+    const ab = new ArrayBuffer(data.byteLength);
+    new Uint8Array(ab).set(data);
+    const url = URL.createObjectURL(new Blob([ab], { type: mime }));
+    setTimeout(() => { try { URL.revokeObjectURL(url); } catch { /* ya no hace falta */ } }, 1000);
+    return click(url);
   } catch {
     try {
-      return tryDataUrlDownload(filename, "application/json", new TextEncoder().encode(text));
+      return click("data:" + mime + ";base64," + toBase64(data));
     } catch {
       return false;
     }
   }
 }
+
+const downloadJsonFile = (filename: string, text: string): boolean => downloadBytes(filename, "application/json", new TextEncoder().encode(text));
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -2400,49 +2348,6 @@ function appendLots(current: Lot[], incoming: Lot[]): Lot[] {
   return out;
 }
 
-function downloadBytes(filename: string, mime: string, data: Uint8Array): boolean {
-  try {
-    const g = globalThis as unknown as {
-      document?: {
-        createElement: (t: string) => {
-          href: string;
-          download: string;
-          rel: string;
-          style: { display: string };
-          click: () => void;
-        };
-        body?: { appendChild: (n: unknown) => unknown; removeChild: (n: unknown) => unknown };
-      };
-      Blob?: new (parts: ArrayBuffer[], opts?: { type?: string }) => Blob;
-      URL?: { createObjectURL: (b: Blob) => string; revokeObjectURL: (u: string) => void };
-    };
-    let blobOk = false;
-    if (g.Blob && g.URL && g.document?.createElement) {
-      const ab = new ArrayBuffer(data.byteLength);
-      new Uint8Array(ab).set(data);
-      const blob = new g.Blob([ab], { type: mime });
-      const url = g.URL.createObjectURL(blob);
-      const a = g.document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.rel = "noopener";
-      a.style.display = "none";
-      g.document.body?.appendChild(a);
-      a.click();
-      g.document.body?.removeChild(a);
-      setTimeout(() => { try { g.URL!.revokeObjectURL(url); } catch { /* ignore */ } }, 1000);
-      blobOk = true;
-    }
-    const dataOk = tryDataUrlDownload(filename, mime, data);
-    return blobOk || dataOk;
-  } catch {
-    try {
-      return tryDataUrlDownload(filename, mime, data);
-    } catch {
-      return false;
-    }
-  }
-}
 
 function ExcelImportPanel({
   onAppend,
