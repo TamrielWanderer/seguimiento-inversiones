@@ -163,3 +163,6 @@ cubiertos por esta licencia.
   after-market (`ext` en cada título), contra el último cierre. El valor de la cartera y los demás
   números siguen usando el precio de la rueda regular.
 - Las corridas rápidas van de 05:00 a 22:00 de Buenos Aires para cubrir esos horarios.
+- Las dispara `.github/workflows/reloj.yml`, no el programador de GitHub (que saltea la mayoría de
+  las corridas pedidas cada media hora). Si alguna vez la página queda sin actualizarse en horario
+  de mercado: pestaña Actions → «Reloj de actualizaciones» → «Run workflow».

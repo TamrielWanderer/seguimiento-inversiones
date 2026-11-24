@@ -1,0 +1,68 @@
+name: Reloj de actualizaciones
+
+# El programador de GitHub (schedule) no garantiza los horarios: en este repositorio llegó a correr
+# dos o tres veces por día cuando se le pedía cada media hora. Este reloj lo reemplaza: es una
+# corrida que queda despierta, cada media hora le pide a «Actualizar y publicar» una actualización
+# y, antes de que se le acabe el tiempo, se vuelve a lanzar a sí misma.
+# - De lunes a viernes, de 05:00 a 22:00 de Buenos Aires: actualización rápida cada 30 minutos.
+# - 18:30 y 03:30 de Buenos Aires: actualización completa.
+# - Se apaga el sábado a la madrugada. El lunes lo vuelve a arrancar el programador (o cualquier
+#   cambio que se suba, o «Run workflow» a mano).
+on:
+  schedule:
+    - cron: "13 7,8,9,10,11,13,15,17,19,21,23 * * 1-5"
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  actions: write
+  contents: read
+
+# Un solo reloj a la vez: el que arranca reemplaza al anterior.
+concurrency:
+  group: reloj
+  cancel-in-progress: true
+
+jobs:
+  reloj:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    steps:
+      - name: Pedir una actualización cada media hora
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -u
+          fin=$(( $(date +%s) + 320 * 60 ))
+          # Semana hábil en UTC: del lunes 08:00 al sábado 01:00 (viernes 22:00 de Buenos Aires).
+          en_semana() {
+            local d h; d=$(date -u +%u); h=$(date -u +%-H)
+            { [ "$d" -ge 1 ] && [ "$d" -le 5 ] && { [ "$d" -gt 1 ] || [ "$h" -ge 8 ]; }; } || { [ "$d" -eq 6 ] && [ "$h" -lt 1 ]; }
+          }
+          primera=1
+          while [ "$(date +%s)" -lt "$fin" ] && en_semana; do
+            h=$(date -u +%-H); m=$(date -u +%-M)
+            modo=""
+            if { [ "$h" -eq 21 ] && [ "$m" -ge 30 ]; } || { [ "$h" -eq 6 ] && [ "$m" -ge 30 ]; }; then
+              modo=completo
+            elif [ "$h" -ge 8 ] || [ "$h" -lt 1 ]; then
+              modo=rapido
+            fi
+            # Al arrancar por un cambio subido no hace falta: ese cambio ya disparó su propia actualización.
+            if [ -n "$modo" ] && ! { [ "$primera" = 1 ] && [ "${{ github.event_name }}" = "push" ]; }; then
+              echo "$(date -u +%H:%M) UTC: pido actualización $modo"
+              gh workflow run publicar.yml -R "$REPO" --ref main -f modo="$modo" || echo "No se pudo pedir; se reintenta en la próxima vuelta."
+            fi
+            primera=0
+            # Dormir hasta 2 minutos después de la próxima media hora en punto.
+            ahora=$(date +%s)
+            sleep $(( 1800 - (ahora - 120) % 1800 ))
+          done
+          if en_semana; then
+            echo "Se acaba el tiempo de esta corrida: lanzo el reloj siguiente."
+            gh workflow run reloj.yml -R "$REPO" --ref main
+          else
+            echo "Fin de la semana hábil: el reloj se apaga hasta el lunes."
+          fi
