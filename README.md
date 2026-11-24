@@ -1,52 +1,54 @@
 # Tu Cartera Libre
 
-**English** · [Español](README.es.md)
+**Español** · [English](README.en.md)
 
-A free investment tracker for people who invest from Argentina: US stocks, CEDEARs, local shares
-and Australian stocks, valued in dollars and pesos with the MEP dollar rate.
+Una aplicación gratuita para seguir tus inversiones desde Argentina: acciones de Estados Unidos,
+CEDEARs, acciones locales y acciones australianas, valuadas en dólares y en pesos con el dólar MEP.
 
-**Open the app:** https://tamrielwanderer.github.io/seguimiento-inversiones/
+**Abrir la aplicación:** https://tamrielwanderer.github.io/seguimiento-inversiones/
 
-It runs in the browser, needs no account, works in Spanish and English, and has a dark and a
-light mode.
+Funciona en el navegador, no pide cuenta, está en español y en inglés, y tiene modo oscuro y
+modo claro.
 
-## What it does
+## Qué hace
 
-- **Portfolio.** Record each purchase with its date and it shows cost, current value and result in
-  dollars and in pesos, using the MEP rate of the purchase date. Supports sales (oldest purchases
-  sold first), fees, several portfolios, and other assets such as bonds, funds or cash.
-- **Performance chart.** Your portfolio over time, compared with putting the same money on the same
-  dates into the S&P 500.
-- **Allocation.** How the portfolio is split by holding, sector and country, with a warning when it
-  is concentrated.
-- **Watchlist.** A heat map and price table for the tickers you follow, with today's change and
-  the change over 3 months, 1 year and 5 years.
-- **Dividends.** Estimated dividends collected so far, expected income for the next year, yield on
-  cost, and upcoming ex-dates and payment dates, which can be exported to a calendar (`.ics`).
-- **Market and dollar.** MEP, CCL, official and blue dollar rates, main indices, and a CEDEAR table
-  with ratios and the implied dollar rate of each one.
-- **Deposit calculator.** Fixed-term deposits (plazo fijo, with optional renewals) and certificates
-  of deposit: amount, rate and term in, interest and effective rates out. It then shows what the
-  deposit really earns against inflation, the dollar, other banks' rates and US Treasuries.
-- **News.** Recent headlines for the companies on your list.
-- **Import and backup.** Import purchases from Excel or CSV, download a backup file, or move the
-  portfolio to another device with an encrypted QR code.
-- **On your phone.** Can be added to the home screen and opens offline with the last prices it
-  downloaded.
+- **Cartera.** Cargás cada compra con su fecha y te muestra el costo, el valor de hoy y el
+  resultado en dólares y en pesos, con el MEP del día de la compra. Admite ventas (se descuentan
+  primero las compras más viejas), comisiones, varias carteras y otros activos, como bonos, fondos
+  o efectivo.
+- **Gráfico de rendimiento.** Tu cartera a lo largo del tiempo, comparada con haber puesto la misma
+  plata, en las mismas fechas, en el S&P 500.
+- **Cómo está repartida.** La cartera por título, sector y país, con un aviso cuando está
+  concentrada.
+- **Seguimiento.** Mapa de calor y tabla de precios de los títulos que seguís, con la variación de
+  hoy y la de 3 meses, 1 año y 5 años.
+- **Dividendos.** Lo que ya cobraste (estimado), lo que cobrarías en un año, el rendimiento sobre tu
+  costo y las próximas fechas ex y de pago, que se pueden pasar a un calendario (`.ics`).
+- **Mercado y dólar.** Dólar MEP, CCL, oficial y blue, los índices principales y una tabla de
+  CEDEARs con el ratio y el dólar implícito de cada uno.
+- **Plazo fijo y CD.** Plazo fijo (con renovaciones opcionales) y certificado de depósito: ponés
+  monto, tasa y plazo, y te da los intereses y las tasas efectivas. Después muestra cuánto rinde de
+  verdad contra la inflación, el dólar, las tasas de otros bancos y los bonos del Tesoro de EE.UU.
+- **Noticias.** Titulares recientes de las empresas de tu lista.
+- **Importar y respaldo.** Importá compras desde Excel o CSV, descargá un respaldo o pasá la
+  cartera a otro dispositivo con un código QR cifrado.
+- **En el celular.** Se puede agregar a la pantalla de inicio y abre sin conexión con los últimos
+  precios que haya bajado.
 
-## Data and privacy
+## Datos y privacidad
 
-- Prices update about every 30 minutes while markets are open, with a delay of roughly 15 minutes.
-  Sources: Yahoo Finance, DolarApi and ArgentinaDatos (which republishes INDEC and BCRA figures).
-- Your portfolio is stored only in your browser. There are no accounts, no server and no cookies.
-- Nothing here is investment advice.
+- Los precios se actualizan cada 30 minutos mientras los mercados están abiertos, con unos
+  15 minutos de demora. Fuentes: Yahoo Finance, DolarApi y ArgentinaDatos (que republica datos del
+  INDEC y del BCRA).
+- Tu cartera se guarda solo en tu navegador. No hay cuentas, ni servidor, ni cookies.
+- Nada de esto es una recomendación de inversión.
 
-## For developers
+## Para desarrolladores
 
-Built with React, TypeScript and Vite; published with GitHub Pages and updated by GitHub Actions.
-Setup, data pipeline and how to add tickers or languages are in [`LEEME.md`](LEEME.md) (Spanish).
-To report a security problem, see [`SECURITY.md`](SECURITY.md).
+Hecha con React, TypeScript y Vite; se publica con GitHub Pages y se actualiza con GitHub Actions.
+La instalación, el circuito de datos y cómo sumar títulos o idiomas están en [`LEEME.md`](LEEME.md).
+Para avisar de un problema de seguridad, mirá [`SECURITY.md`](SECURITY.md).
 
-## License
+## Licencia
 
-[MIT](LICENSE). Market data and news belong to their sources.
+[MIT](LICENSE). Los datos de mercado y las noticias pertenecen a sus fuentes.
