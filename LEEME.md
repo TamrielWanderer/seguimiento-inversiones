@@ -1,4 +1,4 @@
-# Seguimiento de inversiones · aplicación web
+# Tu Cartera Libre · aplicación web
 
 Una página web común (React + TypeScript), sin Grok. Se compila en **un solo archivo**,
 `dist/index.html`, que trae adentro el código, los estilos y los datos del día.

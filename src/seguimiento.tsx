@@ -593,6 +593,8 @@ function writeTab(tab: MainTab): void {
 }
 
 const LEGACY_COOKIE = "familia-inv-bak-v1";
+/** El nombre de la aplicación: es una marca, no se traduce. */
+const APP_NAME = "Tu Cartera Libre";
 const BACKUP_PREFIX = "SI1.";
 const REPO_URL = "https://github.com/TamrielWanderer/seguimiento-inversiones";
 
@@ -1024,7 +1026,7 @@ function DashShell({ tab, onChange, stamp, stampTone = "ok", lang, onLang, child
   return (
     <div className="inv-dash">
       <aside className="inv-side">
-        <div className="inv-brand"><span className="inv-logo">S</span><span className="inv-brand-text">{tr("Inversiones")}</span></div>
+        <div className="inv-brand"><span className="inv-logo">C</span><span className="inv-brand-text">{APP_NAME}</span></div>
         <nav aria-label={tr("Secciones")}>
           {TABS.map((item) => (
             <button key={item.value} type="button" aria-current={item.value === tab ? "page" : undefined} className={item.value === tab ? "inv-nav-btn inv-nav-on" : "inv-nav-btn"} onClick={() => onChange(item.value)}>
@@ -1053,7 +1055,7 @@ function DashShell({ tab, onChange, stamp, stampTone = "ok", lang, onLang, child
       </aside>
       <div className="inv-main">
         <header className="inv-top">
-          <h1>{tr("Seguimiento de inversiones")}</h1>
+          <h1>{tr(TABS.find((t) => t.value === tab)?.label ?? APP_NAME)}</h1>
           <div className={`inv-stamp inv-stamp-${stampTone}`}>{stamp}</div>
         </header>
         <main className="inv-body">{children}</main>
@@ -1418,7 +1420,7 @@ function BackupPanel({
   const download = () => {
     setErr("");
     const json = buildBackupJson(watch, lots, sales, extras);
-    const name = `seguimiento-inversiones-${todayIsoBA()}.json`;
+    const name = `tu-cartera-libre-${todayIsoBA()}.json`;
     const ok = downloadJsonFile(name, json);
     setPending(null);
     if (ok) {
@@ -3132,7 +3134,7 @@ export default function InversionesPage() {
 
   return (
     <Page
-      title={tr("Seguimiento de inversiones")}
+      title={APP_NAME}
       sources={[tr("Precios, dividendos, resultados y noticias: Yahoo Finance. Dólar: DolarApi y ArgentinaDatos. Nueva York al cierre del {0}, Sídney del {1}, Buenos Aires del {2}. No es una recomendación de inversión.", nyDay, asxDay, baDay)]}
     >
       <DashShell tab={tab} onChange={setTab} stamp={tr("Actualizado {0}", fresh.text)} stampTone={fresh.tone} lang={lang} onLang={changeLang}>

@@ -1,10 +1,10 @@
 {
-  "name": "seguimiento-de-inversiones",
+  "name": "tu-cartera-libre",
   "version": "3.0.0",
   "private": true,
   "license": "MIT",
   "type": "module",
-  "description": "Seguimiento de inversiones: aplicación web independiente",
+  "description": "Tu Cartera Libre: seguimiento de inversiones, aplicación web independiente",
   "scripts": {
     "dev": "node scripts/armar.mjs && vite",
     "actualizar": "node scripts/actualizar.mjs",

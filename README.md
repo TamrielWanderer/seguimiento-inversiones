@@ -1,4 +1,4 @@
-# Seguimiento de inversiones
+# Tu Cartera Libre
 
 A free investment tracker for people who invest from Argentina: US stocks, CEDEARs, local shares
 and Australian stocks, valued in dollars and pesos with the MEP dollar rate.

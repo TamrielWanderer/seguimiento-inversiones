@@ -1,6 +1,6 @@
 {
-  "name": "Seguimiento de inversiones",
-  "short_name": "Inversiones",
+  "name": "Tu Cartera Libre",
+  "short_name": "Cartera",
   "description": "Cartera, dividendos, dólar y noticias.",
   "lang": "es-AR",
   "start_url": "./",
