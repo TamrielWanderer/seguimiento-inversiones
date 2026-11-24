@@ -250,7 +250,8 @@ export async function actualizar({ src, catalogo, prev, now = new Date(), log = 
     const r = t.byma?.ratio;
     const b = ba[t.ticker];
     const imp = impliedRatio(catalog[t.ticker]?.price, fx?.ccl?.venta, b?.price);
-    if (r && imp && b.asOf >= new Date(now.getTime() - 5 * DAY).toISOString().slice(0, 10) && Math.abs(imp / r - 1) > 0.15) {
+    // Solo se compara con precios de la misma rueda: en un feriado argentino Nueva York sigue operando.
+    if (r && imp && b.asOf === catalog[t.ticker]?.asOf && Math.abs(imp / r - 1) > 0.15) {
       errors.push(`Aviso: el ratio de ${t.byma.simbolo} (${r}) no coincide con los precios (da ${imp.toFixed(2)}). Revisalo en datos/catalogo.json.`);
     }
   }
