@@ -1,4 +1,4 @@
-# Tu Cartera Libre · aplicación web
+# Tu Cartera Lite · aplicación web
 
 Una página web común (React + TypeScript), sin Grok. Se compila en **un solo archivo**,
 `dist/index.html`, que trae adentro el código, los estilos y los datos del día.

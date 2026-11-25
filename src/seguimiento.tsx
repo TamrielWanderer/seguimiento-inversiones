@@ -596,7 +596,7 @@ function writeTab(tab: MainTab): void {
 
 const LEGACY_COOKIE = "familia-inv-bak-v1";
 /** El nombre de la aplicación: es una marca, no se traduce. */
-const APP_NAME = "Tu Cartera Libre";
+const APP_NAME = "Tu Cartera Lite";
 const BACKUP_PREFIX = "SI1.";
 const REPO_URL = "https://github.com/TamrielWanderer/seguimiento-inversiones";
 
@@ -1435,7 +1435,7 @@ function BackupPanel({
   const download = () => {
     setErr("");
     const json = buildBackupJson(watch, lots, sales, extras);
-    const name = `tu-cartera-libre-${todayIsoBA()}.json`;
+    const name = `tu-cartera-lite-${todayIsoBA()}.json`;
     const ok = downloadJsonFile(name, json);
     setPending(null);
     if (ok) {
