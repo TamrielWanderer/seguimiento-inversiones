@@ -1,68 +1,92 @@
 name: Reloj de actualizaciones
 
 # El programador de GitHub (schedule) no garantiza los horarios: en este repositorio llegó a correr
-# dos o tres veces por día cuando se le pedía cada media hora. Este reloj lo reemplaza: es una
-# corrida que queda despierta, cada media hora le pide a «Actualizar y publicar» una actualización
-# y, antes de que se le acabe el tiempo, se vuelve a lanzar a sí misma.
-# - De lunes a viernes, de 05:00 a 22:00 de Buenos Aires: actualización rápida cada 30 minutos.
-# - 18:30 y 03:30 de Buenos Aires: actualización completa.
-# - Se apaga el sábado a la madrugada. El lunes lo vuelve a arrancar el programador (o cualquier
-#   cambio que se suba, o «Run workflow» a mano).
+# dos o tres veces por día cuando se le pedía cada media hora. Este reloj lo reemplaza durante el
+# día de mercado: queda despierto, le pide a «Actualizar y publicar» una actualización en cada
+# horario de la lista y se apaga al terminar el día.
+#
+# Horarios, de lunes a viernes (hora de Buenos Aires):
+# - 08:00 y 09:30: antes de la apertura de Nueva York (pre-mercado), si el reloj ya arrancó.
+# - 10:30 a 18:00, cada 30 minutos: mercados abiertos (Buenos Aires y Nueva York, verano e invierno).
+# - 18:30: actualización completa (dividendos, noticias, inflación), que guarda los datos.
+# - 19:30: después del cierre (after-market). Ahí el reloj se apaga hasta el otro día.
+#
+# A la mañana lo arranca el programador de GitHub, que puede atrasarse: por eso se le pide varias
+# veces desde las 06:13. También arranca con cualquier cambio que se suba o con «Run workflow».
 on:
   schedule:
-    - cron: "13 7,8,9,10,11,13,15,17,19,21,23 * * 1-5"
+    - cron: "13,43 9-13 * * 1-5"
+    - cron: "13 14-21 * * 1-5"
   push:
     branches: [main]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      relevo:
+        description: "Uso interno: lo marca el reloj cuando se relanza a sí mismo"
+        type: boolean
+        default: false
 
 permissions:
   actions: write
   contents: read
 
-# Un solo reloj a la vez: el que arranca reemplaza al anterior.
+# Un solo reloj a la vez. Si ya hay uno andando, el nuevo espera y, al tocarle, ve que no hace falta.
 concurrency:
   group: reloj
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   reloj:
     runs-on: ubuntu-latest
-    timeout-minutes: 345
+    timeout-minutes: 350
     steps:
-      - name: Pedir una actualización cada media hora
+      - name: Pedir las actualizaciones del día
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          EVENTO: ${{ github.event_name }}
+          RELEVO: ${{ inputs.relevo }}
         run: |
           set -u
-          fin=$(( $(date +%s) + 320 * 60 ))
-          # Semana hábil en UTC: del lunes 08:00 al sábado 01:00 (viernes 22:00 de Buenos Aires).
-          en_semana() {
-            local d h; d=$(date -u +%u); h=$(date -u +%-H)
-            { [ "$d" -ge 1 ] && [ "$d" -le 5 ] && { [ "$d" -gt 1 ] || [ "$h" -ge 8 ]; }; } || { [ "$d" -eq 6 ] && [ "$h" -lt 1 ]; }
+          # Todo en UTC (Buenos Aires + 3 h). minuto del día = hora × 60 + minutos.
+          minuto() { echo $(( 10#$(date -u +%H) * 60 + 10#$(date -u +%M) )); }
+          habil() { [ "$(date -u +%u)" -le 5 ]; }
+          # El día del reloj: de 09:00 a 22:35 UTC (06:00 a 19:35 de Buenos Aires).
+          en_dia() { local t; t=$(minuto); habil && [ "$t" -ge 540 ] && [ "$t" -lt 1355 ]; }
+          # Qué pedir en este horario (vacío = nada).
+          modo_de() {
+            local t=$1
+            if   [ "$t" -ge 1290 ] && [ "$t" -lt 1320 ]; then echo completo        # 21:30 UTC
+            elif [ "$t" -ge 810 ]  && [ "$t" -lt 1290 ]; then echo rapido          # 13:30 a 21:29
+            elif [ "$t" -ge 660 ]  && [ "$t" -lt 690 ];  then echo rapido          # 11:00 (pre-mercado)
+            elif [ "$t" -ge 750 ]  && [ "$t" -lt 780 ];  then echo rapido          # 12:30 (pre-mercado)
+            elif [ "$t" -ge 1350 ] && [ "$t" -lt 1355 ]; then echo rapido          # 22:30 (after-market)
+            fi
           }
-          primera=1
-          while [ "$(date +%s)" -lt "$fin" ] && en_semana; do
-            h=$(date -u +%-H); m=$(date -u +%-M)
-            modo=""
-            if { [ "$h" -eq 21 ] && [ "$m" -ge 30 ]; } || { [ "$h" -eq 6 ] && [ "$m" -ge 30 ]; }; then
-              modo=completo
-            elif [ "$h" -ge 8 ] || [ "$h" -lt 1 ]; then
-              modo=rapido
+          pedir() {
+            local modo; modo=$(modo_de "$(minuto)")
+            [ -z "$modo" ] && return 0
+            echo "$(date -u +%H:%M) UTC: pido actualización $modo"
+            gh workflow run publicar.yml -R "$REPO" --ref main -f modo="$modo" || echo "No se pudo pedir; sigue en el próximo horario."
+          }
+          # Dormir hasta 2 minutos después de la próxima media hora en punto.
+          dormir() { local s; s=$(date +%s); sleep $(( 1800 - (s - 120) % 1800 )); }
+
+          if ! en_dia; then echo "Fuera del día de mercado: no hay nada que hacer."; exit 0; fi
+          # Tiempo de trabajo de esta corrida: 5 horas (el límite de GitHub por corrida es 6).
+          fin=$(( $(date +%s) + 300 * 60 ))
+          # Arrancado a mano o como relevo: pide ya. Arrancado por el programador o por un cambio
+          # subido (que ya dispara su propia actualización): espera al próximo horario.
+          if [ "$EVENTO" = "workflow_dispatch" ]; then pedir; fi
+          while true; do
+            dormir
+            en_dia || { echo "Terminó el día de mercado: el reloj se apaga hasta mañana."; exit 0; }
+            if [ "$(date +%s)" -ge "$fin" ]; then
+              echo "Se acaba el tiempo de esta corrida: sigue un reloj nuevo."
+              gh workflow run reloj.yml -R "$REPO" --ref main -f relevo=true
+              exit 0
             fi
-            # Al arrancar por un cambio subido no hace falta: ese cambio ya disparó su propia actualización.
-            if [ -n "$modo" ] && ! { [ "$primera" = 1 ] && [ "${{ github.event_name }}" = "push" ]; }; then
-              echo "$(date -u +%H:%M) UTC: pido actualización $modo"
-              gh workflow run publicar.yml -R "$REPO" --ref main -f modo="$modo" || echo "No se pudo pedir; se reintenta en la próxima vuelta."
-            fi
-            primera=0
-            # Dormir hasta 2 minutos después de la próxima media hora en punto.
-            ahora=$(date +%s)
-            sleep $(( 1800 - (ahora - 120) % 1800 ))
+            pedir
+            # El de after-market es el último del día.
+            if [ "$(minuto)" -ge 1350 ]; then echo "Último horario del día: el reloj se apaga hasta mañana."; exit 0; fi
           done
-          if en_semana; then
-            echo "Se acaba el tiempo de esta corrida: lanzo el reloj siguiente."
-            gh workflow run reloj.yml -R "$REPO" --ref main
-          else
-            echo "Fin de la semana hábil: el reloj se apaga hasta el lunes."
-          fi

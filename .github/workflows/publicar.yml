@@ -1,18 +1,17 @@
 name: Actualizar y publicar
 
 # Baja los datos, compila la página y la publica en GitHub Pages.
-# - Rápido (solo precios y dólar): cada 30 minutos de lunes a viernes, de 05:00 a 22:00 de Buenos
-#   Aires. Lo dispara el «Reloj de actualizaciones» (reloj.yml), porque el programador de GitHub
-#   saltea la mayoría de las corridas que se le piden cada media hora. No guarda nada en el repositorio.
-# - Completo (además dividendos, resultados, noticias, inflación e historia del dólar): después del
-#   cierre de Nueva York y a la madrugada para la sesión de Sídney. Guarda los datos.
+# - Rápido (solo precios y dólar): de lunes a viernes cada 30 minutos mientras los mercados están
+#   abiertos (10:30 a 18:00 de Buenos Aires), más dos antes de la apertura y uno después del cierre.
+#   Lo pide el «Reloj de actualizaciones» (reloj.yml). No guarda nada en el repositorio.
+# - Completo (además dividendos, resultados, noticias, inflación e historia del dólar): a las 18:30
+#   de Buenos Aires (lo pide el reloj) y a la madrugada para la sesión de Sídney. Guarda los datos.
 # - Al subir cambios (por ejemplo, editar datos/catalogo.json o datos/noticias.json desde GitHub):
 #   también baja datos nuevos, así un título recién agregado aparece enseguida.
 #   (Los commits de datos que hace este mismo flujo no lo vuelven a disparar.)
 # - A mano: pestaña Actions → «Actualizar y publicar» → «Run workflow».
 on:
   schedule:
-    - cron: "40 21 * * 1-5"
     - cron: "30 6 * * 1-5"
   push:
     branches: [main]

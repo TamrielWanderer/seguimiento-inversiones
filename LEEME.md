@@ -162,7 +162,8 @@ cubiertos por esta licencia.
 - Fuera del horario de Nueva York la página muestra aparte el movimiento del pre-mercado o del
   after-market (`ext` en cada título), contra el último cierre. El valor de la cartera y los demás
   números siguen usando el precio de la rueda regular.
-- Las corridas rápidas van de 05:00 a 22:00 de Buenos Aires para cubrir esos horarios.
+- Actualizaciones (hora de Buenos Aires, de lunes a viernes): cada 30 minutos de 10:30 a 18:00,
+  dos antes de la apertura (08:00 y 09:30), la completa a las 18:30 y una después del cierre (19:30).
 - Las dispara `.github/workflows/reloj.yml`, no el programador de GitHub (que saltea la mayoría de
   las corridas pedidas cada media hora). Si alguna vez la página queda sin actualizarse en horario
   de mercado: pestaña Actions → «Reloj de actualizaciones» → «Run workflow».

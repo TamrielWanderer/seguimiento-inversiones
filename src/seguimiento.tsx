@@ -2701,8 +2701,8 @@ export default function InversionesPage() {
         .catch(() => { /* sin red o bloqueado: quedan los datos de la página */ });
     };
     load();
-    // Mientras la página está abierta, busca datos nuevos cada 5 minutos y al volver a la pestaña.
-    const id = setInterval(load, 5 * 60 * 1000);
+    // Los datos cambian cada 30 minutos como mucho: alcanza con mirar cada 15 (y al volver a la pestaña).
+    const id = setInterval(load, 15 * 60 * 1000);
     const onVisible = () => { if (document.visibilityState === "visible") load(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => { alive = false; clearInterval(id); document.removeEventListener("visibilitychange", onVisible); };
