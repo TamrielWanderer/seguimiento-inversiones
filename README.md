@@ -1,4 +1,4 @@
-# Tu Cartera Libre
+# Tu Cartera Lite
 
 **Español** · [English](README.en.md)
 
