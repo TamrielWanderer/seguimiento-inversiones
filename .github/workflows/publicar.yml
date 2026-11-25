@@ -5,14 +5,12 @@ name: Actualizar y publicar
 #   abiertos (10:30 a 18:00 de Buenos Aires), más dos antes de la apertura y uno después del cierre.
 #   Lo pide el «Reloj de actualizaciones» (reloj.yml). No guarda nada en el repositorio.
 # - Completo (además dividendos, resultados, noticias, inflación e historia del dólar): a las 18:30
-#   de Buenos Aires (lo pide el reloj) y a la madrugada para la sesión de Sídney. Guarda los datos.
+#   y a las 03:30 de Buenos Aires (para la sesión de Sídney); también lo pide el reloj. Guarda los datos.
 # - Al subir cambios (por ejemplo, editar datos/catalogo.json o datos/noticias.json desde GitHub):
 #   también baja datos nuevos, así un título recién agregado aparece enseguida.
 #   (Los commits de datos que hace este mismo flujo no lo vuelven a disparar.)
 # - A mano: pestaña Actions → «Actualizar y publicar» → «Run workflow».
 on:
-  schedule:
-    - cron: "30 6 * * 1-5"
   push:
     branches: [main]
   workflow_dispatch:

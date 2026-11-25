@@ -1,22 +1,25 @@
 name: Reloj de actualizaciones
 
-# El programador de GitHub (schedule) no garantiza los horarios: en este repositorio llegó a correr
-# dos o tres veces por día cuando se le pedía cada media hora. Este reloj lo reemplaza durante el
-# día de mercado: queda despierto, le pide a «Actualizar y publicar» una actualización en cada
-# horario de la lista y se apaga al terminar el día.
+# El programador de GitHub (schedule) no garantiza los horarios: en este repositorio llegó a pasar
+# toda una mañana sin correr nada. Este reloj lo reemplaza: queda despierto de lunes a viernes, le
+# pide a «Actualizar y publicar» una actualización en cada horario de la lista y, cada 5 horas, se
+# relanza a sí mismo. De noche sigue despierto sin pedir nada: es lo que le permite arrancar a
+# horario a la mañana sin depender del programador.
 #
 # Horarios, de lunes a viernes (hora de Buenos Aires):
-# - 08:00 y 09:30: antes de la apertura de Nueva York (pre-mercado), si el reloj ya arrancó.
+# - 03:30: actualización completa para la sesión de Sídney.
+# - 08:00 y 09:30: antes de la apertura de Nueva York (pre-mercado).
 # - 10:30 a 18:00, cada 30 minutos: mercados abiertos (Buenos Aires y Nueva York, verano e invierno).
 # - 18:30: actualización completa (dividendos, noticias, inflación), que guarda los datos.
-# - 19:30: después del cierre (after-market). Ahí el reloj se apaga hasta el otro día.
+# - 19:30: después del cierre (after-market). El viernes, ahí se apaga hasta el lunes.
 #
-# A la mañana lo arranca el programador de GitHub, que puede atrasarse: por eso se le pide varias
-# veces desde las 06:13. También arranca con cualquier cambio que se suba o con «Run workflow».
+# El lunes lo arranca el programador de GitHub, que puede atrasarse horas: por eso se le pide cada
+# media hora desde el domingo a la noche. También arranca con cualquier cambio que se suba o con
+# «Run workflow».
 on:
   schedule:
-    - cron: "13,43 9-13 * * 1-5"
-    - cron: "13 14-21 * * 1-5"
+    - cron: "13,43 * * * 1"        # lunes (UTC), cada media hora: el arranque de la semana
+    - cron: "43 1,7,10,12,15,19 * * 2-5"   # de martes a viernes: respaldo por si el reloj se cayó
   push:
     branches: [main]
   workflow_dispatch:
@@ -51,8 +54,8 @@ jobs:
           # Todo en UTC (Buenos Aires + 3 h). minuto del día = hora × 60 + minutos.
           minuto() { echo $(( 10#$(date -u +%H) * 60 + 10#$(date -u +%M) )); }
           habil() { [ "$(date -u +%u)" -le 5 ]; }
-          # El día del reloj: de 09:00 a 22:35 UTC (06:00 a 19:35 de Buenos Aires).
-          en_dia() { local t; t=$(minuto); habil && [ "$t" -ge 540 ] && [ "$t" -lt 1355 ]; }
+          # La semana del reloj: de lunes a viernes, hasta el viernes 22:35 UTC (19:35 de Buenos Aires).
+          en_dia() { habil && { [ "$(date -u +%u)" -lt 5 ] || [ "$(minuto)" -lt 1355 ]; }; }
           # Qué pedir en este horario (vacío = nada).
           modo_de() {
             local t=$1
@@ -60,7 +63,8 @@ jobs:
             elif [ "$t" -ge 810 ]  && [ "$t" -lt 1290 ]; then echo rapido          # 13:30 a 21:29
             elif [ "$t" -ge 660 ]  && [ "$t" -lt 690 ];  then echo rapido          # 11:00 (pre-mercado)
             elif [ "$t" -ge 750 ]  && [ "$t" -lt 780 ];  then echo rapido          # 12:30 (pre-mercado)
-            elif [ "$t" -ge 1350 ] && [ "$t" -lt 1355 ]; then echo rapido          # 22:30 (after-market)
+            elif [ "$t" -ge 1350 ] && [ "$t" -lt 1380 ]; then echo rapido          # 22:30 (after-market)
+            elif [ "$t" -ge 390 ]  && [ "$t" -lt 420 ];  then echo completo        # 06:30 (Sídney)
             fi
           }
           pedir() {
@@ -72,7 +76,7 @@ jobs:
           # Dormir hasta 2 minutos después de la próxima media hora en punto.
           dormir() { local s; s=$(date +%s); sleep $(( 1800 - (s - 120) % 1800 )); }
 
-          if ! en_dia; then echo "Fuera del día de mercado: no hay nada que hacer."; exit 0; fi
+          if ! en_dia; then echo "Fin de semana: no hay nada que hacer."; exit 0; fi
           # Tiempo de trabajo de esta corrida: 5 horas (el límite de GitHub por corrida es 6).
           fin=$(( $(date +%s) + 300 * 60 ))
           # Arrancado a mano o como relevo: pide ya. Arrancado por el programador o por un cambio
@@ -80,13 +84,11 @@ jobs:
           if [ "$EVENTO" = "workflow_dispatch" ]; then pedir; fi
           while true; do
             dormir
-            en_dia || { echo "Terminó el día de mercado: el reloj se apaga hasta mañana."; exit 0; }
+            en_dia || { echo "Terminó la semana: el reloj se apaga hasta el lunes."; exit 0; }
             if [ "$(date +%s)" -ge "$fin" ]; then
               echo "Se acaba el tiempo de esta corrida: sigue un reloj nuevo."
               gh workflow run reloj.yml -R "$REPO" --ref main -f relevo=true
               exit 0
             fi
             pedir
-            # El de after-market es el último del día.
-            if [ "$(minuto)" -ge 1350 ]; then echo "Último horario del día: el reloj se apaga hasta mañana."; exit 0; fi
           done
